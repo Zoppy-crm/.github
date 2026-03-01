@@ -1,0 +1,111 @@
+name: "Refinamento Técnico"
+description: "Template para refinamento técnico de features e tarefas"
+labels: ["refinement"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Resumo da Solução
+      description: "Descreva o cenário atual. Qual o problema que precisa ser resolvido? (Ponto de partida)"
+      placeholder: "Ex: Hoje o sistema não envia notificações push para usuários inativos..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objetivo
+      description: "Descreva como o problema será resolvido. (Ponto de chegada)"
+      placeholder: "Ex: Implementar um worker que identifica usuários inativos e dispara push via FCM..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Critérios de Aceite
+      description: "Quais critérios o card precisa atender para considerar a conclusão da tarefa"
+      placeholder: |
+        - [ ] Critério 1
+        - [ ] Critério 2
+        - [ ] Critério 3
+    validations:
+      required: true
+
+  - type: textarea
+    id: layout
+    attributes:
+      label: Layout
+      description: "Protótipos elaborados pelo time de design (cole links do Figma ou imagens)"
+      placeholder: "Link do Figma ou arraste imagens aqui"
+    validations:
+      required: false
+
+  - type: textarea
+    id: technical-details
+    attributes:
+      label: Detalhamento Técnico
+      description: "Detalhe os lugares em que será necessário atuar. Quanto mais detalhe, melhor"
+      placeholder: |
+        **Arquivos/Módulos impactados:**
+        -
+
+        **Endpoints novos/alterados:**
+        -
+
+        **Banco de dados:**
+        -
+
+        **Dependências externas:**
+        -
+    validations:
+      required: false
+
+  - type: input
+    id: feature-flag
+    attributes:
+      label: Feature Flag
+      description: "Nome da feature flag (se aplicável)"
+      placeholder: "Ex: ENABLE_PUSH_NOTIFICATIONS"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      options:
+        - Aguardando refinamento
+        - Refinado
+        - Pronto para desenvolvimento
+    validations:
+      required: true
+
+  - type: textarea
+    id: test-plan
+    attributes:
+      label: Roteiro de Teste
+      description: "Detalhe o fluxo de teste que o QA deve seguir"
+      placeholder: |
+        **Telas:**
+        -
+
+        **Rotinas:**
+        -
+
+        **Locais de impacto:**
+        -
+
+        **Resultado Esperado:**
+        -
+    validations:
+      required: false
+
+  - type: textarea
+    id: postman-collections
+    attributes:
+      label: Collections do Postman alteradas/adicionadas (E2E)
+      description: "Nome das collections que foram alteradas ou adicionadas"
+      placeholder: "Ex: Users > Push Notifications"
+    validations:
+      required: false

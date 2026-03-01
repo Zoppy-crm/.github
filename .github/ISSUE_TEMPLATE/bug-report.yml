@@ -1,0 +1,90 @@
+name: "Bug Report"
+description: "Reportar um bug encontrado em produção ou staging"
+labels: ["bug"]
+body:
+  - type: input
+    id: ticket-id
+    attributes:
+      label: ID do Ticket
+      description: "ID do ticket de suporte (se aplicável)"
+      placeholder: "Ex: #12345"
+    validations:
+      required: false
+
+  - type: input
+    id: attendant
+    attributes:
+      label: Atendente
+      description: "Quem reportou ou atendeu o chamado"
+      placeholder: "Ex: João"
+    validations:
+      required: false
+
+  - type: input
+    id: company
+    attributes:
+      label: Empresa
+      description: "Empresa afetada"
+      placeholder: "Ex: Loja XYZ"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição
+      description: "Descreva o bug de forma clara"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Comportamento Atual
+      description: "O que está acontecendo?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Comportamento Esperado
+      description: "O que deveria acontecer?"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Ambiente
+      options:
+        - Produção
+        - Staging
+        - Desenvolvimento
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências
+      description: "Screenshots, logs, vídeos ou qualquer evidência do bug"
+      placeholder: "Arraste imagens ou cole logs aqui"
+    validations:
+      required: false
+
+  - type: textarea
+    id: blocked
+    attributes:
+      label: Blocked
+      description: "Existe algo bloqueado por causa deste bug?"
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Retorno de Solução
+      description: "Descrição da solução aplicada (preencher após resolução)"
+    validations:
+      required: false
