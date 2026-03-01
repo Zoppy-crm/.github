@@ -1,0 +1,27 @@
+name: Validate Done Status
+
+on:
+  projects_v2_item:
+    types: [edited]
+
+jobs:
+  validate:
+    runs-on: self-hosted
+    if: github.event.changes.field_value.field_type == 'single_select'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Validate required fields before Done
+        env:
+          GH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: python scripts/validate_done.py
