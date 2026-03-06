@@ -1,0 +1,136 @@
+name: "Preparação Individual — Tech Lead"
+description: "Template para preparação individual do Tech Lead antes da reunião de refinamento técnico"
+labels: ["refinement", "preparation"]
+body:
+  - type: input
+    id: feature-name
+    attributes:
+      label: Nome da Feature
+      description: "Nome da feature que será refinada"
+      placeholder: "Ex: Notificações Push para Usuários Inativos"
+    validations:
+      required: true
+
+  - type: input
+    id: prd-link
+    attributes:
+      label: PRD (Product Requirement Document)
+      description: "Link para o PRD da feature"
+      placeholder: "https://..."
+    validations:
+      required: true
+
+  - type: input
+    id: figma-link
+    attributes:
+      label: Figma
+      description: "Link para o protótipo no Figma"
+      placeholder: "https://figma.com/..."
+    validations:
+      required: true
+
+  - type: input
+    id: refinement-date
+    attributes:
+      label: Refinamento Previsto
+      description: "Data prevista para a reunião de refinamento (mínimo 2 dias úteis após recebimento do PRD e Figma)"
+      placeholder: "Ex: 2026-03-10"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dor
+    attributes:
+      label: DoR (Definition of Ready)
+      description: "Confirme que os pré-requisitos estão atendidos"
+      options:
+        - label: PRD (Product Requirement Document) finalizado
+          required: true
+        - label: Figma com fluxo completo
+          required: true
+        - label: Contexto de valor claro
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto
+      description: "Dúvidas, cenários de borda e requisitos não explícitos identificados na leitura do PRD e Figma"
+      placeholder: |
+        - Dúvida: ...
+        - Cenário de borda: ...
+        - Requisito implícito: ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: initial-impact
+    attributes:
+      label: Impacto Inicial
+      description: "Serviços e shared packages provavelmente afetados"
+      placeholder: |
+        Ex: zoppy-api (API/WORKER), zoppy-FE, @Zoppy-crm/models, etc.
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution-sketch
+    attributes:
+      label: Esboço de Solução
+      description: "Ideia inicial de fluxo, tabelas/migrações e endpoints. Anexar diagrama se houver"
+      placeholder: |
+        **Fluxo de dados:**
+        -
+
+        **Tabelas/Migrações:**
+        -
+
+        **Endpoints:**
+        -
+
+        **Diagrama:** (cole imagem ou link)
+    validations:
+      required: false
+
+  - type: textarea
+    id: attention-points
+    attributes:
+      label: Pontos de Atenção
+      description: "O que já se sabe que vai precisar de atenção especial"
+      placeholder: |
+        Ex: N+1 em queries, RBAC (Role-Based Access Control), mudanças de infra, migrations complexas, jobs retroativos, etc.
+    validations:
+      required: false
+
+  - type: textarea
+    id: observability
+    attributes:
+      label: Observabilidade
+      description: "Como acompanhar a saúde da feature pós-deploy"
+      placeholder: |
+        Métricas, alertas e dashboards previstos.
+    validations:
+      required: false
+
+  - type: textarea
+    id: participants
+    attributes:
+      label: Participantes
+      description: "Devs que fazem sentido estar na reunião de refinamento"
+      placeholder: |
+        - @dev1 (motivo)
+        - @dev2 (motivo)
+    validations:
+      required: false
+
+  - type: textarea
+    id: agenda
+    attributes:
+      label: Pauta
+      description: "O que será apresentado na reunião de refinamento"
+      placeholder: |
+        1. Contexto da feature
+        2. Esboço de solução
+        3. Riscos identificados
+        4. Perguntas em aberto
+    validations:
+      required: false

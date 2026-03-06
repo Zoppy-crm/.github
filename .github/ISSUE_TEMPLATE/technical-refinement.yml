@@ -61,6 +61,71 @@ body:
     validations:
       required: false
 
+  - type: textarea
+    id: affected-services
+    attributes:
+      label: Serviços Afetados
+      description: "Liste os serviços que serão alterados. Inclua shared packages se aplicável"
+      placeholder: |
+        Ex: zoppy-api (API/PVT/WORKER), zoppy-event-bridge, zoppy-workflow, zoppy-FE, zoppy-workflow-FE, ui-components.
+        Shared packages: @Zoppy-crm/models, @Zoppy-crm/shared, @Zoppy-crm/api-signatures, etc.
+    validations:
+      required: false
+
+  - type: textarea
+    id: migrations
+    attributes:
+      label: Migrations
+      description: "Scripts de migration necessários (Sequelize CLI / Cassandra)"
+      placeholder: |
+        Para cada migration: nome do arquivo, tipo de operação (create table, alter table, add column, etc.) e breve descrição do impacto.
+    validations:
+      required: false
+
+  - type: textarea
+    id: infrastructure
+    attributes:
+      label: Infraestrutura
+      description: "Mudanças necessárias em infraestrutura"
+      placeholder: |
+        Novos buckets ou políticas no S3, configurações de Redis, novas filas BullMQ, variáveis de ambiente, permissões IAM, etc.
+        Deixar em branco se não aplicável.
+    validations:
+      required: false
+
+  - type: textarea
+    id: endpoint-permissions
+    attributes:
+      label: Permissões de Endpoints
+      description: "Mapeamento de permissões por endpoint novo ou alterado"
+      placeholder: |
+        | Rota | Método | Guards | Níveis de acesso |
+        |------|--------|--------|-------------------|
+        | /api/example | GET | RoleGuard, FeatureGuard | Master / Admin |
+    validations:
+      required: false
+
+  - type: textarea
+    id: retroactive-data-jobs
+    attributes:
+      label: Jobs de Correção de Dados Retroativos
+      description: "Scripts ou jobs necessários para migração ou correção de dados históricos após o deploy"
+      placeholder: |
+        Informar: origem dos dados, lógica de transformação, critério de elegibilidade e estratégia de execução (one-shot, paginado, etc.).
+        Deixar em branco se não aplicável.
+    validations:
+      required: false
+
+  - type: textarea
+    id: monitoring
+    attributes:
+      label: Monitoramento e Observabilidade
+      description: "Métricas, alertas e dashboards a serem criados ou atualizados"
+      placeholder: |
+        Fonte de dados (MySQL RDS para operacional, Athena para analítico), logs estruturados relevantes (Loki) e quem deve ser notificado em caso de anomalia.
+    validations:
+      required: false
+
   - type: input
     id: feature-flag
     attributes:
