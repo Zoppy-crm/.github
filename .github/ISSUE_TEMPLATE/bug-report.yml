@@ -1,6 +1,6 @@
 name: "Bug Report"
 description: "Reportar um bug encontrado em produção ou staging"
-labels: ["bug"]
+labels: ["bug", "work: bug"]
 body:
   - type: input
     id: ticket-id
@@ -53,6 +53,13 @@ body:
     validations:
       required: true
 
+  - type: checkboxes
+    id: client-report
+    attributes:
+      label: Relatado por cliente?
+      options:
+        - label: Sim, foi reportado por um cliente
+
   - type: dropdown
     id: environment
     attributes:
@@ -60,7 +67,7 @@ body:
       options:
         - Produção
         - Staging
-        - Desenvolvimento
+        - Mirror
     validations:
       required: true
 
