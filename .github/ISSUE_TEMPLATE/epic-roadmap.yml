@@ -1,6 +1,6 @@
 name: "Epic de Roadmap"
 description: "Template para épicos de produto rastreados no roadmap"
-labels: ["epic", "roadmap"]
+labels: ["roadmap"]
 body:
   - type: textarea
     id: why
