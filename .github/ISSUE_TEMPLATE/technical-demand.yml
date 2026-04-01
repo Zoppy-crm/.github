@@ -1,0 +1,24 @@
+name: "Demanda Técnica"
+description: "Template para demandas técnicas"
+labels: ["work: demanda"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição
+      description: "Descreva o conteúdo da demanda em markdown livre"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Critérios de Aceite
+      description: "Quais critérios o card precisa atender para considerar a conclusão da tarefa"
+      placeholder: |
+        - [ ] Critério 1
+        - [ ] Critério 2
+        - [ ] Critério 3
+    validations:
+      required: false
+
