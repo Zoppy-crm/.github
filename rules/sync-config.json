@@ -1,0 +1,29 @@
+{
+    "description": "Mapeamento de repos para pastas de rules. Cada repo recebe 'shared' + as pastas listadas.",
+    "groups": {
+        "backend": {
+            "folders": ["shared", "backend"],
+            "repos": [
+                "zoppy-api",
+                "zoppy-workflow",
+                "zoppy-pixel-lambda",
+                "zoppy-whatsapp-commerce",
+                "zoppy-event-bridge"
+            ]
+        },
+        "frontend": {
+            "folders": ["shared", "frontend"],
+            "repos": [
+                "zoppy-FE",
+                "ui-components",
+                "zoppy-partners-fe"
+            ]
+        },
+        "e2e": {
+            "folders": ["shared", "e2e"],
+            "repos": [
+                "zoppy-e2e-api"
+            ]
+        }
+    }
+}

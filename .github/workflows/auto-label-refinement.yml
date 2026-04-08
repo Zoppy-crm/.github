@@ -1,0 +1,51 @@
+name: Auto Label Refinement Cards
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  auto-label:
+    if: contains(github.event.issue.labels.*.name, 'refinement')
+    runs-on: self-hosted
+    permissions:
+      issues: write
+
+    steps:
+      - name: Apply ai-assisted label based on issue form
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const issueNumber = context.issue.number;
+
+            const aiMatch = body.match(/### Criado com auxílio de IA\?\s*\n\s*\n\s*(.+)/);
+            const usedAi = aiMatch && aiMatch[1].trim() === 'Sim';
+
+            const currentLabels = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+            });
+            const labelNames = currentLabels.data.map(l => l.name);
+            const hasAiLabel = labelNames.includes('ai-assisted');
+
+            if (usedAi && !hasAiLabel) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['ai-assisted'],
+              });
+              core.info('Label "ai-assisted" applied.');
+            } else if (!usedAi && hasAiLabel) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                name: 'ai-assisted',
+              });
+              core.info('Label "ai-assisted" removed.');
+            } else {
+              core.info('No label change needed.');
+            }

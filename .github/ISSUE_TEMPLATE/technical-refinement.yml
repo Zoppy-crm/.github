@@ -181,3 +181,14 @@ body:
         - Fluxo: Webhook → Processamento → Persistência
     validations:
       required: false
+
+  - type: dropdown
+    id: ai-assisted
+    attributes:
+      label: Criado com auxílio de IA?
+      description: "Esse card foi gerado ou co-criado usando Claude, Cursor ou outra ferramenta de IA?"
+      options:
+        - Sim
+        - Não
+    validations:
+      required: true
