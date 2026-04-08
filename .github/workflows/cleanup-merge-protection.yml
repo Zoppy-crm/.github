@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Apenas listar repos sem deletar'
+        description: 'Apenas listar repos sem alterar'
         type: boolean
         default: true
 
@@ -15,7 +15,7 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Remove merge-protection.yml from repos
+      - name: Disable enforce_admins and remove merge-protection.yml
         env:
           GH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -23,16 +23,17 @@ jobs:
 
           ORG="Zoppy-crm"
           FILE_PATH=".github/workflows/merge-protection.yml"
+          BRANCHES=("master" "development" "staging" "mirror")
           DRY_RUN="${{ inputs.dry_run }}"
           SINCE=$(date -d '60 days ago' +%Y-%m-%dT%H:%M:%SZ)
 
-          echo "🔍 Buscando repos ativos com $FILE_PATH..."
+          echo "🔍 Buscando repos ativos..."
 
           REPOS=$(gh api --paginate "/orgs/$ORG/repos?per_page=100&sort=pushed&direction=desc" \
             --jq ".[] | select(.archived == false) | select(.pushed_at > \"$SINCE\") | .name")
 
+          FIXED=0
           DELETED=0
-          SKIPPED=0
           FAILED=0
 
           for REPO in $REPOS; do
@@ -40,14 +41,32 @@ jobs:
               continue
             fi
 
-            # Check if file exists and get its SHA
-            FILE_SHA=$(gh api "/repos/$ORG/$REPO/contents/$FILE_PATH" --jq '.sha' 2>/dev/null || true)
+            # Step 1: Disable enforce_admins on all protected branches
+            for BRANCH in "${BRANCHES[@]}"; do
+              ENFORCED=$(gh api "/repos/$ORG/$REPO/branches/$BRANCH/protection" --jq '.enforce_admins.enabled' 2>/dev/null || true)
 
-            if [ -z "$FILE_SHA" ]; then
+              if [ "$ENFORCED" = "true" ]; then
+                echo "🔓 $REPO/$BRANCH — enforce_admins: true"
+
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "  🔍 [DRY RUN] Would disable enforce_admins"
+                else
+                  gh api -X DELETE "/repos/$ORG/$REPO/branches/$BRANCH/protection/enforce_admins" 2>/dev/null || true
+                  echo "  ✅ enforce_admins disabled"
+                fi
+                FIXED=$((FIXED + 1))
+              fi
+            done
+
+            # Step 2: Check if merge-protection.yml exists on default branch
+            DEFAULT_BRANCH=$(gh api "/repos/$ORG/$REPO" --jq '.default_branch' 2>/dev/null || true)
+            FILE_SHA=$(gh api "/repos/$ORG/$REPO/contents/$FILE_PATH?ref=$DEFAULT_BRANCH" --jq '.sha' 2>/dev/null || true)
+
+            if [ -z "$FILE_SHA" ] || echo "$FILE_SHA" | grep -q "message"; then
               continue
             fi
 
-            echo "📂 $REPO — found merge-protection.yml (sha: $FILE_SHA)"
+            echo "📂 $REPO — found merge-protection.yml on $DEFAULT_BRANCH"
 
             if [ "$DRY_RUN" = "true" ]; then
               echo "  🔍 [DRY RUN] Would delete"
@@ -55,18 +74,18 @@ jobs:
               continue
             fi
 
-            # Delete the file via API (works on default branch)
             RESULT=$(gh api -X DELETE "/repos/$ORG/$REPO/contents/$FILE_PATH" \
               -f message="chore: remove merge-protection.yml (moved to org .github)" \
               -f sha="$FILE_SHA" \
+              -f branch="$DEFAULT_BRANCH" \
               -f "committer[name]=Zoppy Rules Bot" \
               -f "committer[email]=rules-bot@zoppy.com.br" 2>&1) || true
 
             if echo "$RESULT" | grep -q '"commit"'; then
-              echo "  ✅ Deleted!"
+              echo "  ✅ Deleted from $DEFAULT_BRANCH!"
               DELETED=$((DELETED + 1))
             else
-              echo "  ❌ Failed: $RESULT"
+              echo "  ❌ Failed to delete: $RESULT"
               FAILED=$((FAILED + 1))
             fi
           done
@@ -74,5 +93,6 @@ jobs:
           echo ""
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📊 Resultado:"
-          echo "  ✅ Deleted: $DELETED"
+          echo "  🔓 enforce_admins disabled: $FIXED branches"
+          echo "  🗑️  Files deleted: $DELETED repos"
           echo "  ❌ Failed: $FAILED"
