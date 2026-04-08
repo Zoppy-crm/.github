@@ -167,10 +167,17 @@ body:
       required: false
 
   - type: textarea
-    id: postman-collections
+    id: e2e-tests
     attributes:
-      label: Collections do Postman alteradas/adicionadas (E2E)
-      description: "Nome das collections que foram alteradas ou adicionadas"
-      placeholder: "Ex: Users > Push Notifications"
+      label: Testes E2E (Playwright)
+      description: "Cenários end-to-end que precisam de cobertura via Playwright (API e/ou Frontend). Novas features devem ter boa cobertura E2E"
+      placeholder: |
+        **Frontend:**
+        - Fluxo: Login → Dashboard → Criar Recurso
+        - Fluxo: Carrinho → Checkout → Pagamento
+
+        **API:**
+        - Fluxo: CRUD completo de /endpoint
+        - Fluxo: Webhook → Processamento → Persistência
     validations:
       required: false
