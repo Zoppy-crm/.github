@@ -111,6 +111,12 @@ jobs:
               git fetch origin "$BRANCH" 2>&1 || continue
               git checkout -f "$BRANCH" 2>&1 || git checkout -b "$BRANCH" "origin/$BRANCH" 2>&1 || continue
 
+              # Fix .gitignore if it ignores .claude/ entirely
+              if [ -f ".gitignore" ] && grep -q '^\.claude/$' ".gitignore"; then
+                sed -i 's|^\.claude/$|.claude/*\n!.claude/skills/|' ".gitignore"
+                git add .gitignore
+              fi
+
               # Clean existing synced skills and rebuild
               rm -rf ".claude/skills/.synced-from-org"
               mkdir -p ".claude/skills"
