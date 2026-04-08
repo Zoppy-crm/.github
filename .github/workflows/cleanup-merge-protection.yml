@@ -58,36 +58,37 @@ jobs:
               fi
             done
 
-            # Step 2: Check if merge-protection.yml exists on default branch
-            DEFAULT_BRANCH=$(gh api "/repos/$ORG/$REPO" --jq '.default_branch' 2>/dev/null || true)
-            FILE_SHA=$(gh api "/repos/$ORG/$REPO/contents/$FILE_PATH?ref=$DEFAULT_BRANCH" --jq '.sha' 2>/dev/null || true)
+            # Step 2: Delete merge-protection.yml from ALL branches
+            for BRANCH in "${BRANCHES[@]}"; do
+              FILE_SHA=$(gh api "/repos/$ORG/$REPO/contents/$FILE_PATH?ref=$BRANCH" --jq '.sha' 2>/dev/null || true)
 
-            if [ -z "$FILE_SHA" ] || echo "$FILE_SHA" | grep -q "message"; then
-              continue
-            fi
+              if [ -z "$FILE_SHA" ] || echo "$FILE_SHA" | grep -q "message"; then
+                continue
+              fi
 
-            echo "📂 $REPO — found merge-protection.yml on $DEFAULT_BRANCH"
+              echo "📂 $REPO/$BRANCH — found merge-protection.yml"
 
-            if [ "$DRY_RUN" = "true" ]; then
-              echo "  🔍 [DRY RUN] Would delete"
-              DELETED=$((DELETED + 1))
-              continue
-            fi
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "  🔍 [DRY RUN] Would delete"
+                DELETED=$((DELETED + 1))
+                continue
+              fi
 
-            RESULT=$(gh api -X DELETE "/repos/$ORG/$REPO/contents/$FILE_PATH" \
-              -f message="chore: remove merge-protection.yml (moved to org .github)" \
-              -f sha="$FILE_SHA" \
-              -f branch="$DEFAULT_BRANCH" \
-              -f "committer[name]=Zoppy Rules Bot" \
-              -f "committer[email]=rules-bot@zoppy.com.br" 2>&1) || true
+              RESULT=$(gh api -X DELETE "/repos/$ORG/$REPO/contents/$FILE_PATH" \
+                -f message="chore: remove merge-protection.yml (moved to org .github)" \
+                -f sha="$FILE_SHA" \
+                -f branch="$BRANCH" \
+                -f "committer[name]=Zoppy Rules Bot" \
+                -f "committer[email]=rules-bot@zoppy.com.br" 2>&1) || true
 
-            if echo "$RESULT" | grep -q '"commit"'; then
-              echo "  ✅ Deleted from $DEFAULT_BRANCH!"
-              DELETED=$((DELETED + 1))
-            else
-              echo "  ❌ Failed to delete: $RESULT"
-              FAILED=$((FAILED + 1))
-            fi
+              if echo "$RESULT" | grep -q '"commit"'; then
+                echo "  ✅ Deleted from $BRANCH!"
+                DELETED=$((DELETED + 1))
+              else
+                echo "  ❌ Failed on $BRANCH: $RESULT"
+                FAILED=$((FAILED + 1))
+              fi
+            done
           done
 
           echo ""

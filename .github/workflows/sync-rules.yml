@@ -172,15 +172,39 @@ jobs:
                 done
               } > ".claude/skills/.synced-from-org"
 
+              # Generate compiled copilot-instructions.md from all SKILL.md files
+              mkdir -p ".github"
+              {
+                echo "# Copilot Instructions — Zoppy"
+                echo ""
+                echo "> Auto-generated from .claude/skills/. Do not edit manually."
+                echo "> Last sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                echo ""
+                for folder in "${FOLDERS[@]}"; do
+                  SOURCE="$GITHUB_WORKSPACE/skills/$folder"
+                  if [ -d "$SOURCE" ]; then
+                    for skill_dir in "$SOURCE"/*/; do
+                      if [ -d "$skill_dir" ] && [ -f "$skill_dir/SKILL.md" ]; then
+                        skill_name=$(basename "$skill_dir")
+                        echo "---"
+                        echo ""
+                        cat "$skill_dir/SKILL.md"
+                        echo ""
+                      fi
+                    done
+                  fi
+                done
+              } > ".github/copilot-instructions.md"
+
               # Check if there are changes
-              if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude)" ]; then
+              if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude .github/copilot-instructions.md)" ]; then
                 echo "  ✅ $BRANCH — já está atualizado"
                 continue
               fi
 
               # Commit and push
-              git add .claude/
-              git commit -m "chore: sync skills from .github [${FOLDERS[*]}] [skip ci]"
+              git add .claude/ .github/copilot-instructions.md
+              git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
 
               if git push origin "$BRANCH" 2>&1; then
                 echo "  🚀 $BRANCH — synced!"
