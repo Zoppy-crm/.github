@@ -20,6 +20,7 @@ Repositório de configurações compartilhadas da organização Zoppy no GitHub.
 | **Auto Label Refinement** | Issue aberta/editada com label `refinement` | Aplica label `ai-assisted` quando o card foi criado com auxílio de IA |
 | **PR Standards Check** | PR aberto/editado/atualizado | Valida naming de branch, tamanho do PR e descrição. Comenta warnings e dicas no PR |
 | **Sync Skills** | Push em `development` alterando `skills/` ou manual | Sincroniza `.claude/skills/` para repos configurados (push direto em master, development, staging, mirror) |
+| **Auto Label AI PRs** | PR aberto/atualizado | Detecta `Co-Authored-By` de IA nos commits e aplica label `ai-assisted` automaticamente |
 
 ## Refinamento Técnico com IA
 
