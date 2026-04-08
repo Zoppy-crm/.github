@@ -32,7 +32,7 @@ jobs:
 
           ORG="Zoppy-crm"
           CONFIG_FILE="skills/sync-config.json"
-          BRANCHES=("master" "development" "staging" "mirror")
+          BRANCHES=("development")
           DRY_RUN="${{ inputs.dry_run || 'false' }}"
 
           if [ ! -f "$CONFIG_FILE" ]; then
@@ -85,9 +85,10 @@ jobs:
             fi
 
             TMPDIR=$(mktemp -d)
+            REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/$ORG/$REPO.git"
 
-            # Clone repo (shallow)
-            if ! git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/$ORG/$REPO.git" "$TMPDIR/$REPO" 2>&1; then
+            # Clone repo with no checkout (just get .git)
+            if ! git clone --no-checkout "$REPO_URL" "$TMPDIR/$REPO" 2>&1; then
               echo "  ❌ Failed to clone"
               FAILED=$((FAILED + 1))
               rm -rf "$TMPDIR"
@@ -106,15 +107,15 @@ jobs:
                 continue
               fi
 
-              # Fetch and checkout branch
-              git fetch origin "$BRANCH" --depth 1 2>&1 || true
-              git checkout -B "$BRANCH" "origin/$BRANCH" 2>&1 || true
+              # Fetch the specific branch and checkout
+              git fetch origin "$BRANCH" 2>&1 || continue
+              git checkout -f "$BRANCH" 2>&1 || git checkout -b "$BRANCH" "origin/$BRANCH" 2>&1 || continue
 
               # Clean existing synced skills and rebuild
               rm -rf ".claude/skills/.synced-from-org"
               mkdir -p ".claude/skills"
 
-              # Copy skills from each mapped folder, preserving skill folder structure
+              # Copy skills from each mapped folder
               for folder in "${FOLDERS[@]}"; do
                 SOURCE="$GITHUB_WORKSPACE/skills/$folder"
                 if [ -d "$SOURCE" ]; then
@@ -129,19 +130,21 @@ jobs:
               done
 
               # Write marker file
-              echo "# Skills synced from Zoppy-crm/.github" > ".claude/skills/.synced-from-org"
-              echo "# Last sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ".claude/skills/.synced-from-org"
-              echo "# Groups: ${FOLDERS[*]}" >> ".claude/skills/.synced-from-org"
-              for folder in "${FOLDERS[@]}"; do
-                SOURCE="$GITHUB_WORKSPACE/skills/$folder"
-                if [ -d "$SOURCE" ]; then
-                  for skill_dir in "$SOURCE"/*/; do
-                    if [ -d "$skill_dir" ]; then
-                      echo "$(basename "$skill_dir")" >> ".claude/skills/.synced-from-org"
-                    fi
-                  done
-                fi
-              done
+              {
+                echo "# Skills synced from Zoppy-crm/.github"
+                echo "# Last sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                echo "# Groups: ${FOLDERS[*]}"
+                for folder in "${FOLDERS[@]}"; do
+                  SOURCE="$GITHUB_WORKSPACE/skills/$folder"
+                  if [ -d "$SOURCE" ]; then
+                    for skill_dir in "$SOURCE"/*/; do
+                      if [ -d "$skill_dir" ]; then
+                        echo "$(basename "$skill_dir")"
+                      fi
+                    done
+                  fi
+                done
+              } > ".claude/skills/.synced-from-org"
 
               # Check if there are changes
               if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude)" ]; then
@@ -157,7 +160,7 @@ jobs:
                 echo "  🚀 $BRANCH — synced!"
                 REPO_SYNCED=true
               else
-                echo "  ❌ $BRANCH — push failed (see output above)"
+                echo "  ⚠️  $BRANCH — push blocked (check repository rulesets)"
                 FAILED=$((FAILED + 1))
               fi
             done
