@@ -19,7 +19,7 @@ Repositório de configurações compartilhadas da organização Zoppy no GitHub.
 | **Auto Label Bug Reports** | Issue aberta com label `bug` | Aplica labels de ambiente (`origin: master/staging/mirror`) e `client:report` baseado no formulário |
 | **Auto Label Refinement** | Issue aberta/editada com label `refinement` | Aplica label `ai-assisted` quando o card foi criado com auxílio de IA |
 | **PR Standards Check** | PR aberto/editado/atualizado | Valida naming de branch, tamanho do PR e descrição. Comenta warnings e dicas no PR |
-| **Sync Rules** | Push em `development` alterando `rules/` ou manual | Sincroniza `rules/` para todos os repos ativos da org (push direto em master, development, staging, mirror) |
+| **Sync Skills** | Push em `development` alterando `skills/` ou manual | Sincroniza `.claude/skills/` para repos configurados (push direto em master, development, staging, mirror) |
 
 ## Refinamento Técnico com IA
 
@@ -68,58 +68,63 @@ Prefixos válidos: `milestone/`, `task/`, `bugfix/`, `hotfix/`, `chore/`, `refac
 
 O check comenta no PR com warnings e dicas, mas **não bloqueia o merge**.
 
-## Rules — Source of Truth Centralizado
+## Skills — Source of Truth Centralizado
 
-A pasta `rules/` deste repositório é a **fonte única de verdade** para rules e skills de desenvolvimento da Zoppy. Cada repo recebe apenas as rules relevantes para o seu contexto.
+A pasta `skills/` deste repositório é a **fonte única de verdade** para skills do Claude Code. Cada repo recebe apenas as skills relevantes para o seu contexto, no formato nativo `.claude/skills/<nome>/SKILL.md`.
 
 ### Como funciona
 
-1. Abra um PR no `.github` alterando arquivos em `rules/`
+1. Abra um PR no `.github` alterando arquivos em `skills/`
 2. O PR precisa de **aprovação humana** (gate de qualidade)
-3. Após merge em `development`, a action **Sync Rules** faz push direto em `master`, `development`, `staging` e `mirror` dos repos configurados
+3. Após merge em `development`, a action **Sync Skills** faz push direto em `master`, `development`, `staging` e `mirror` dos repos configurados
 4. Nenhuma aprovação adicional necessária nos repos destino — o gate já aconteceu aqui
+5. O Claude Code descobre automaticamente as skills em `.claude/skills/`
 
-### Estrutura
+### Estrutura no `.github` (source of truth)
 
 ```
-rules/
-├── sync-config.json              # Mapeamento repo → pastas
-├── shared/                       # Todos os repos recebem
-│   ├── refinement.md             # Processo de refinamento técnico
-│   └── review-pr.md              # Checklist de review de PR
-├── backend/                      # Repos NestJS
-│   ├── api-development.md        # Arquitetura, padrões, logging, queues
-│   └── testing.md                # Testes unitários e integração (Jest)
-├── frontend/                     # Repos Angular
-│   └── frontend-angular.md       # Componentes, signals, Tailwind, design system
-└── e2e/                          # Repos de teste E2E
-    └── e2e-testing.md            # Playwright, fixtures, padrões E2E
+skills/
+├── sync-config.json                      # Mapeamento repo → grupos
+├── shared/                               # Todos os repos recebem
+│   ├── refinement/SKILL.md               # Processo de refinamento técnico
+│   └── review-pr/SKILL.md                # Checklist de review de PR
+├── backend/                              # Repos NestJS
+│   ├── api-development/SKILL.md          # Arquitetura, padrões, logging, queues
+│   └── testing/SKILL.md                  # Testes unitários e integração (Jest)
+├── frontend/                             # Repos Angular
+│   └── frontend-angular/SKILL.md         # Componentes, signals, Tailwind, design system
+└── e2e/                                  # Repos de teste E2E
+    └── e2e-testing/SKILL.md              # Playwright, fixtures, padrões E2E
 ```
 
 ### Mapeamento por grupo
 
-| Grupo | Recebe | Exemplos de repos |
+| Grupo | Skills recebidas | Repos |
 |---|---|---|
-| **backend** | `shared` + `backend` | zoppy-api, zoppy-event-bridge, zoppy-workflow |
-| **frontend** | `shared` + `frontend` | zoppy-FE, zoppy-partners-fe, zoppy-workflow-FE |
-| **e2e** | `shared` + `e2e` | zoppy-e2e-api, playwright-e2e |
-| **integrations** | `shared` + `backend` | zoppy-shopify, zoppy-vtex, zoppy-wake-commerce |
-| **workers** | `shared` + `backend` | data-sync-worker, totvs-moda-data-sync-worker |
-| **shared-packages** | `shared` | zoppy-model, ui-components, zoppy-utilities |
+| **backend** | `shared` + `backend` | zoppy-api, zoppy-workflow, zoppy-pixel-lambda, zoppy-whatsapp-commerce, zoppy-event-bridge |
+| **frontend** | `shared` + `frontend` | zoppy-FE, ui-components, zoppy-partners-fe |
+| **e2e** | `shared` + `e2e` | zoppy-e2e-api |
 
-Para adicionar ou mover repos, edite `rules/sync-config.json`.
-
-### Execução manual
-
-A action pode ser disparada manualmente via `workflow_dispatch` com opção de dry run (apenas lista repos sem fazer push).
+Para adicionar repos ou grupos, edite `skills/sync-config.json`.
 
 ### O que acontece no repo destino
 
-Os arquivos são copiados para `rules/` na raiz do repo. Exemplo para `zoppy-FE`:
+Skills são copiadas para `.claude/skills/` no formato nativo do Claude Code. Exemplo para `zoppy-FE`:
 
 ```
-rules/
-├── refinement.md          # de shared/
-├── review-pr.md           # de shared/
-└── frontend-angular.md    # de frontend/
+.claude/
+└── skills/
+    ├── refinement/
+    │   └── SKILL.md           # de shared/
+    ├── review-pr/
+    │   └── SKILL.md           # de shared/
+    ├── frontend-angular/
+    │   └── SKILL.md           # de frontend/
+    └── .synced-from-org       # marker de rastreamento
 ```
+
+O dev também pode criar skills locais no repo (ex: `.claude/skills/checkout/SKILL.md`) — a sync não sobrescreve skills que não vieram da org.
+
+### Execução manual
+
+A action pode ser disparada manualmente via `workflow_dispatch` com opção de dry run.

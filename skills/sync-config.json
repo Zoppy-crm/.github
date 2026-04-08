@@ -1,5 +1,5 @@
 {
-    "description": "Mapeamento de repos para pastas de rules. Cada repo recebe 'shared' + as pastas listadas.",
+    "description": "Mapeamento de repos para grupos de skills. Cada repo recebe as skills das pastas listadas em 'folders', sincronizadas para .claude/skills/<nome>/SKILL.md",
     "groups": {
         "backend": {
             "folders": ["shared", "backend"],

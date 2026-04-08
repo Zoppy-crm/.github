@@ -1,10 +1,10 @@
-name: Sync Rules to All Repos
+name: Sync Skills to All Repos
 
 on:
   push:
     branches: [development]
     paths:
-      - 'rules/**'
+      - 'skills/**'
 
   workflow_dispatch:
     inputs:
@@ -24,14 +24,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Sync rules to repos based on config
+      - name: Sync skills to repos based on config
         env:
           GH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
 
           ORG="Zoppy-crm"
-          CONFIG_FILE="rules/sync-config.json"
+          CONFIG_FILE="skills/sync-config.json"
           BRANCHES=("master" "development" "staging" "mirror")
           DRY_RUN="${{ inputs.dry_run || 'false' }}"
 
@@ -110,25 +110,49 @@ jobs:
               git fetch origin "$BRANCH" --depth 1 2>/dev/null
               git checkout -B "$BRANCH" "origin/$BRANCH" 2>/dev/null
 
-              # Clean existing rules dir and rebuild with mapped folders
-              rm -rf "rules"
-              mkdir -p "rules"
+              # Clean existing synced skills and rebuild
+              # Only remove skills that came from sync (tracked by .claude/skills/.synced-from-org marker)
+              rm -rf ".claude/skills/.synced-from-org"
+              mkdir -p ".claude/skills"
 
+              # Copy skills from each mapped folder, preserving skill folder structure
               for folder in "${FOLDERS[@]}"; do
-                SOURCE="$GITHUB_WORKSPACE/rules/$folder"
+                SOURCE="$GITHUB_WORKSPACE/skills/$folder"
                 if [ -d "$SOURCE" ]; then
-                  cp -r "$SOURCE"/* "rules/" 2>/dev/null || true
+                  # Each subfolder in the source becomes a skill folder
+                  for skill_dir in "$SOURCE"/*/; do
+                    if [ -d "$skill_dir" ]; then
+                      skill_name=$(basename "$skill_dir")
+                      mkdir -p ".claude/skills/$skill_name"
+                      cp -r "$skill_dir"/* ".claude/skills/$skill_name/"
+                    fi
+                  done
+                fi
+              done
+
+              # Write marker file with synced skill names for tracking
+              echo "# Skills synced from Zoppy-crm/.github" > ".claude/skills/.synced-from-org"
+              echo "# Last sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ".claude/skills/.synced-from-org"
+              echo "# Groups: ${FOLDERS[*]}" >> ".claude/skills/.synced-from-org"
+              for folder in "${FOLDERS[@]}"; do
+                SOURCE="$GITHUB_WORKSPACE/skills/$folder"
+                if [ -d "$SOURCE" ]; then
+                  for skill_dir in "$SOURCE"/*/; do
+                    if [ -d "$skill_dir" ]; then
+                      echo "$(basename "$skill_dir")" >> ".claude/skills/.synced-from-org"
+                    fi
+                  done
                 fi
               done
 
               # Check if there are changes
-              if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard rules)" ]; then
+              if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude)" ]; then
                 continue
               fi
 
               # Commit and push
-              git add rules/
-              git commit -m "chore: sync rules from .github [${FOLDERS[*]}]
+              git add .claude/
+              git commit -m "chore: sync skills from .github [${FOLDERS[*]}]
 
 Automated sync from Zoppy-crm/.github
 Groups: ${FOLDERS[*]}
