@@ -294,7 +294,7 @@ What are you doing?
 
 After writing or modifying tests:
 
-1. **Run tests**: `npx playwright test --reporter=list`
+1. **Run tests**: `npx playwright test --reporter=list `
 2. **If tests fail**:
    - Review error output and trace (`npx playwright show-trace`)
    - Fix locators, waits, or assertions
