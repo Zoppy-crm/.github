@@ -28,7 +28,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
 
           ORG="Zoppy-crm"
           CONFIG_FILE="skills/sync-config.json"
@@ -87,7 +87,7 @@ jobs:
             TMPDIR=$(mktemp -d)
 
             # Clone repo (shallow)
-            if ! git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/$ORG/$REPO.git" "$TMPDIR/$REPO" 2>/dev/null; then
+            if ! git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/$ORG/$REPO.git" "$TMPDIR/$REPO" 2>&1; then
               echo "  ❌ Failed to clone"
               FAILED=$((FAILED + 1))
               rm -rf "$TMPDIR"
@@ -107,11 +107,10 @@ jobs:
               fi
 
               # Fetch and checkout branch
-              git fetch origin "$BRANCH" --depth 1 2>/dev/null
-              git checkout -B "$BRANCH" "origin/$BRANCH" 2>/dev/null
+              git fetch origin "$BRANCH" --depth 1 2>&1 || true
+              git checkout -B "$BRANCH" "origin/$BRANCH" 2>&1 || true
 
               # Clean existing synced skills and rebuild
-              # Only remove skills that came from sync (tracked by .claude/skills/.synced-from-org marker)
               rm -rf ".claude/skills/.synced-from-org"
               mkdir -p ".claude/skills"
 
@@ -119,7 +118,6 @@ jobs:
               for folder in "${FOLDERS[@]}"; do
                 SOURCE="$GITHUB_WORKSPACE/skills/$folder"
                 if [ -d "$SOURCE" ]; then
-                  # Each subfolder in the source becomes a skill folder
                   for skill_dir in "$SOURCE"/*/; do
                     if [ -d "$skill_dir" ]; then
                       skill_name=$(basename "$skill_dir")
@@ -130,7 +128,7 @@ jobs:
                 fi
               done
 
-              # Write marker file with synced skill names for tracking
+              # Write marker file
               echo "# Skills synced from Zoppy-crm/.github" > ".claude/skills/.synced-from-org"
               echo "# Last sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ".claude/skills/.synced-from-org"
               echo "# Groups: ${FOLDERS[*]}" >> ".claude/skills/.synced-from-org"
@@ -147,26 +145,19 @@ jobs:
 
               # Check if there are changes
               if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude)" ]; then
+                echo "  ✅ $BRANCH — já está atualizado"
                 continue
               fi
 
               # Commit and push
               git add .claude/
-              git commit -m "$(cat <<EOF
-          chore: sync skills from .github [${FOLDERS[*]}]
+              git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
 
-          Automated sync from Zoppy-crm/.github
-          Groups: ${FOLDERS[*]}
-          Triggered by: ${{ github.actor }}
-          Commit: ${{ github.sha }}
-          EOF
-          )"
-
-              if git push origin "$BRANCH" 2>/dev/null; then
+              if git push origin "$BRANCH" 2>&1; then
                 echo "  🚀 $BRANCH — synced!"
                 REPO_SYNCED=true
               else
-                echo "  ❌ $BRANCH — push failed"
+                echo "  ❌ $BRANCH — push failed (see output above)"
                 FAILED=$((FAILED + 1))
               fi
             done
