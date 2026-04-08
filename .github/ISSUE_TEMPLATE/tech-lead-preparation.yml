@@ -112,6 +112,17 @@ body:
       required: false
 
   - type: textarea
+    id: e2e-tests
+    attributes:
+      label: Testes E2E (Playwright)
+      description: "Fluxos críticos que devem ter cobertura E2E — avaliar na reunião de refinamento"
+      placeholder: |
+        - Fluxo: ...
+        - Fluxo: ...
+    validations:
+      required: false
+
+  - type: textarea
     id: participants
     attributes:
       label: Participantes
