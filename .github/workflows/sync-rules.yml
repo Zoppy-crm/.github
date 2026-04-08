@@ -8,6 +8,10 @@ on:
 
   workflow_dispatch:
     inputs:
+      repos:
+        description: 'Repos para sincronizar (comma-separated, ou "all" para todos)'
+        type: string
+        default: 'all'
       dry_run:
         description: 'Apenas listar repos sem fazer push'
         type: boolean
@@ -56,7 +60,23 @@ jobs:
             done
           done
 
-          echo "📦 Repos configurados: ${#REPO_FOLDERS[@]}"
+          # Filter repos if specific ones requested
+          INPUT_REPOS="${{ inputs.repos || 'all' }}"
+          if [ "$INPUT_REPOS" != "all" ]; then
+            IFS=',' read -ra SELECTED <<< "$INPUT_REPOS"
+            declare -A SELECTED_MAP
+            for r in "${SELECTED[@]}"; do
+              SELECTED_MAP[$(echo "$r" | xargs)]=1
+            done
+            for repo in "${!REPO_FOLDERS[@]}"; do
+              if [ -z "${SELECTED_MAP[$repo]:-}" ]; then
+                unset "REPO_FOLDERS[$repo]"
+              fi
+            done
+            echo "🎯 Filtro ativo: ${SELECTED[*]}"
+          fi
+
+          echo "📦 Repos a sincronizar: ${#REPO_FOLDERS[@]}"
           echo ""
 
           SYNCED=0
