@@ -1,0 +1,195 @@
+name: Merge Protection Rules
+
+on:
+  pull_request:
+    types: [review_requested, review_request_removed, opened, synchronize, reopened, ready_for_review]
+    branches:
+      - master
+      - staging
+      - mirror
+  pull_request_review:
+    types: [submitted, dismissed, edited]
+    branches:
+      - master
+      - staging
+      - mirror
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  contents: write
+  checks: write
+  statuses: write
+
+jobs:
+  configure-protection:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Configure Branch Protection
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.NPM_TOKEN }}
+          script: |
+            const token = '${{ secrets.NPM_TOKEN }}';
+            if (!token) {
+              throw new Error('NPM_TOKEN is not set in organization secrets!');
+            }
+
+            async function configureBranchProtection(branch, requireSquadLeader = true) {
+              try {
+                await github.rest.repos.updateBranchProtection({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: branch,
+                  required_status_checks: {
+                    strict: true,
+                    contexts: []
+                  },
+                  enforce_admins: false,
+                  required_pull_request_reviews: {
+                    dismissal_restrictions: {},
+                    dismiss_stale_reviews: true,
+                    require_code_owner_reviews: false,
+                    required_approving_review_count: 2
+                  },
+                  restrictions: null
+                });
+              } catch (error) {
+                console.error(`Error configuring branch protection for ${branch}:`, error.message);
+                throw error;
+              }
+            }
+
+            try {
+              await configureBranchProtection('master', true);
+              await configureBranchProtection('staging', true);
+              await configureBranchProtection('mirror', true);
+            } catch (error) {
+              console.error('Error configuring branch protection:', error.message);
+              throw error;
+            }
+
+  check-merge-requirements:
+    needs: configure-protection
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Install dependencies
+        run: npm install axios
+
+      - name: Check PR Requirements
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.NPM_TOKEN }}
+          script: |
+            const token = '${{ secrets.NPM_TOKEN }}';
+            if (!token) {
+              throw new Error('NPM_TOKEN is not set in organization secrets!');
+            }
+
+            const axios = require('axios');
+            const { owner, repo, number } = context.issue;
+
+            const pr = await github.rest.pulls.get({ owner, repo, pull_number: number });
+
+            async function updatePRStatus(state, description) {
+              await github.rest.repos.createCommitStatus({
+                owner,
+                repo,
+                sha: pr.data.head.sha,
+                state,
+                context: 'Merge Requirements',
+                description,
+                target_url: 'https://github.com/' + owner + '/' + repo + '/pull/' + number
+              });
+            }
+
+            const status = {
+              isOpen: true,
+              hasEnoughApprovals: false,
+              hasSquadLeaderApproval: false,
+              error: null
+            };
+
+            status.isOpen = pr.data.state === 'open';
+
+            const reviews = await github.rest.pulls.listReviews({ owner, repo, pull_number: number });
+            const approvals = reviews.data.filter(review =>
+              review.state === 'APPROVED' &&
+              !review.dismissed_at
+            );
+
+            status.hasEnoughApprovals = approvals.length >= 2;
+            const isDevBranch = pr.data.base.ref === 'development';
+
+            if (!isDevBranch) {
+              const squadLeadersTeamId = 13116659;
+              try {
+                const response = await axios.get('https://api.github.com/teams/' + squadLeadersTeamId + '/members', {
+                  headers: {
+                    'Authorization': 'token ' + token,
+                    'Accept': 'application/vnd.github.v3+json'
+                  }
+                });
+
+                const teamMembers = response.data;
+                const squadLeaderLogins = new Set(teamMembers.map(member => member.login));
+                const squadLeaderApprovals = approvals.filter(approval =>
+                  squadLeaderLogins.has(approval.user.login)
+                );
+
+                status.hasSquadLeaderApproval = squadLeaderApprovals.length > 0;
+              } catch (error) {
+                console.error('Error checking team members:', error.message);
+                status.error = error;
+              }
+            } else {
+              status.hasSquadLeaderApproval = true;
+            }
+
+            if (!status.isOpen) {
+              await updatePRStatus('success', 'PR is not open');
+              return;
+            }
+
+            if (status.error) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: 'Error checking squad-leaders team approvals. Please contact an administrator. Error: ' + status.error.message
+              });
+              await updatePRStatus('error', 'Error checking squad leader approvals');
+              return;
+            }
+
+            if (!status.hasEnoughApprovals) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: 'This PR needs at least 2 approvals before being merged. Current approvals: ' + approvals.length
+              });
+              await updatePRStatus('failure', 'Needs at least 2 approvals');
+              return;
+            }
+
+            if (!isDevBranch && !status.hasSquadLeaderApproval) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: 'This PR needs at least one approval from a squad-leaders team member.'
+              });
+              await updatePRStatus('failure', 'Needs approval from a squad leader');
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: 'All merge conditions have been met! The PR can be merged.'
+            });
+            await updatePRStatus('success', 'All merge conditions have been met');

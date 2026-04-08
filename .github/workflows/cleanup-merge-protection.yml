@@ -1,0 +1,78 @@
+name: Cleanup merge-protection from repos
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Apenas listar repos sem deletar'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove merge-protection.yml from repos
+        env:
+          GH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -uo pipefail
+
+          ORG="Zoppy-crm"
+          FILE_PATH=".github/workflows/merge-protection.yml"
+          DRY_RUN="${{ inputs.dry_run }}"
+          SINCE=$(date -d '60 days ago' +%Y-%m-%dT%H:%M:%SZ)
+
+          echo "🔍 Buscando repos ativos com $FILE_PATH..."
+
+          REPOS=$(gh api --paginate "/orgs/$ORG/repos?per_page=100&sort=pushed&direction=desc" \
+            --jq ".[] | select(.archived == false) | select(.pushed_at > \"$SINCE\") | .name")
+
+          DELETED=0
+          SKIPPED=0
+          FAILED=0
+
+          for REPO in $REPOS; do
+            if [ "$REPO" = ".github" ]; then
+              continue
+            fi
+
+            # Check if file exists and get its SHA
+            FILE_SHA=$(gh api "/repos/$ORG/$REPO/contents/$FILE_PATH" --jq '.sha' 2>/dev/null || true)
+
+            if [ -z "$FILE_SHA" ]; then
+              continue
+            fi
+
+            echo "📂 $REPO — found merge-protection.yml (sha: $FILE_SHA)"
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  🔍 [DRY RUN] Would delete"
+              DELETED=$((DELETED + 1))
+              continue
+            fi
+
+            # Delete the file via API (works on default branch)
+            RESULT=$(gh api -X DELETE "/repos/$ORG/$REPO/contents/$FILE_PATH" \
+              -f message="chore: remove merge-protection.yml (moved to org .github)" \
+              -f sha="$FILE_SHA" \
+              -f "committer[name]=Zoppy Rules Bot" \
+              -f "committer[email]=rules-bot@zoppy.com.br" 2>&1) || true
+
+            if echo "$RESULT" | grep -q '"commit"'; then
+              echo "  ✅ Deleted!"
+              DELETED=$((DELETED + 1))
+            else
+              echo "  ❌ Failed: $RESULT"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Resultado:"
+          echo "  ✅ Deleted: $DELETED"
+          echo "  ❌ Failed: $FAILED"
