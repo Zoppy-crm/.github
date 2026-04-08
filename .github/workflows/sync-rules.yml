@@ -32,7 +32,7 @@ jobs:
 
           ORG="Zoppy-crm"
           CONFIG_FILE="skills/sync-config.json"
-          BRANCHES=("development" "staging")
+          BRANCHES=("development" "staging" "master" "mirror")
           DRY_RUN="${{ inputs.dry_run || 'false' }}"
 
           if [ ! -f "$CONFIG_FILE" ]; then
