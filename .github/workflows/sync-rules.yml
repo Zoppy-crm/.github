@@ -152,12 +152,15 @@ jobs:
 
               # Commit and push
               git add .claude/
-              git commit -m "chore: sync skills from .github [${FOLDERS[*]}]
+              git commit -m "$(cat <<EOF
+          chore: sync skills from .github [${FOLDERS[*]}]
 
-Automated sync from Zoppy-crm/.github
-Groups: ${FOLDERS[*]}
-Triggered by: ${{ github.actor }}
-Commit: ${{ github.sha }}"
+          Automated sync from Zoppy-crm/.github
+          Groups: ${FOLDERS[*]}
+          Triggered by: ${{ github.actor }}
+          Commit: ${{ github.sha }}
+          EOF
+          )"
 
               if git push origin "$BRANCH" 2>/dev/null; then
                 echo "  🚀 $BRANCH — synced!"
