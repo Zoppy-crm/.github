@@ -160,7 +160,7 @@ jobs:
 
               # Commit and push
               git add .claude/
-              git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
+              git commit -m "chore: sync skills from .github [${FOLDERS[*]}] [skip ci]"
 
               if git push origin "$BRANCH" 2>&1; then
                 echo "  🚀 $BRANCH — synced!"
