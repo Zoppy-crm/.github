@@ -1,3 +1,8 @@
+---
+name: review-pr
+description: Revisa um Pull Request aplicando as regras de arquitetura e boas práticas do zoppy-api. Use esta skill sempre que o usuário quiser revisar uma PR, checar o código de um pull request, pedir feedback sobre mudanças, ou executar o comando /review-pr. Acione também em frases como "revisa essa PR", "dá uma olhada na PR #123", "faz o review", "revisa o diff da branch atual".
+---
+
 # Review de Pull Request
 
 Revisa um Pull Request aplicando as regras de desenvolvimento do zoppy-api.

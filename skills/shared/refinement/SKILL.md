@@ -1,3 +1,8 @@
+---
+name: refinement
+description: Cria um card de refinamento técnico no GitHub Issues seguindo o template da organização Zoppy. Use esta skill sempre que o usuário quiser criar um refinamento, abrir uma issue de feature, documentar uma tarefa técnica, criar um card no GitHub, ou descrever o escopo de uma nova funcionalidade. Acione também em frases como "abre uma issue", "cria o refinamento de X", "vamos refinar", "monta o card", "cria a issue no GitHub".
+---
+
 # Refinamento Técnico
 
 Cria um card de refinamento técnico no GitHub Issues seguindo o template da organização Zoppy.
