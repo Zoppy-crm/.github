@@ -158,7 +158,6 @@ jobs:
               # Write marker file
               {
                 echo "# Skills synced from Zoppy-crm/.github"
-                echo "# Last sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
                 echo "# Groups: ${FOLDERS[*]}"
                 for folder in "${FOLDERS[@]}"; do
                   SOURCE="$GITHUB_WORKSPACE/skills/$folder"
@@ -178,7 +177,6 @@ jobs:
                 echo "# Copilot Instructions — Zoppy"
                 echo ""
                 echo "> Auto-generated from .claude/skills/. Do not edit manually."
-                echo "> Last sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
                 echo ""
                 for folder in "${FOLDERS[@]}"; do
                   SOURCE="$GITHUB_WORKSPACE/skills/$folder"

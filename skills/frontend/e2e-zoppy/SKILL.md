@@ -56,14 +56,42 @@ Usar `data-testid` como seletor primário. Nunca depender de classes CSS, tags H
 // CORRETO
 await page.getByTestId('provider-list');
 await page.getByTestId('sak-card').getByRole('button', { name: 'Configurar' });
-
-// ACEITÁVEL — para textos estáveis
-await page.getByText('Integrações');
 await page.getByRole('button', { name: /salvar/i });
 
 // ERRADO — frágil
+await page.getByText('Integrações'); // texto pode mudar
 await page.locator('.flex.gap-6 > div:nth-child(2) button');
 await page.locator('ui-button[type="primary"]');
+```
+
+### `getByText` — nunca usar como seletor de interação
+
+`getByText` é frágil: textos mudam com i18n ou redesign. **Sempre usar `data-testid`.**
+
+### Angular `[routerLink]` em `<div>` — precisa de `data-testid`
+
+Elementos com `[routerLink]` em `<div>` **não geram atributo `href`**, portanto não funcionam com `getByRole('link')` nem com `[href]` selector. Adicionar `[attr.data-testid]` no template:
+
+```html
+<!-- template Angular -->
+<div [routerLink]="item.route" [attr.data-testid]="'menu-item-' + item.id">
+```
+
+```typescript
+// teste — funciona
+const item: Locator = page.getByTestId('menu-item-integrations');
+```
+
+### `getByRole('link')` — cuidado com nome acessível
+
+`getByRole('link', { name: 'Texto' })` pode falhar quando o `<a>` contém ícones (`ps-icon`, `mat-icon`) — o nome acessível inclui o texto do ícone concatenado ao label. Preferir `getByTestId`:
+
+```typescript
+// ERRADO — falha se <a> contém <ps-icon> junto ao texto
+const item = page.getByRole('link', { name: 'Integrações' });
+
+// CORRETO — adicionar data-testid="main-menu-configurations" no template
+const item: Locator = page.getByTestId('main-menu-configurations');
 ```
 
 ## Regra #4 — Aguardar antes de agir
@@ -179,12 +207,39 @@ test.describe.serial('CRUD completo', () => {
 // Configurado no playwright.config.ts via project dependencies
 ```
 
+## Regra #11 — Tipos explícitos em variáveis
+
+Todas as variáveis declaradas em testes devem ter tipo explícito após o nome. Nunca depender de inferência.
+
+```typescript
+// CORRETO
+const item: Locator = page.getByTestId('menu-item');
+const response: Response | null = await page.goto('/dashboard');
+const errors: string[] = [];
+
+// ERRADO — lint falha
+const item = page.getByTestId('menu-item');
+const response = await page.goto('/dashboard');
+```
+
+Importar tipos do `@playwright/test` separadamente das fixtures do projeto:
+
+```typescript
+import { test, expect } from '../../shared/fixtures';
+import type { Locator, Response } from '@playwright/test';
+```
+
+---
+
 ## Checklist ao criar testes E2E
 
 - [ ] Cada teste navega para a página por conta própria (`page.goto(...)`)
 - [ ] Nenhum `waitForLoadState('networkidle')`
-- [ ] Seletores usam `data-testid` ou `getByRole`/`getByText`
+- [ ] Seletores usam `data-testid` — nunca `getByText` para interação
+- [ ] Elementos Angular com `[routerLink]` em `<div>` têm `[attr.data-testid]` no template
+- [ ] `getByRole('link')` evitado quando `<a>` contém ícones — usar `getByTestId`
 - [ ] Timeouts explícitos e curtos em `waitFor()`
 - [ ] Page errors capturados quando testando que features não dão erro
 - [ ] Testes podem rodar em qualquer ordem
 - [ ] Testes podem rodar em paralelo sem interferir um no outro
+- [ ] Todas as variáveis com tipo explícito (`const x: Locator = ...`)
