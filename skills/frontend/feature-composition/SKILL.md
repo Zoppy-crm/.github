@@ -19,7 +19,7 @@ src/core/pages/dashboard/
     ├── create-product.component.spec.ts
     ├── create-product.state.service.ts      # feature state (if needed)
     ├── create-product.routes.ts             # child routes (if multi-step)
-    └── components/                          # dumb sub-components
+    └── components/                          # sub-components (focused, single-responsibility)
         ├── product-form/
         │   ├── product-form.component.ts
         │   ├── product-form.component.html
@@ -32,19 +32,21 @@ src/core/pages/dashboard/
             └── product-summary.component.html
 ```
 
-## Smart vs Dumb Components
+## Container vs Sub-Components
 
 **Smart container** (`create-product.component.ts`):
-- Injects services
+
+- Injects data services (HTTP, repositories)
 - Manages data loading and saving
 - Handles navigation
-- Does NOT contain visual logic — delegates to dumb components
+- Provides the feature state service via `providers: [FeatureStateService]`
+- Does NOT contain visual/presentation logic — delegates to sub-components
 
-**Dumb sub-components** (inside `components/`):
-- Receive data via `input()`
-- Emit events via `output()`
-- Zero service injection
-- No business logic — pure presentation
+**Sub-components** (inside `components/`):
+
+- Focused on a single responsibility (form, summary, upload…)
+- **May and should** inject services directly — state services, API services, or any other shared service
+- Use `input()` / `output()` only when the value comes from **outside the feature scope**
 
 ## Component Size Rule
 
@@ -66,7 +68,7 @@ import { ProductSummaryComponent } from './components/product-summary/product-su
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ProductFormComponent, ProductSummaryComponent],
-    templateUrl: './create-product.component.html',
+    templateUrl: './create-product.component.html'
 })
 export class CreateProductComponent {
     private readonly router = inject(Router);
@@ -88,41 +90,44 @@ export class CreateProductComponent {
 
 ```html
 <!-- create-product.component.html -->
+<!-- Sub-componentes injetam o state service diretamente — sem passar props -->
 <div class="flex flex-col gap-6 p-6">
-    <app-product-form
-        [loading]="state.loading()"
-        (formChange)="state.setFormValue($event)"
-    />
-    <app-product-summary
-        [product]="state.formValue()"
-    />
+    <app-product-form />
+    <app-product-summary />
     <div class="flex justify-end gap-3">
-        <ui-button variant="secondary" (clicked)="router.back()">Cancel</ui-button>
+        <ui-button variant="secondary" (clicked)="router.navigate(['/dashboard/products'])">Cancel</ui-button>
         <ui-button [loading]="state.loading()" (clicked)="save()">Save</ui-button>
     </div>
 </div>
 ```
 
-## Dumb Sub-Component Example
+## Sub-Component Example (injetando state service)
 
 ```typescript
 // components/product-form/product-form.component.ts
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { UiInputComponent } from '@Zoppy-crm/ui-input';
-import { ProductRequest } from 'src/shared/models/requests/product/product.request';
+import { CreateProductStateService } from '../../create-product.state.service';
 
 @Component({
     selector: 'app-product-form',
-    standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [UiInputComponent],
-    templateUrl: './product-form.component.html',
+    templateUrl: './product-form.component.html'
 })
 export class ProductFormComponent {
-    loading = input(false);
-    formChange = output<Partial<ProductRequest>>();
+    // Injeta o state service diretamente — sem prop drilling
+    protected readonly state = inject(CreateProductStateService);
 }
 ```
+
+```html
+<!-- product-form.component.html -->
+<ui-input [value]="state.name()" (valueChange)="state.name.set($event)" />
+<ui-input type="number" [value]="state.price()" (valueChange)="state.price.set($event)" />
+```
+
+> Use `input()` / `output()` apenas quando o dado vem **de fora do escopo da feature** (ex: um componente reutilizável que não conhece o state service).
 
 ## Adding the Route
 
@@ -154,17 +159,19 @@ For multi-step features with child routes, create a dedicated `create-product.ro
 ## Composition Hierarchy
 
 ```
-CreateProductComponent (smart — owns data, handles save)
-├── ProductFormComponent (dumb — renders fields, emits changes)
-│   ├── ProductImageUploadComponent (dumb — drag & drop UI)
-│   └── CategorySelectorComponent (dumb — dropdown)
-└── ProductSummaryComponent (dumb — preview)
+CreateProductComponent (container — injeta serviços HTTP, faz save/navigation)
+│  providers: [CreateProductStateService]
+├── ProductFormComponent (sub-component — injeta CreateProductStateService)
+│   ├── ProductImageUploadComponent (sub-component — injeta CreateProductStateService)
+│   └── CategorySelectorComponent (sub-component — injeta CreateProductStateService)
+└── ProductSummaryComponent (sub-component — injeta CreateProductStateService)
 ```
 
 ## Checklist
 
 - [ ] Feature folder created under `src/core/pages/dashboard/<feature-name>/`
-- [ ] Smart container injects services; dumb components do not
+- [ ] Smart container injeta serviços HTTP e provê o `FeatureStateService` via `providers: [...]`
+- [ ] Sub-components injetam o `FeatureStateService` diretamente — sem prop drilling
 - [ ] No component exceeds ~150 lines
 - [ ] Sub-components are in `components/<sub-name>/` sub-folders
 - [ ] Route registered with `loadComponent` (lazy loading)

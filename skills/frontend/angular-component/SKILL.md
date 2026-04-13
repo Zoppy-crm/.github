@@ -7,51 +7,56 @@ description: Create modern Angular standalone components following v20+ best pra
 
 Create standalone components for Angular v20+. Components are standalone by default—do NOT set `standalone: true`.
 
+## Regra obrigatória: sempre dois arquivos
+
+**Nunca use `template:` inline.** Todo componente deve ter um arquivo `.html` separado. Sempre use `templateUrl` apontando para o arquivo correspondente.
+
+```
+feature/
+├── feature.component.ts       ← só lógica TypeScript
+└── feature.component.html     ← só template HTML
+```
+
 ## Component Structure
 
 ```typescript
+// user-card.component.ts
 import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
 
 @Component({
   selector: 'app-user-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    'class': 'user-card',
-    '[class.active]': 'isActive()',
-    '(click)': 'handleClick()',
-  },
-  template: `
-    <img [src]="avatarUrl()" [alt]="name() + ' avatar'" />
-    <h2>{{ name() }}</h2>
-    @if (showEmail()) {
-      <p>{{ email() }}</p>
-    }
-  `,
-  styles: `
-    :host { display: block; }
-    :host.active { border: 2px solid blue; }
-  `,
+  templateUrl: './user-card.component.html',
 })
 export class UserCard {
   // Required input
   name = input.required<string>();
-  
+
   // Optional input with default
   email = input<string>('');
   showEmail = input(false);
-  
+
   // Input with transform
   isActive = input(false, { transform: booleanAttribute });
-  
+
   // Computed from inputs
   avatarUrl = computed(() => `https://api.example.com/avatar/${this.name()}`);
-  
+
   // Output
   selected = output<string>();
-  
+
   handleClick() {
     this.selected.emit(this.name());
   }
+}
+```
+
+```html
+<!-- user-card.component.html -->
+<img [src]="avatarUrl()" [alt]="name() + ' avatar'" />
+<h2>{{ name() }}</h2>
+@if (showEmail()) {
+  <p>{{ email() }}</p>
 }
 ```
 
@@ -101,37 +106,38 @@ this.selected.emit(item);
 Use the `host` object in `@Component`—do NOT use `@HostBinding` or `@HostListener` decorators.
 
 ```typescript
+// button.component.ts
 @Component({
   selector: 'app-button',
+  templateUrl: './button.component.html',
   host: {
     // Static attributes
     'role': 'button',
-    
+
     // Dynamic class bindings
     '[class.primary]': 'variant() === "primary"',
     '[class.disabled]': 'disabled()',
-    
+
     // Dynamic style bindings
     '[style.--btn-color]': 'color()',
-    
+
     // Attribute bindings
     '[attr.aria-disabled]': 'disabled()',
     '[attr.tabindex]': 'disabled() ? -1 : 0',
-    
+
     // Event listeners
     '(click)': 'onClick($event)',
     '(keydown.enter)': 'onClick($event)',
     '(keydown.space)': 'onClick($event)',
   },
-  template: `<ng-content />`,
 })
 export class Button {
   variant = input<'primary' | 'secondary'>('primary');
   disabled = input(false, { transform: booleanAttribute });
   color = input('#007bff');
-  
+
   clicked = output<void>();
-  
+
   onClick(event: Event) {
     if (!this.disabled()) {
       this.clicked.emit();
@@ -140,31 +146,42 @@ export class Button {
 }
 ```
 
+```html
+<!-- button.component.html -->
+<ng-content />
+```
+
 ## Content Projection
 
 ```typescript
+// card.component.ts
 @Component({
   selector: 'app-card',
-  template: `
-    <header>
-      <ng-content select="[card-header]" />
-    </header>
-    <main>
-      <ng-content />
-    </main>
-    <footer>
-      <ng-content select="[card-footer]" />
-    </footer>
-  `,
+  templateUrl: './card.component.html',
 })
 export class Card {}
+```
 
-// Usage:
-// <app-card>
-//   <h2 card-header>Title</h2>
-//   <p>Main content</p>
-//   <button card-footer>Action</button>
-// </app-card>
+```html
+<!-- card.component.html -->
+<header>
+  <ng-content select="[card-header]" />
+</header>
+<main>
+  <ng-content />
+</main>
+<footer>
+  <ng-content select="[card-footer]" />
+</footer>
+```
+
+Uso:
+```html
+<app-card>
+  <h2 card-header>Title</h2>
+  <p>Main content</p>
+  <button card-footer>Action</button>
+</app-card>
 ```
 
 ## Lifecycle Hooks
@@ -172,7 +189,7 @@ export class Card {}
 ```typescript
 import { OnDestroy, OnInit, afterNextRender, afterRender } from '@angular/core';
 
-export class My implements OnInit, OnDestroy {
+export class MyComponent implements OnInit, OnDestroy {
   constructor() {
     // For DOM manipulation after render (SSR-safe)
     afterNextRender(() => {
@@ -199,8 +216,10 @@ Components MUST:
 - Maintain visible focus indicators
 
 ```typescript
+// toggle.component.ts
 @Component({
   selector: 'app-toggle',
+  templateUrl: './toggle.component.html',
   host: {
     'role': 'switch',
     '[attr.aria-checked]': 'checked()',
@@ -210,17 +229,23 @@ Components MUST:
     '(keydown.enter)': 'toggle()',
     '(keydown.space)': 'toggle(); $event.preventDefault()',
   },
-  template: `<span class="toggle-track"><span class="toggle-thumb"></span></span>`,
 })
 export class Toggle {
   label = input.required<string>();
   checked = input(false, { transform: booleanAttribute });
   checkedChange = output<boolean>();
-  
+
   toggle() {
     this.checkedChange.emit(!this.checked());
   }
 }
+```
+
+```html
+<!-- toggle.component.html -->
+<span class="toggle-track">
+  <span class="toggle-thumb"></span>
+</span>
 ```
 
 ## Template Syntax
@@ -271,18 +296,22 @@ Do NOT use `ngClass` or `ngStyle`. Use direct bindings:
 Use `NgOptimizedImage` for static images:
 
 ```typescript
+// hero.component.ts
 import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   imports: [NgOptimizedImage],
-  template: `
-    <img ngSrc="/assets/hero.jpg" width="800" height="600" priority />
-    <img [ngSrc]="imageUrl()" width="200" height="200" />
-  `,
+  templateUrl: './hero.component.html',
 })
 export class Hero {
   imageUrl = input.required<string>();
 }
+```
+
+```html
+<!-- hero.component.html -->
+<img ngSrc="/assets/hero.jpg" width="800" height="600" priority />
+<img [ngSrc]="imageUrl()" width="200" height="200" />
 ```
 
 For detailed patterns, see [references/component-patterns.md](references/component-patterns.md).
