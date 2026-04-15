@@ -1,3 +1,8 @@
+---
+name: e2e-testing
+description: Guia de regras e padrões para escrever testes E2E no projeto zoppy-e2e-api (Playwright). Use esta skill sempre que o usuário quiser criar, editar ou revisar testes E2E de API, adicionar cobertura para um endpoint novo, escrever testes para a Partners API, webhooks, APIs internas (PVT) ou Segment. Acione também em frases como "cria o teste e2e", "adiciona cobertura e2e", "escreve o spec", "testa o endpoint X", "adiciona o e2e da partners api".
+---
+
 # E2E Testing Guidelines
 
 Rules and patterns for end-to-end tests in `zoppy-e2e-api` (Playwright-based).

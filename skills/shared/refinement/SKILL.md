@@ -234,7 +234,6 @@ Normalização das duas variantes no `segment-rule.resolver.ts` com precedência
 Extraído para o método privado `normalizeSegmentSubRules`.
 
 ### Testes
-
 5 cenários cobrindo: PascalCase preenchido tem prioridade, camelCase usado quando PascalCase ausente/vazio, fallback `[]` quando ambos ausentes/vazios. Suíte total: 13/13 passando.
 ```
 
