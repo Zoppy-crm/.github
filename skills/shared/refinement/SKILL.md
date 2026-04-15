@@ -1,3 +1,8 @@
+---
+name: refinement
+description: Cria um card de refinamento técnico no GitHub Issues seguindo o template da organização Zoppy, ou posta um retorno de solução em issues de bug já resolvidas. Use esta skill sempre que o usuário quiser criar um refinamento, abrir uma issue de feature, documentar uma tarefa técnica, criar um card no GitHub, descrever o escopo de uma nova funcionalidade, ou comentar a solução de um bug num card existente. Acione também em frases como "abre uma issue", "cria o refinamento de X", "vamos refinar", "monta o card", "cria a issue no GitHub", "coloca o retorno de solução", "comenta a solução no card".
+---
+
 # Refinamento Técnico
 
 Cria um card de refinamento técnico no GitHub Issues seguindo o template da organização Zoppy.
@@ -173,6 +178,131 @@ gh issue edit <card-base-number> --add-sub-issue <sub-issue-number> --repo Zoppy
 -   **Permissões**: use os Guards reais do codebase (RoleGuard, FeatureGuard, BlockFreeTierGuard)
 -   **Roteiro de teste (QA)**: pense como QA — descreva os passos pra validar cada critério de aceite
 -   Se um campo não é aplicável, escreva "N/A" — não deixe em branco
+
+## Fechamento de bug — dois artefatos
+
+Ao resolver um bug, preencha **sempre os dois** artefatos com públicos e linguagens diferentes:
+
+| Artefato           | Onde vai                                                                     | Público                 | Linguagem                                                |
+| ------------------ | ---------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------- |
+| Comentário técnico | Comentário na issue (`gh issue comment`)                                     | Devs, reviewers         | Técnica — arquivos, classes, regras, resultado de testes |
+| Retorno de Solução | Field do project `Zoppy Engineering` (preenchido via `gh project item-edit`) | Cliente / CSM / produto | Alto nível, sem jargão — sintoma → causa → correção      |
+
+Se o usuário pedir "coloca o retorno de solução no card", ele está falando do **field do project** (não do comment). Se pedir "comenta a solução na issue" ou "posta o resumo técnico", é o **comment**. Na dúvida, preencha os dois.
+
+---
+
+### 1) Comentário técnico na issue
+
+Público: devs. Serve pra registro histórico da causa raiz, da correção e da cobertura de testes.
+
+#### Template
+
+```markdown
+## Solução
+
+### Causa raiz
+
+<!-- 1-3 frases: o que estava errado e por que o sintoma relatado acontecia. Cite nomes reais (arquivo, classe, variável, tela). -->
+
+### Correção
+
+<!-- O que foi alterado. Cite o arquivo principal e a regra aplicada. Se houver precedência/ordem de fallback, liste numerado. -->
+
+### Testes
+
+<!-- Cenários de teste adicionados + resultado da suíte (ex.: "13/13 passando"). -->
+```
+
+#### Exemplo — issue #6270
+
+```markdown
+## Solução
+
+### Causa raiz
+
+O payload do segmento chegava com o array de sub-regras em **camelCase** (`segmentSubRules`) na tela de Segmentos e em **PascalCase** (`SegmentSubRules`) na tela de Campanhas. O `SegmentRuleResolver` só olhava a versão camelCase, então segmentos abertos via fluxo de Campanha (ex.: filtro de cupom que depende das sub-regras de data) perdiam essas condições e retornavam lista vazia.
+
+### Correção
+
+Normalização das duas variantes no `segment-rule.resolver.ts` com precedência:
+
+1. Usa `SegmentSubRules` (PascalCase) se for array não-vazio
+2. Senão, usa `segmentSubRules` (camelCase) se for array não-vazio
+3. Senão, array vazio
+
+Extraído para o método privado `normalizeSegmentSubRules`.
+
+### Testes
+
+5 cenários cobrindo: PascalCase preenchido tem prioridade, camelCase usado quando PascalCase ausente/vazio, fallback `[]` quando ambos ausentes/vazios. Suíte total: 13/13 passando.
+```
+
+#### Como postar
+
+```bash
+gh issue comment <numero> --repo Zoppy-crm/<repo> --body "$(cat <<'EOF'
+<conteúdo do comentário técnico>
+EOF
+)"
+```
+
+#### Diretrizes
+
+-   **Causa raiz** descreve o "porquê", não só o "o quê" — conecte o sintoma reportado à falha técnica
+-   Cite arquivos reais (`src/...`), nomes de métodos e classes
+-   Mencione quantos testes foram adicionados e se a suíte passa
+-   Não copie o diff inteiro — explique, não re-mostre o código
+
+---
+
+### 2) Retorno de Solução (field do GitHub Project)
+
+Público: cliente / CSM / produto. É texto **não-técnico**, em alto nível, que o dev/PM vai repassar ao cliente que abriu o ticket.
+
+#### Como escrever
+
+-   **Linguagem de negócio, não técnica** — fale em "tela de Segmentos", "filtro de cupom", "campanha"; nunca em classes/arquivos/variáveis
+-   **3-5 frases corridas** em parágrafo único (não use bullets)
+-   **Comece pelo sintoma do cliente** (o que acontecia de errado)
+-   **Explique a causa de forma metafórica** ("formato diferente", "rota diferente", "cálculo antigo") em vez de termos técnicos
+-   **Termine pelo resultado prático** ("agora funciona em qualquer tela", "a contagem volta a refletir…")
+-   Sem código, sem nomes de arquivo, sem contagem de testes
+
+#### Exemplo — issue #6270
+
+> O problema acontecia quando uma campanha era criada a partir de um segmento que usava filtro de cupom. As informações complementares do segmento (como datas) chegavam em formatos diferentes dependendo da tela: na tela de Segmentos vinham de um jeito e na tela de Campanhas de outro. O sistema só reconhecia o formato da tela de Segmentos, então, ao abrir a campanha, essas informações eram ignoradas e o segmento aparecia como vazio. A correção passou a aceitar os dois formatos, garantindo que a contagem e o disparo da campanha funcionem igual em qualquer tela.
+
+#### Como preencher via CLI
+
+1. Pegue o **ID do item no project** a partir do número da issue:
+
+    ```bash
+    gh api graphql -f query='query { repository(owner:"Zoppy-crm",name:"<repo>"){ issue(number:<numero>){ projectItems(first:10){ nodes { id project { number title } } } } } }'
+    ```
+
+    Use o `id` do node cujo `project.number` é `7` (Zoppy Engineering).
+
+2. IDs fixos do project `Zoppy Engineering`:
+
+    - Project ID: `PVT_kwDOCAubUc4BQdrV`
+    - Field ID "Retorno de Solução": `PVTF_lADOCAubUc4BQdrVzg-wo9s`
+
+3. Atualize o field:
+
+    ```bash
+    gh project item-edit \
+      --id <ITEM_ID> \
+      --project-id PVT_kwDOCAubUc4BQdrV \
+      --field-id PVTF_lADOCAubUc4BQdrVzg-wo9s \
+      --text "<texto do retorno de solução>"
+    ```
+
+4. (Opcional) Verificar:
+
+    ```bash
+    gh api graphql -f query='query { node(id:"<ITEM_ID>"){ ... on ProjectV2Item { fieldValueByName(name:"Retorno de Solução"){ ... on ProjectV2ItemFieldTextValue { text } } } } }'
+    ```
 
 ## Estratégia de testes — como decidir
 
