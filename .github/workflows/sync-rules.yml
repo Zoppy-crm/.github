@@ -155,6 +155,25 @@ jobs:
                 fi
               done
 
+              # Merge hooks-template.json into .claude/settings.json
+              HOOKS_TEMPLATE="$GITHUB_WORKSPACE/config/hooks-template.json"
+              SETTINGS_FILE=".claude/settings.json"
+
+              if [ -f "$HOOKS_TEMPLATE" ]; then
+                mkdir -p ".claude"
+                if [ -f "$SETTINGS_FILE" ]; then
+                  # Merge only the hooks key, preserving all other settings
+                  jq --argjson hooksCfg "$(cat "$HOOKS_TEMPLATE")" \
+                    '.hooks = ($hooksCfg.hooks * (.hooks // {}))' \
+                    "$SETTINGS_FILE" > /tmp/settings-merged.json 2>/dev/null \
+                    && mv /tmp/settings-merged.json "$SETTINGS_FILE" \
+                    || cp "$HOOKS_TEMPLATE" "$SETTINGS_FILE"
+                else
+                  cp "$HOOKS_TEMPLATE" "$SETTINGS_FILE"
+                fi
+                git add "$SETTINGS_FILE"
+              fi
+
               # Write marker file
               {
                 echo "# Skills synced from Zoppy-crm/.github"
