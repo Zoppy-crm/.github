@@ -136,6 +136,30 @@ Keep methods readable — a method should fit in a single screen.
 
 ---
 
+### Method visibility order in classes
+
+Always order class methods by visibility:
+
+1. **public** methods at the top (right after the constructor)
+2. **protected** methods in the middle (when present)
+3. **private** methods at the bottom
+
+Applies to all classes: domains, application services, helpers, controllers, processors, queue services. Makes the public API immediately visible to readers; helpers stay out of the way.
+
+```typescript
+export class MyService {
+    public constructor(...) {}
+
+    public async doThing(): Promise<void> { /* ... */ }
+    public async findById(id: string): Promise<Thing> { /* ... */ }
+
+    protected mapResponse(raw: Raw): Mapped { /* ... */ }
+
+    private helper1(): void { /* ... */ }
+    private async enqueueSideEffect(record: Thing): Promise<void> { /* ... */ }
+}
+```
+
 ## General Conventions
 
 - **Models**: import from `@Zoppy-crm/models`; utilities from `@Zoppy-crm/utilities`
