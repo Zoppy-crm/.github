@@ -131,12 +131,6 @@ jobs:
               git fetch origin "$BRANCH" 2>&1 || continue
               git checkout -f "$BRANCH" 2>&1 || git checkout -b "$BRANCH" "origin/$BRANCH" 2>&1 || continue
 
-              # Fix .gitignore if it ignores .claude/ entirely
-              if [ -f ".gitignore" ] && grep -q '^\.claude/$' ".gitignore"; then
-                sed -i 's|^\.claude/$|.claude/*\n!.claude/skills/|' ".gitignore"
-                git add .gitignore
-              fi
-
               # Clean existing synced skills and rebuild
               rm -rf ".claude/skills/.synced-from-org"
               mkdir -p ".claude/skills"
@@ -171,7 +165,7 @@ jobs:
                 else
                   cp "$HOOKS_TEMPLATE" "$SETTINGS_FILE"
                 fi
-                git add "$SETTINGS_FILE"
+                git add -f "$SETTINGS_FILE"
               fi
 
               # Write marker file
@@ -219,8 +213,8 @@ jobs:
                 continue
               fi
 
-              # Commit and push
-              git add .claude/ .github/copilot-instructions.md
+              # Commit and push (force-add so gitignored paths like .claude/settings.json still commit)
+              git add -f .claude/ .github/copilot-instructions.md
               git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
 
               if git push origin "$BRANCH" 2>&1; then
