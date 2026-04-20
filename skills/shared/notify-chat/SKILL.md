@@ -32,8 +32,13 @@ Se precisar rotacionar ou trocar o space, edite a URL acima e a sync de skills p
 | Prefixo da branch | TIPO    | Emoji |
 | ----------------- | ------- | ----- |
 | `hotfix/*`        | BUGFIX  | 🐛    |
+| `bugfix/*`        | BUGFIX  | 🐛    |
+| `fix/*`           | BUGFIX  | 🐛    |
 | `task/*`          | FEATURE | ✨    |
+| `feature/*`       | FEATURE | ✨    |
+| `feat/*`          | FEATURE | ✨    |
 | `milestone/*`     | FEATURE | ✨    |
+| `epic/*`          | FEATURE | ✨    |
 | `chore/*`         | CHORE   | 🔧    |
 | outros            | CHANGE  | 🔀    |
 
@@ -43,6 +48,7 @@ Se precisar rotacionar ou trocar o space, edite a URL acima e a sync de skills p
 | ----------------- | --------- |
 | `staging`         | STAGING   |
 | `master` / `main` | PROD      |
+| `mirror`          | MIRROR    |
 | `milestone/*`     | MILESTONE |
 | `development`     | DEV       |
 | outros            | OTHER     |
@@ -52,7 +58,7 @@ Se precisar rotacionar ou trocar o space, edite a URL acima e a sync de skills p
 Procure nessa ordem:
 
 1. `Closes #N`, `Fixes #N`, `Resolves #N` (case-insensitive) no body do PR
-2. Regex no nome da branch: `(hotfix|task)/(?:[^/]+/)?(\d+)-` — captura `N`
+2. Regex no nome da branch: `(hotfix|bugfix|fix|task|feature|feat|milestone|epic)/(?:[^/]+/)?(\d+)-` — captura `N`
 3. Se não achar, omita a linha `🐛 Issue:` e continue com só o link do PR
 
 O link completo da issue é `https://github.com/<ORG>/<REPO>/issues/<N>` — derive `<ORG>/<REPO>` de `gh repo view --json nameWithOwner -q .nameWithOwner`.
