@@ -314,9 +314,36 @@ Apos o commit/push da fase, **sempre perguntar**:
 - Se durante a implementacao houve mudancas que afetaram planos de fases anteriores, perguntar ao dev se quer atualizar esses planos tambem
 - Listar quais planos foram afetados antes de atualizar
 
-### Passo C.5 — Propor proxima fase
+### Passo C.5 — Criar roteiro de QA
 
-**So apos concluir os passos C.1 a C.4**, propor a proxima fase:
+Apos atualizar plano e card, se for a **ultima fase** da feature/bugfix ou tratar-se de um **bugfix de fase unica**, perguntar:
+
+> "Quer que eu gere o roteiro de QA?"
+> - **Sim** — crio `docs/plans/<nome>-qa.md` com cenarios de teste + adiciono secao ao body da issue do card
+> - **Nao** — pulo
+
+**Se sim:**
+
+1. Gerar o roteiro baseado no plano + report + diff da implementacao, cobrindo:
+   - Contexto (resumo do bug/feature)
+   - Ambiente (staging/mirror, empresa de teste, fluxo de acesso)
+   - Cenarios principais (reproducao do bug, controles positivos, caminho feliz)
+   - Regressoes a verificar (o que foi tocado indiretamente)
+   - Fora do escopo (o que o fix nao resolve)
+
+2. **Apresentar o draft ao dev** e aguardar confirmacao — o conteudo vai para arquivo versionado e para o body do card (visivel ao time).
+
+3. Apos aprovacao, executar em paralelo:
+   - `Write` em `docs/plans/<nome>-qa.md`
+   - `gh issue edit <N> --repo <ORG>/<REPO> --body-file <body.md>` (apensando secao `## Roteiro de QA` ao body atual — **sem remover nada existente**)
+
+**Padrao para o nome do arquivo:** `<nome-do-plano>-qa.md` (mesmo prefixo do plan e report).
+
+**Ao atualizar o body do issue:** ler o body atual com `gh issue view --json body --jq .body`, append da nova secao com separador `---` e data, nunca editar secoes pre-existentes.
+
+### Passo C.6 — Propor proxima fase
+
+**So apos concluir os passos C.1 a C.5**, propor a proxima fase:
 
 > "Proxima: **Fase [N+1] — [Nome]**. Quer comecar?"
 
@@ -401,7 +428,7 @@ Proximos passos sugeridos:
 - **Segue a sequencia de implementacao** do plano — nao pula passos
 - **Verifica criterios de aceite** antes de declarar fase concluida
 - **Nunca avanca fase sem confirmacao** do dev
-- **Nunca menciona a proxima fase antes de concluir os passos C.1 a C.4** — handoff e docs vem antes de propor a proxima fase, sem excecao
+- **Nunca menciona a proxima fase antes de concluir os passos C.1 a C.5** — handoff, docs e roteiro de QA vem antes de propor a proxima fase, sem excecao
 - **Fase C e sequencial e bloqueante** — cada passo aguarda resposta do dev antes de avancar. Nao agrupar perguntas de passos diferentes numa unica mensagem
 - **Consulta o design no plano** antes de perguntar ao dev por imagens (quando frontend)
 - **Nao modifica os planos** — se algo precisa mudar, sugere ao dev atualizar o plano primeiro
