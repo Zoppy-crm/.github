@@ -23,7 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE 'git commit' 2>/dev/null; then BRANCH=$(git branch --show-current 2>/dev/null); if echo \"$BRANCH\" | grep -qE '^(bugfix|hotfix)/'; then echo '{\"notification\":\"🐛 Commit em branch de bugfix detectado. Use /flow-bug-solution-reply para gerar o retorno de solução para o cliente.\"}'; fi; fi; true",
+            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE 'git commit' 2>/dev/null; then BRANCH=$(git branch --show-current 2>/dev/null); if echo \"$BRANCH\" | grep -qE '^(bugfix|hotfix)/'; then echo '{\"notification\":\"🐛 Commit em branch de bugfix detectado. Use /retorno-solucao para gerar o retorno de solução (campo do Project V2 + comentário técnico no issue).\"}'; fi; fi; true",
             "statusMessage": "Verificando branch de bugfix..."
           }
         ]
