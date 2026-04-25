@@ -1,6 +1,6 @@
 name: "Refinamento Técnico"
 description: "Template para refinamento técnico de features e tarefas"
-labels: ["refinement"]
+labels: ["refinement", "work: feature"]
 body:
   - type: textarea
     id: summary
@@ -134,17 +134,6 @@ body:
       placeholder: "Ex: ENABLE_PUSH_NOTIFICATIONS"
     validations:
       required: false
-
-  - type: dropdown
-    id: status
-    attributes:
-      label: Status
-      options:
-        - Aguardando refinamento
-        - Refinado
-        - Pronto para desenvolvimento
-    validations:
-      required: true
 
   - type: textarea
     id: test-plan

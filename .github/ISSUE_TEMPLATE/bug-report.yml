@@ -1,6 +1,6 @@
 name: "Bug Report"
 description: "Reportar um bug encontrado em produção ou staging"
-labels: ["bug", "work: bug"]
+labels: ["work: bug"]
 body:
   - type: input
     id: ticket-id
@@ -85,13 +85,5 @@ body:
     attributes:
       label: Blocked
       description: "Existe algo bloqueado por causa deste bug?"
-    validations:
-      required: false
-
-  - type: textarea
-    id: solution
-    attributes:
-      label: Retorno de Solução
-      description: "Descrição da solução aplicada (preencher após resolução)"
     validations:
       required: false

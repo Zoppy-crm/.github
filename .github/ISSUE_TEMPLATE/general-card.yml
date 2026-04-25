@@ -26,11 +26,3 @@ body:
       description: "Existe algo bloqueado por este card?"
     validations:
       required: false
-
-  - type: textarea
-    id: solution
-    attributes:
-      label: Retorno de Solução
-      description: "Descrição da solução aplicada (preencher após resolução)"
-    validations:
-      required: false
