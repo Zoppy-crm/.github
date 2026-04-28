@@ -7,8 +7,13 @@
                 "zoppy-api",
                 "zoppy-workflow",
                 "zoppy-pixel-lambda",
-                "zoppy-whatsapp-commerce",
                 "zoppy-event-bridge"
+            ]
+        },
+        "wpp-commerce": {
+            "folders": ["shared", "wpp-commerce"],
+            "repos": [
+                "zoppy-whatsapp-commerce"
             ]
         },
         "frontend": {
