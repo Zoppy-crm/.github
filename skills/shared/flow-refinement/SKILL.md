@@ -5,7 +5,26 @@ description: Cria um card de refinamento técnico no GitHub Issues seguindo o te
 
 # Refinamento Técnico
 
-Cria um card de refinamento técnico no GitHub Issues seguindo o template da organização Zoppy.
+Cria um card de refinamento técnico no GitHub Issues seguindo o template oficial da organização Zoppy.
+
+## Template oficial — fonte da verdade
+
+O template fica em `Zoppy-crm/.github/.github/ISSUE_TEMPLATE/technical-refinement.yml`. Se o repo `Zoppy-crm/.github` estiver clonado localmente, ler do caminho local; senão, baixar via:
+
+```bash
+curl -s "https://raw.githubusercontent.com/Zoppy-crm/.github/development/.github/ISSUE_TEMPLATE/technical-refinement.yml"
+```
+
+Quando criar issue via API/CLI (bypassando o form), replicar **TODOS** os campos do template como headings markdown no body. Campos obrigatórios:
+
+-   **Resumo da Solução** — required
+-   **Objetivo** — required
+-   **Critérios de Aceite** — required
+-   **Criado com auxílio de IA?** — required (Sim/Não)
+
+Campos opcionais (preencher quando aplicável, ou usar "N/A"): Layout, Detalhamento Técnico, Serviços Afetados, Migrations, Infraestrutura, Permissões de Endpoints, Jobs de Correção de Dados Retroativos, Monitoramento e Observabilidade, Feature Flag, Roteiro de Teste, Testes E2E (Playwright).
+
+**Labels automáticas do template** (aplicadas pelo form, mas precisam ser passadas manualmente quando criando via `gh issue create`): `refinement`, `work: feature`.
 
 ## Instruções
 
@@ -80,43 +99,46 @@ O card deve ser criado com o seguinte formato no body (GitHub-flavored markdown)
 
 <!-- Nome da feature flag ou "N/A". -->
 
-### Estratégia de Testes
+### Roteiro de Teste
 
-<!-- IMPORTANTE: pense em cada tipo de teste que faz sentido para esta feature -->
+<!-- Detalhe o fluxo de teste que o QA deve seguir. -->
 
-**Testes unitários (zoppy-api — Jest):**
-
-## <!-- Domain/Application specs. Quais comportamentos precisam de teste? -->
-
-**Testes de integração (zoppy-api — Jest + supertest):**
-
-## <!-- Controller specs. Quais endpoints precisam de teste de contrato HTTP? -->
-
-**Testes E2E de API (zoppy-e2e-api — Playwright):**
-
-<!-- Para endpoints NÃO consumidos pelo frontend: Partners API, webhooks, APIs internas (PVT), segment.
-     Listar os endpoints e cenários que devem ser cobertos. -->
-
--   **Testes E2E de Frontend (zoppy-FE — Cypress/Playwright):**
-    <!-- Para fluxos consumidos pelo frontend: telas, formulários, fluxos de navegação.
-         Listar as telas e fluxos que devem ser cobertos. -->
+**Telas:**
 
 -
 
-### Roteiro de Teste (QA)
+**Rotinas:**
 
-## **Telas:**
+-
 
-## **Rotinas:**
+**Locais de impacto:**
 
-## **Locais de impacto:**
+-
 
-## **Resultado Esperado:**
+**Resultado Esperado:**
 
-### Collections E2E alteradas/adicionadas
+-
 
-<!-- Nome das collections ou "N/A". -->
+### Testes E2E (Playwright)
+
+<!-- Cenários end-to-end que precisam de cobertura via Playwright (API e/ou Frontend). Novas features devem ter boa cobertura E2E. -->
+
+**Frontend:**
+
+-
+
+**API:**
+
+-
+
+### Criado com auxílio de IA?
+
+<!-- Sim ou Não. Required pelo template oficial. -->
+
+Sim
 ```
+
+> **Importante — auto-label:** o heading `### Criado com auxílio de IA?` seguido por `Sim` aciona o workflow `auto-label-refinement.yml` no `.github` repo, mas **esse workflow só roda em issues criadas no próprio `.github` repo**. Pra issues em outros repos da org (zoppy-api, zoppy-FE, etc.), aplicar a label `ai-assisted` manualmente após criar (`gh issue edit <num> --add-label "ai-assisted"`). Manter a seção no body é correto pra docs/intent mesmo assim.
 
 ## Criando a issue
 
@@ -126,13 +148,18 @@ Use o comando `gh issue create` com:
 -   `--title` conciso e descritivo
 -   `--assignee @me` — sempre atribuir ao usuário autenticado no gh
 -   `--label "refinement" --label "origin: master" --label "work: feature"` (sempre incluir essas 3 labels)
--   Adicionar também a **label do epic** relacionado (pergunte ao usuário se não ficar claro, ex: `epic:partners-migration`, `epic:whatsapp-v2`)
--   `--body` com o conteúdo preenchido acima (usar HEREDOC)
+-   Adicionar também a **label do epic** relacionado (pergunte ao usuário se não ficar claro). **Format real das labels é `epic: <nome>` com espaço após o `:`** (ex: `epic: envio-email`, `epic: chat-whatsapp`, `epic: campanhas`). Verifique se a label existe no repo via `gh label list --repo Zoppy-crm/<repo> | grep epic:` antes de usar.
+-   `--body-file <path>` ou `--body` com o conteúdo preenchido acima. Preferir `--body-file` quando o body é longo (evita escape hell).
 
-Após criar a issue, **adicione ao projeto do time**:
+Após criar a issue:
 
 ```bash
-gh project item-add 7 --owner Zoppy-crm --url https://github.com/Zoppy-crm/<repo>/issues/<number>
+# 1. Adicionar ao Project Board
+gh project item-add 7 --owner Zoppy-crm --url https://github.com/Zoppy-crm/<repo>/issues/<number> --format json
+
+# 2. Aplicar manualmente a label `ai-assisted` se foi criado com auxílio de IA
+#    (workflow auto-label-refinement.yml não propaga pra outros repos)
+gh issue edit <number> --repo Zoppy-crm/<repo> --add-label "ai-assisted"
 ```
 
 ### Milestones complexas (múltiplos cards)
@@ -142,21 +169,31 @@ Quando a tarefa é grande demais pra um único card (milestone complexa), crie u
 1. **Card base da milestone** — issue principal com o template completo, visão macro do objetivo e critérios de aceite gerais
 2. **Sub-issues** — uma issue por tarefa, cada uma seguindo o mesmo template de refinamento técnico, com escopo menor e critérios de aceite específicos
 
-Para criar sub-issues, use `gh issue create` com `--body` contendo o template completo, e depois vincule como sub-issue do card base:
+Para criar sub-issues, use `gh issue create` com `--body-file` apontando pro arquivo da fase, e depois vincule como sub-issue do card base via GraphQL `addSubIssue`:
 
 ```bash
 # Criar o card base da milestone (normalmente no zoppy-api)
-gh issue create --repo Zoppy-crm/zoppy-api --title "Milestone: <nome>" \
-  --label "refinement" --label "origin: master" --label "work: feature" --label "<epic-label>" --body "..."
-gh project item-add 7 --owner Zoppy-crm --url https://github.com/Zoppy-crm/zoppy-api/issues/<card-base-number>
+EPIC_URL=$(gh issue create --repo Zoppy-crm/zoppy-api --title "Milestone: <nome>" \
+  --assignee @me \
+  --label "refinement" --label "origin: master" --label "work: feature" --label "epic: <nome>" \
+  --body-file <path/prd.md>)
+EPIC_NUMBER=$(echo "$EPIC_URL" | grep -o '[0-9]*$')
+EPIC_NODE_ID=$(gh api "/repos/Zoppy-crm/zoppy-api/issues/$EPIC_NUMBER" --jq '.node_id')
+gh project item-add 7 --owner Zoppy-crm --url "$EPIC_URL"
 
-# Criar sub-issues (pergunte ao dev em qual repo cada uma deve ficar)
-gh issue create --repo Zoppy-crm/<repo-da-sub-issue> --title "<tarefa específica>" \
-  --label "refinement" --label "origin: master" --label "work: feature" --label "<epic-label>" --body "..."
-gh project item-add 7 --owner Zoppy-crm --url https://github.com/Zoppy-crm/<repo-da-sub-issue>/issues/<sub-issue-number>
+# Criar sub-issue (pergunte ao dev em qual repo deve ficar)
+SUB_URL=$(gh issue create --repo Zoppy-crm/<repo-sub> --title "[Fase N] <título>" \
+  --assignee @me \
+  --label "refinement" --label "origin: master" --label "work: feature" --label "epic: <nome>" \
+  --body-file <path/fase-N.md>)
+SUB_NUMBER=$(echo "$SUB_URL" | grep -o '[0-9]*$')
+SUB_NODE_ID=$(gh api "/repos/Zoppy-crm/<repo-sub>/issues/$SUB_NUMBER" --jq '.node_id')
 
-# Vincular sub-issue ao card base
-gh issue edit <card-base-number> --add-sub-issue <sub-issue-number> --repo Zoppy-crm/zoppy-api
+# Vincular sub-issue ao card base via GraphQL (NÃO usar --add-sub-issue, é menos confiável)
+gh api graphql -f query="mutation { addSubIssue(input: {issueId: \"$EPIC_NODE_ID\", subIssueId: \"$SUB_NODE_ID\"}) { issue { number } } }"
+
+# Adicionar sub ao board e setar fields obrigatórios (Priority/Size/Estimate, senão fica invisível em filtros)
+gh project item-add 7 --owner Zoppy-crm --url "$SUB_URL"
 ```
 
 **Critérios pra decidir se é milestone:**

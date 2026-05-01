@@ -7,6 +7,37 @@ description: Documenta trabalho no GitHub Issues da organização Zoppy-crm — 
 
 Cria issues no GitHub da organização `Zoppy-crm` com hierarquia adequada (epic → sub-issues), labels padrão e vínculo ao project board.
 
+## Templates oficiais — fonte da verdade
+
+Os templates da org vivem em `Zoppy-crm/.github/.github/ISSUE_TEMPLATE/`. Sempre alinhar o body da issue com o template correspondente:
+
+| Tipo de issue | Template oficial | Labels auto-aplicadas pelo form |
+|---|---|---|
+| Epic de roadmap | `epic-roadmap.yml` | `roadmap` |
+| Refinamento técnico | `technical-refinement.yml` | `refinement`, `work: feature` |
+| Bug report | `bug-report.yml` | (variam) |
+| Demanda técnica | `technical-demand.yml` | (variam) |
+| POC | `poc.yml` | (variam) |
+| Card geral | `general-card.yml` | (variam) |
+| Tech lead preparation | `tech-lead-preparation.yml` | (variam) |
+
+**Importante:** quando criar issue via `gh issue create` (bypass do form), as labels auto-aplicadas pelo template **NÃO são adicionadas automaticamente** — passar manualmente via `--label`.
+
+Pra ler um template antes de gerar o body, baixar via:
+
+```bash
+curl -s "https://raw.githubusercontent.com/Zoppy-crm/.github/development/.github/ISSUE_TEMPLATE/<template>.yml"
+```
+
+Ou ler do repo `Zoppy-crm/.github` clonado localmente quando disponível.
+
+## Workflows automáticos — atenção crítica
+
+O workflow `auto-label-refinement.yml` (em `Zoppy-crm/.github/.github/workflows/`) parseia o body procurando o heading `### Criado com auxílio de IA?` seguido por `Sim` e aplica a label `ai-assisted`. **MAS o workflow só roda em issues do próprio repo `.github`** — não propaga pra `zoppy-api`, `zoppy-FE`, etc. Pra issues criadas em outros repos:
+
+1. **Sempre incluir a seção `### Criado com auxílio de IA?` + valor (Sim/Não) no body** — alinha com o template oficial e serve de doc.
+2. **Aplicar label `ai-assisted` manualmente** via `gh issue edit <num> --add-label "ai-assisted"` quando a issue foi criada com auxílio de IA.
+
 ---
 
 ## Fase 1 — Identificar intenção e contexto
@@ -28,7 +59,7 @@ Analise o que o usuário quer criar:
 | Informação | Como obter | Default |
 |------------|------------|---------|
 | **Repositório** | Detectar pela branch atual, nome do plano/PRD, menção explícita. Se ambíguo: perguntar | — |
-| **Epic label** | Detectar pelo nome da feature, PRD ou menção no prompt. Se ambíguo: perguntar (ex: `epic:whatsapp-v2`) | — |
+| **Epic label** | Detectar pelo nome da feature, PRD ou menção no prompt. **Format real é `epic: <nome>` com espaço após `:`** (ex: `epic: envio-email`, `epic: chat-whatsapp`). Validar via `gh label list --repo <repo> \| grep "epic:"` antes de usar; se não existir, perguntar se pode criar | — |
 | **Tipo de trabalho** | Detectar pela natureza da tarefa | `work: feature` |
 
 **Repositórios disponíveis na organização `Zoppy-crm`:**
@@ -87,12 +118,19 @@ Não faça perguntas desnecessárias — se o usuário deu contexto suficiente, 
 📋 Vou criar as seguintes issues em Zoppy-crm/<repo>:
 
 Epic: "<título>"
-Labels: refinement | origin: master | work: feature | epic:<nome>
+Labels: roadmap | refinement | origin: master | work: feature | epic: <nome>
 
   Sub-issues:
-  ├── [Fase 1] <título>
-  ├── [Fase 2] <título>
-  └── [Fase N] <título>
+  ├── [Fase 1] <título>     → Size <X>, P<N>, ~<estimate>
+  ├── [Fase 2] <título>     → Size <X>, P<N>, ~<estimate>
+  └── [Fase N] <título>     → Size <X>, P<N>, ~<estimate>
+
+Cada sub-issue:
+  - Labels: refinement | origin: master | work: feature | epic: <nome>
+  - Body: conteúdo do .md correspondente (incluindo seção "### Criado com auxílio de IA?")
+  - Vinculada ao epic via GraphQL addSubIssue
+  - Adicionada ao Project Board #7 com Priority/Size/Estimate setados
+  - Label `ai-assisted` aplicada manualmente após criação
 
 Confirma? (ou ajuste o que quiser)
 ```
@@ -105,17 +143,29 @@ Para issues avulsas (Ad-hoc), mostrar apenas o título, repo e labels antes de c
 
 ## Fase 4 — Criar as issues
 
-### 4.1 Labels obrigatórias (sempre incluir em toda issue)
+### 4.1 Labels obrigatórias
+
+**Sub-issues (refinements):** sempre 4 labels.
 
 ```bash
---label "refinement" --label "origin: master" --label "work: feature" --label "epic:<nome>"
+--label "refinement" --label "origin: master" --label "work: feature" --label "epic: <nome>"
 ```
 
 Ajustar `work: feature` conforme o tipo:
 - Bug: `--label "work: fix"`
 - Chore/infra: `--label "work: chore"`
 
+**Epic (parent):** as 4 acima + a label `roadmap` (que o template oficial `epic-roadmap.yml` aplicaria automaticamente, mas precisa ser passada manual quando criando via API).
+
+```bash
+--label "refinement" --label "origin: master" --label "work: feature" --label "epic: <nome>" --label "roadmap"
+```
+
+> **Format de label de epic:** sempre `epic: <nome>` com espaço após `:`. Validar via `gh label list --repo <repo> | grep "epic:"`.
+
 ### 4.2 Criar o Epic (issue pai)
+
+Preferir `--body-file` quando o body é longo (PRDs costumam ter 200+ linhas — escapar em HEREDOC fica frágil):
 
 ```bash
 EPIC_URL=$(gh issue create \
@@ -125,14 +175,13 @@ EPIC_URL=$(gh issue create \
   --label "refinement" \
   --label "origin: master" \
   --label "work: feature" \
-  --label "epic:<nome>" \
-  --body "$(cat <<'EOF'
-<conteúdo do epic>
-EOF
-)")
+  --label "epic: <nome>" \
+  --label "roadmap" \
+  --body-file <path/prd.md>)
 
 echo "Epic criado: $EPIC_URL"
 EPIC_NUMBER=$(echo "$EPIC_URL" | grep -o '[0-9]*$')
+EPIC_NODE_ID=$(gh api "/repos/Zoppy-crm/<repo>/issues/$EPIC_NUMBER" --jq '.node_id')
 ```
 
 ### 4.3 Criar cada sub-issue (fase)
@@ -147,15 +196,15 @@ SUB_URL=$(gh issue create \
   --label "refinement" \
   --label "origin: master" \
   --label "work: feature" \
-  --label "epic:<nome>" \
-  --body "$(cat <<'EOF'
-<conteúdo da fase>
-EOF
-)")
+  --label "epic: <nome>" \
+  --body-file <path/fase-N.md>)
 
 echo "Sub-issue criada: $SUB_URL"
 SUB_NUMBER=$(echo "$SUB_URL" | grep -o '[0-9]*$')
+SUB_NODE_ID=$(gh api "/repos/Zoppy-crm/<repo>/issues/$SUB_NUMBER" --jq '.node_id')
 ```
+
+> **O body do .md deve incluir a seção `### Criado com auxílio de IA?` seguida por `Sim` ou `Não`** — alinha com o template oficial `technical-refinement.yml`.
 
 ### 4.4 Vincular sub-issues ao epic
 
@@ -180,37 +229,46 @@ mutation {
 
 ### 4.5 Adicionar ao Project Board + setar campos obrigatórios
 
-Após criar cada issue (epic e sub-issues):
+Após criar cada issue (epic e sub-issues), adicionar ao board e capturar o Item ID direto da resposta (mais rápido que `item-list` em projects grandes):
 
 ```bash
-gh project item-add 7 --owner Zoppy-crm --url <issue-url>
+ITEM_ID=$(gh project item-add 7 --owner Zoppy-crm --url <issue-url> --format json | jq -r '.id')
 ```
 
 **Imediatamente após adicionar**, setar os campos obrigatórios do board (Priority, Size, Estimate). Sem isso, o item pode ficar **invisível** por filtros ativos no board.
 
 ```bash
-# Buscar o Item ID recém-adicionado
-ITEM_ID=$(gh project item-list 7 --owner Zoppy-crm --format json --limit 1000 \
-  | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-for item in data.get('items', []):
-    c = item.get('content', {})
-    if c.get('number') == <ISSUE_NUMBER> and '<repo>' in c.get('repository', ''):
-        print(item['id'])
-        break
-")
+PROJECT_ID="PVT_kwDOCAubUc4BQdrV"
 
-# Setar Priority, Size e Estimate (ver IDs na seção 6.5)
-gh project item-edit --project-id PVT_kwDOCAubUc4BQdrV --id $ITEM_ID \
+# Priority (single select) — usa gh project item-edit
+gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
   --field-id PVTSSF_lADOCAubUc4BQdrVzg-k1Ns --single-select-option-id <priority_id>
-gh project item-edit --project-id PVT_kwDOCAubUc4BQdrV --id $ITEM_ID \
+
+# Size (single select) — usa gh project item-edit
+gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
   --field-id PVTSSF_lADOCAubUc4BQdrVzg-k1Nw --single-select-option-id <size_id>
-gh project item-edit --project-id PVT_kwDOCAubUc4BQdrV --id $ITEM_ID \
-  --field-id PVTF_lADOCAubUc4BQdrVzg-k1N0 --number <estimate_hours>
+
+# Estimate (Number) — REQUER GraphQL (gh project item-edit não funciona pra Number)
+gh api graphql -f query='
+mutation {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: "'$PROJECT_ID'"
+    itemId: "'$ITEM_ID'"
+    fieldId: "PVTF_lADOCAubUc4BQdrVzg-k1N0"
+    value: { number: <estimate> }
+  }) { projectV2Item { id } }
+}'
 ```
 
 > **Aprendizado:** Issues no board sem Priority/Size/Estimate ficam ocultas quando há filtros ativos. Sempre preencher esses campos ao adicionar.
+
+### 4.6 Aplicar label `ai-assisted` quando criado com auxílio de IA
+
+O workflow `auto-label-refinement.yml` no `.github` repo só roda em issues do próprio `.github` repo — **não propaga**. Pra issues criadas em outros repos com auxílio de IA, aplicar a label manualmente:
+
+```bash
+gh issue edit <number> --repo Zoppy-crm/<repo> --add-label "ai-assisted"
+```
 
 ---
 
@@ -430,12 +488,18 @@ gh project item-edit \
 ## Regras
 
 - **Nunca criar issues sem confirmação** do rascunho pelo usuário
-- **Sempre `--assignee @me`** — nunca deixar sem atribuição
+- **Sempre `--assignee @me`** — nunca deixar sem atribuição (a não ser que o usuário peça explicitamente sem assignee)
 - **Sempre verificar assignee em epics existentes** — ao vincular sub-issues a um epic pré-existente, checar se o epic tem assignee e setar se não tiver
-- **Sempre 4 labels** obrigatórias: `refinement`, `origin: master`, `work: feature` (ou fix/chore), `epic:<nome>`
+- **Sempre 4 labels** obrigatórias em refinements: `refinement`, `origin: master`, `work: feature` (ou fix/chore), `epic: <nome>` (com espaço após `:`)
+- **Para epics, adicionar `roadmap`** como 5ª label (auto-aplicada pelo template oficial mas não quando criado via API)
+- **Para issues criadas com auxílio de IA, aplicar `ai-assisted` manualmente** — o workflow `auto-label-refinement.yml` não propaga pra outros repos
+- **Sempre incluir seção `### Criado com auxílio de IA?` no body** — alinha com o template oficial `technical-refinement.yml`
 - **Sempre capturar a URL** de cada issue criada para vincular sub-issues e adicionar ao board
 - **Sempre setar campos do board ao adicionar** — Priority, Size e Estimate devem ser preenchidos imediatamente ao adicionar issue ao Project Board. Issues sem esses campos ficam invisíveis quando há filtros ativos
 - **Sempre verificar campos antes de mover status** — ao mover para In Progress/Done, garantir que Priority, Size, Estimate e assignee estão preenchidos
 - **Usar GraphQL para vincular sub-issues** — `addSubIssue` mutation com `node_id`, não REST API
+- **Usar GraphQL para campos Number e Date no board** — `gh project item-edit` não funciona pra esses tipos; só single-select.
+- **Preferir `--body-file` sobre `--body` HEREDOC** — quando o body é longo (> 50 linhas), evita escape hell.
+- **Capturar Item ID via `--format json | jq -r '.id'` no `item-add`** — mais rápido que listar todos os items do board.
 - **Não fazer perguntas desnecessárias** — inferir pelo contexto e confirmar no rascunho
 - **Repositório pode mudar por sub-issue** — para milestones cross-repo, pergunte ao dev em qual repo cada sub-issue deve ficar
