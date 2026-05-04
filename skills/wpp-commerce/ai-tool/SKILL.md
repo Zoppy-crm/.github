@@ -43,15 +43,51 @@ The system has three families of tools:
 ```
 src/ai/tools/
 ├── __init__.py
-├── registry.py              # create_tools_for_company(...) — company-wide registry
-├── common.py                # transfer_to_human (@tool, always available)
-├── agent_wrappers.py        # wrap_subagent_as_tool + subagent_usage_accumulator
-├── giftback.py              # create_giftback_tools(partners_token)
-├── shopify.py               # create_shopify_tools(...) + create_order_status_tool(...)
-├── nuvemshop.py             # create_nuvemshop_tools(store_id, access_token)
-├── cart.py                  # create_cart_tools(shop_domain, session_ttl_minutes)
-└── knowledge.py             # create_knowledge_tools()
+├── registry.py                  # create_tools_for_company(...) — company-wide registry
+├── common.py                    # transfer_to_human (@tool, always available)
+├── agent_wrappers.py            # wrap_subagent_as_tool + subagent_usage_accumulator
+├── giftback.py                  # create_giftback_tools(partners_token)
+├── giftback_helpers.py          # formatters PT-BR dos cupons
+├── shopify.py                   # create_shopify_tools(...) + create_order_status_tool(...)
+├── nuvemshop.py                 # create_nuvemshop_tools(store_id, access_token)
+├── nuvemshop_helpers.py         # compactador de CatalogSearchResult
+├── cart.py                      # create_cart_tools (legado / NuvemShop)
+├── cart_helpers.py              # formatters do cart legado + checkout permalink builder
+├── cart_shopify.py              # create_shopify_cart_tools(...) — carrinho real Storefront MCP
+├── cart_shopify_helpers.py      # formatters PT-BR do payload UCP + tradução de erros
+└── knowledge.py                 # create_knowledge_tools()
 ```
+
+## Convenção: `<feature>.py` + `<feature>_helpers.py`
+
+Toda tool segue um padrão de 2 arquivos irmãos no mesmo nível de
+`src/ai/tools/`:
+
+- **`<feature>.py`** — núcleo da feature: classes (HTTP client, manager),
+  factory `create_<feature>_tools(...)` e os `@tool` decorados. É o que
+  outros módulos (registries, orchestrator) importam.
+- **`<feature>_helpers.py`** — funções privadas (prefix `_`) que o
+  núcleo consome: formatters PT-BR, parsers, tradução de erros,
+  builders de payload. Helpers usados **só** pela feature.
+
+Regras práticas:
+
+- **Sempre que houver pelo menos 1 helper privado** (função `_underscore`,
+  formatter, parser, builder, translator), ele vai para o
+  `<feature>_helpers.py`. Mesmo que seja apenas 1 função e 10 linhas —
+  o ganho é consistência: olhando qualquer feature, o padrão é o mesmo.
+  Features sem nenhum helper privado (`common.py`, `knowledge.py`,
+  `agent_wrappers.py`, `shopify.py` hoje) ficam em arquivo único.
+- **`__all__` no `<feature>.py`** lista a public API + os helpers que
+  testes importam direto, garantindo que `from src.ai.tools.<feature>
+  import _format_X` continue funcionando após o split.
+- **Forward references com `TYPE_CHECKING`** quando o helper precisa
+  do tipo de uma classe definida em `<feature>.py` (evita circular
+  import). Exemplo: `cart_helpers.py` usa
+  `if TYPE_CHECKING: from src.ai.tools.cart import CartItem`.
+- **Não criar pasta** `<feature>/` enquanto houver só núcleo + helpers.
+  Pasta só se justifica quando aparecem 3+ módulos coesos (schemas,
+  client, helpers, tools, etc.).
 
 Two registries call into here:
 
@@ -463,4 +499,8 @@ call it; gating at registry time avoids the failed-call detour.
       path + error paths + missing-context path
 - [ ] If response is large, paired compactor middleware (or documented
       decision not to)
+- [ ] Toda função privada (`_underscore`) — formatter, parser, builder,
+      translator — vai para `<feature>_helpers.py` irmão, mesmo que
+      seja apenas 1; `<feature>.py` re-exporta via `__all__` o que
+      testes importam direto
 - [ ] `uv run pytest tests/unit/ai/tools/ -q` is green
