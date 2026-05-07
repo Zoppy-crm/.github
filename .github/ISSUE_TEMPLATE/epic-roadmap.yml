@@ -1,67 +1,21 @@
-name: "Epic Roadmap"
+name: "Epic de Roadmap"
 description: "Template obrigatório para todas as demandas de produto encaminhadas à tecnologia. Preencha antes de agendar o Pré-Refinamento com o Tech Lead."
 title: "[Brief] "
 labels: ["brief-de-demanda"]
 assignees: []
 
 body:
-  # ── METADADOS ──────────────────────────────────────────────────────────────
+  # ── INTRODUÇÃO ─────────────────────────────────────────────────────────────
   - type: markdown
     attributes:
       value: |
         > **Critério de entrada:** preencha todas as seções obrigatórias antes de agendar o Pré-Refinamento com o Tech Lead.
 
-  - type: dropdown
-    id: squad
-    attributes:
-      label: Squad
-      options:
-        - Ativação
-        - Retenção
-        - Expansão
-        - Plataforma
-    validations:
-      required: true
-
-  - type: dropdown
-    id: prioridade
-    attributes:
-      label: Prioridade
-      options:
-        - Alta
-        - Média
-        - Baixa
-    validations:
-      required: true
-
-  - type: input
-    id: sprint_alvo
-    attributes:
-      label: Sprint alvo
-      placeholder: "Ex: Sprint 23 — 12/05 a 26/05"
-    validations:
-      required: false
-
-  # ── CHECKLIST PRÉ-ENVIO ────────────────────────────────────────────────────
-  - type: checkboxes
-    id: checklist_pre_envio
-    attributes:
-      label: "✅ Checklist pré-envio ao Tech Lead"
-      description: "Confirme que cada item foi verificado antes de encaminhar."
-      options:
-        - label: O objetivo está orientado ao problema, não à solução
-        - label: As regras de negócio estão descritas em linguagem clara
-        - label: O escopo (entra / não entra) está definido
-        - label: Os critérios de aceite estão rascunhados
-        - label: As referências visuais (Figma, protótipos) estão linkadas ou explicitamente marcadas como ausentes
-        - label: As dúvidas e decisões em aberto estão listadas ou marcadas como "Nenhuma"
-        - label: A demanda está madura — sem bloqueadores de produto que impeçam o início
-
-  # ── SEÇÃO 1 — CONTEXTO ────────────────────────────────────────────────────
+  # ── SEÇÃO 1 — CONTEXTO DO PROBLEMA ───────────────────────────────────────
   - type: textarea
-    id: contexto
+    id: contexto_do_problema
     attributes:
-      label: "1. Contexto"
+      label: "1. Contexto do Problema"
       description: "Por que essa demanda existe? Qual problema de negócio ou de usuário ela resolve? Escreva em 2–3 frases. Foque no problema, não na solução."
       placeholder: |
         Ex: Clientes que concluem o onboarding sem configurar ao menos um workflow automatizado têm churn 40% maior em 60 dias.
@@ -80,11 +34,11 @@ body:
     validations:
       required: true
 
-  # ── SEÇÃO 3 — ESCOPO ──────────────────────────────────────────────────────
+  # ── SEÇÃO 3 — ESCOPO DA SOLUÇÃO ───────────────────────────────────────────
   - type: textarea
     id: escopo_entra
     attributes:
-      label: "3a. Escopo — ✅ Entra"
+      label: "3a. Escopo da Solução — ✅ Entra"
       description: "Liste o que está dentro desta demanda. Um item por linha."
       placeholder: |
         - Tela de seleção de tipo de workflow no onboarding
@@ -96,14 +50,14 @@ body:
   - type: textarea
     id: escopo_nao_entra
     attributes:
-      label: "3b. Escopo — ❌ Não entra"
-      description: "Liste explicitamente o que está fora desta demanda. Regras vagas geram implementações incorretas."
+      label: "3b. Escopo da Solução — ❌ Não entra"
+      description: "Liste o que está explicitamente fora desta demanda. Deixe em branco se não houver exclusões relevantes."
       placeholder: |
         - Edição de workflows já ativos
         - Criação de templates de mensagem customizados
         - Relatório de performance do workflow
     validations:
-      required: true
+      required: false
 
   # ── SEÇÃO 4 — REGRAS DE NEGÓCIO ───────────────────────────────────────────
   - type: textarea
@@ -162,7 +116,7 @@ body:
     validations:
       required: false
 
-  # ── SEÇÃO 8 — PRIORIDADE E JUSTIFICATIVA ──────────────────────────────────
+  # ── SEÇÃO 8 — JUSTIFICATIVA DA PRIORIDADE ─────────────────────────────────
   - type: textarea
     id: justificativa_prioridade
     attributes:
