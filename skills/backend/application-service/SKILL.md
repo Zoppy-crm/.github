@@ -14,13 +14,55 @@ description: >
 ## Application Layer Responsibility
 
 Application Services (`src/application/`) orchestrate complete use cases. They:
-1. Receive a Request DTO from the controller
+1. Receive input from access (Request DTO from a controller, job data from a queue processor, event from a WebSocket)
 2. Execute business validations
-3. Call domains for persistence
+3. Call domains for persistence (and rely on domains for rich behavior — state transitions, entity creation rules, queries)
 4. Enqueue jobs via QueueServices when necessary
-5. Return a Response DTO
+5. Return a Response DTO (or void, when called from a processor)
 
-They do not directly access the database (that is the Domain's responsibility). They do not expose infrastructure details to the controller.
+They do not directly access the database (that is the Domain's responsibility). They do not expose infrastructure details to the access layer.
+
+## Application vs Service — when to use which
+
+These two are NOT interchangeable. Pick the right one:
+
+| | `*.application.ts` | `*.service.ts` |
+|---|---|---|
+| Consumed by | **access only** — controllers, queue processors, WebSocket gateways | applications or other services |
+| Visibility | **always exported** by its module | public (exported) **or** private (only in `providers`) |
+| Purpose | public API surface of the feature; orchestrates services, domains, queue services | building block consumed by an Application; one cohesive concern (issuance, cancellation, S3 upload, port resolver, ...) |
+
+Rule of thumb: if access (controller, processor, socket) wants to call it, it MUST be an Application. If only another Application or another Service calls it, it stays a Service.
+
+If a Service is consumed inside the same module only, leave it out of `exports` — it remains a `providers`-only member.
+
+### When to break an Application into Application + Service(s)
+
+If your Application is becoming a god-class with multiple flows (issuance, cancellation, webhook handling, ...), keep the **Application** as a thin orchestrator and extract each flow into its own private **Service**:
+
+```
+src/application/tax-invoice/
+├── tax-invoice.application.ts                  // public, exported
+└── services/
+    ├── tax-invoice-issuance.service.ts         // private
+    ├── tax-invoice-cancellation.service.ts     // private
+    ├── tax-invoice-webhook.service.ts          // private
+    └── tax-invoice-document.service.ts         // private
+```
+
+The Application then has 1-line methods that delegate to a Service plus optional follow-up (enqueueing, logging):
+
+```typescript
+public async executeIssue(invoiceId: string): Promise<IssuanceResult> {
+    const result = await this.issuanceService.execute(invoiceId);
+    if (result.shouldScheduleDocumentDownload) {
+        await this.scheduleDocumentDownload(result.taxInvoice.id);
+    }
+    return result;
+}
+```
+
+Access (controller / processor) injects only the Application; services stay invisible to them.
 
 ---
 
