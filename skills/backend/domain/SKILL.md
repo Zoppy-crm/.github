@@ -24,6 +24,25 @@ Every Domain extends `RepositoryAdapter<T>` — a base class that already handle
 - Transaction control
 - Hook emission after persistence
 
+## Rich domain, not anemic
+
+Push business rules down into the Domain instead of letting them pile up in the Application. Today many of our Domains are anemic CRUD wrappers — when you're adding behavior to a feature, prefer a Domain method.
+
+Concretely, these belong to the Domain (not the Application):
+
+- **State transitions** — `markAsIssued`, `markAsCancelled`, `markAsFailed`, `markAsArchived`. The Domain validates the previous state if needed, mutates, and `updateOne`s.
+- **"Create with defaults" / "next of"** — `createForInvoice(invoice, provider)`, `findNextAttemptNumberFor(invoiceId)`. The rule for choosing the attempt number / centavos conversion / default provider stays in the Domain.
+- **Entity-scoped queries** — `findActiveByInvoiceId`, `findPendingForRetry`, `findByExternalReference`. Anything answerable from a single entity (and its parents/children).
+- **Field-update bundles** — `updateS3Keys(id, pdfKey, xmlKey)`. The Domain knows which fields go together.
+
+These stay in an Application or Service (not the Domain):
+
+- Orchestration across **multiple unrelated** domains (e.g., loading an Invoice + Company + creating a TaxInvoice + recording an event).
+- Calls to **queue services** (enqueue follow-up jobs).
+- Calls to **ports / external SDKs** (the Application talks to the gateway lib, not the Domain).
+
+Good Domain methods return the updated entity when they mutate, so callers don't double-fetch.
+
 ---
 
 ## Minimal structure

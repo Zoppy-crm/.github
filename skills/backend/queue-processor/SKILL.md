@@ -53,7 +53,7 @@ export enum QueueJobEnum {
 
 ## 2. Create the QueueService
 
-The QueueService is the producer — it enqueues jobs from other places (domains, applications):
+The QueueService is the producer — it enqueues jobs from applications (or, less commonly, from other queue services):
 
 ```typescript
 // src/access/queues/services/my-feature.queue.service.ts
@@ -105,11 +105,11 @@ Use when the job doesn't need an exclusive lock per company/integration:
 // src/access/queues/processors/my-feature.queue.processor.ts
 import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { QueueBaseData, QueueEnum } from '../base.queue';
+import { QueueBaseData, QueueEnum, QueueJobEnum } from '../base.queue';
 import { QueueProcessorBase } from './queue.processor.base';
 import { SessionService } from 'src/services/session/session.service';
 import { LogService } from 'src/services/log/log.service';
-import { MyEntityDomain } from 'src/domain/my-entity.domain';
+import { MyFeatureApplication } from 'src/application/my-feature/my-feature.application';
 
 interface JobData {
     entityId: string;
@@ -124,26 +124,22 @@ export class MyFeatureQueueProcessor extends QueueProcessorBase {
     public constructor(
         public session: SessionService,
         public logService: LogService,
-        private readonly myEntityDomain: MyEntityDomain
+        private readonly application: MyFeatureApplication  // ← the ONLY business dep
     ) {
         super(session, logService);
     }
 
     public async process(job: Job<QueueBaseData<JobData>>): Promise<boolean> {
+        if (job.name !== QueueJobEnum.MY_FEATURE_PROCESS) return false;
         // REQUIRED: always the first line
         await this.setSession(job);
-
-        const { entityId } = job.data.data;
-        const entity = await this.myEntityDomain.findById(entityId);
-        if (!entity) return false;
-
-        // processing logic
-        await this.myEntityDomain.updateOne({ ...entity, processed: true });
-
+        await this.application.executeProcess(job.data.data.entityId);
         return true;
     }
 }
 ```
+
+> **Architecture rule (do not break this):** queue processors are part of the **access layer** and may inject **only an Application**. Never a domain, never a service, never another processor's queue service. If the processor needs an extra dep, that dep belongs inside the Application — promote a method on the Application instead.
 
 **`await this.setSession(job)` is required** — propagates company, user, features and token to
 the session context. Without it, domains won't have `companyId` and all queries will fail.
@@ -151,6 +147,8 @@ the session context. Without it, domains won't have `companyId` and all queries 
 ### Redis lock case: extend ProviderQueueProcessorBase
 
 Use when processing needs to be exclusive per company/integration (e.g., ERP sync):
+
+For ERP/provider sync flows where `DataSyncManagement` is part of the job payload, extend `ProviderQueueProcessorBase`:
 
 ```typescript
 @Processor(QueueEnum.MY_SYNC_QUEUE, { concurrency: 5 })
@@ -163,7 +161,7 @@ export class MySyncQueueProcessor extends ProviderQueueProcessorBase {
         public logService: LogService,
         protected readonly zoppyRedisService: ZoppyRedisService,
         protected readonly dataSyncManagementDomain: DataSyncManagementDomain,
-        private readonly myStrategy: MySyncRequestStrategy
+        private readonly application: MySyncApplication  // ← still only an Application
     ) {
         super(session, logService, zoppyRedisService, dataSyncManagementDomain);
     }
@@ -173,13 +171,45 @@ export class MySyncQueueProcessor extends ProviderQueueProcessorBase {
         const request = job.data.data.dataSyncManagement;
 
         return await this.executeWithLock(job, request, async () => {
-            // exclusive logic — only one execution per company at a time
-            await this.processSyncLogic(request);
+            // exclusive per (companyId, integration) — only one execution at a time
+            await this.application.executeSync(request);
             return true;
         });
     }
 }
 ```
+
+For **generic Redis-lock processors** (no `DataSyncManagement`), prefer the `@JobMutex` decorator over hand-rolling the lock:
+
+```typescript
+import { JobMutex } from 'src/cross-cutting/decorators/job-mutex.decorator';
+
+@Processor(QueueEnum.MY_QUEUE, { concurrency: 5 })
+export class MyQueueProcessor extends QueueProcessorBase {
+    public constructor(
+        public sessionService: SessionService,         // named `sessionService` (decorator reads it)
+        public logService: LogService,
+        private readonly zoppyRedisService: ZoppyRedisService,  // decorator reads it via this.zoppyRedisService
+        private readonly application: MyApplication
+    ) {
+        super(sessionService, logService);
+    }
+
+    @JobMutex({
+        lockKey: 'my-feature:lock',
+        getLockIdentifier: (job: Job) => (job.data as QueueBaseData<JobData>).data.entityId,
+        delayMs: 60_000,
+        expirationMinutes: 10
+    })
+    public async process(job: Job<QueueBaseData<JobData>>): Promise<unknown> {
+        if (job.name !== QueueJobEnum.MY_JOB) return undefined;
+        await this.application.executeProcess(job.data.data.entityId);
+        return job.data.data.entityId;
+    }
+}
+```
+
+The decorator handles `setSession`, lock acquisition, delay-on-existing-lock (via `DelayedError`), and lock release. The processor body only orchestrates the Application call.
 
 ---
 
