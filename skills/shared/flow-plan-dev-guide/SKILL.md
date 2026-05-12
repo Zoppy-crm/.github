@@ -205,43 +205,105 @@ Se o dev corrigir, ajuste sem questionar.
 
 #### W4: Bug Fix
 
-> **Principio:** economizar tokens. NAO mapear o projeto inteiro. Partir de uma referencia
-> concreta dada pelo dev e investigar cirurgicamente a partir dela.
+> **Principio:** economizar tokens E alinhar com o dev antes de documentar. NAO mapear o
+> projeto inteiro. Partir de uma referencia concreta, investigar cirurgicamente, APRESENTAR
+> achados em chat e ITERAR ate alinhamento real antes de escrever qualquer documento. O
+> dev deve sentir que esta discutindo o bug, nao recebendo um documento pronto.
 
 ```
- Passo 1  — Pedir referencia de onde comecar
-             Perguntar ao dev PRIMEIRO:
-             > "Me passe uma referencia pra eu investigar sem varrer o projeto todo:
+ Passo 1  — Coletar referencia e contexto do bug
+             Fazer um round curto de perguntas antes de investigar. Cobrir duas
+             dimensoes:
+
+             > Dimensao tecnica (obrigatoria):
              >   - Arquivo/funcao suspeita, OU
              >   - Stack trace / mensagem de erro, OU
              >   - Endpoint / rota / componente afetado, OU
-             >   - Passos para reproduzir + comportamento esperado vs atual"
+             >   - Passos para reproduzir + comportamento esperado vs atual
 
-             Fallback: se o dev NAO souber por onde comecar (nao tem stack trace,
-             nao sabe o arquivo, nao consegue reproduzir), entao invocar
-             /map-project para ganhar contexto minimo sobre a estrutura e voltar
-             a tentar localizar o bug. Avisar o dev antes:
+             > Dimensao de contexto (perguntar somente o que ficou em branco):
+             >   - Quando o bug foi notado? (apos algum deploy/release especifico?)
+             >   - Eh reproduzivel 100% ou intermitente? Em que ambiente?
+             >   - Qual o impacto? (1 cliente, todos, condicao especifica)
+             >   - Quem reportou e como (suporte, CSM, dev)?
+
+             Regra de fricção: se o dev ja deu contexto suficiente no pedido inicial,
+             NAO repetir perguntas obvias. Mas SE alguma dimensao acima ficou em
+             branco e parece relevante, perguntar antes de seguir. Use AskUserQuestion
+             para multiplas dimensoes de uma vez.
+
+             Fallback (sem referencia nenhuma): avisar antes de rodar /map-project:
              > "Sem referencia, vou rodar /map-project pra entender a estrutura
              >  antes de investigar. Isso consome mais tokens — tudo bem?"
 
  Passo 2  — Investigar a partir da referencia (ou do mapeamento)
              - Ler somente os arquivos apontados e seus dependentes diretos
              - Reproduzir o bug mentalmente (ou pedir ao dev pra rodar)
-             - Identificar causa raiz
+             - Identificar causa raiz (ou hipoteses, se houver duvida)
              - NAO expandir a investigacao alem do necessario
+             - NAO escrever o relatorio ainda — o proximo passo eh discussao
 
- Passo 3  — Gerar o RELATORIO de diagnostico (docs/plans/bugfix-<slug>-report.md)
-             Conteudo obrigatorio:
+ Passo 3  — APRESENTAR ACHADOS EM CHAT E DISCUTIR (gate bloqueante)
+             Este passo eh BLOQUEANTE. Nunca pule da investigacao (Passo 2) direto
+             para o relatorio (Passo 4). O dev precisa sentir que esta discutindo
+             o bug e tomando decisoes — nao recebendo um documento ja decidido.
+
+             Apresentar em CHAT (nao em arquivo) um resumo estruturado:
+               - Diagnostico em 2-4 linhas
+               - Causa raiz (com arquivo:linha quando aplicavel)
+               - Pipeline / fluxo afetado (como o bug se manifesta)
+               - Solucoes CANDIDATAS — listar como OPCOES com trade-offs, nao como
+                 recomendacao fechada. Mesmo que voce tenha uma preferida, mostre
+                 as alternativas com pros/contras pro dev julgar
+               - Riscos / efeitos colaterais que precisam de decisao
+               - Pontos out-of-scope candidatos (o que NAO entra neste fix)
+
+             Em seguida, abrir Q&A estruturado com AskUserQuestion (uma chamada,
+             multiplas perguntas) cobrindo TODAS as decisoes em aberto. Exemplos
+             tipicos (adapte ao bug):
+               - "Qual abordagem prefere para a correcao?" (opcoes A/B/C, cada
+                 uma com descricao curta dos trade-offs)
+               - "Mexer no BE como salvaguarda ou so corrigir no FE?"
+               - "Tratar o sintoma secundario X neste mesmo bugfix ou separar
+                 em outro card?"
+               - "Aceita o trade-off Y (ex: edge case Z passa a se comportar
+                 como W)?"
+
+             Iteracao (parte essencial deste passo):
+               - Se o dev pedir mais investigacao em algum ponto, volte ao
+                 Passo 2 cirurgicamente (so o subconjunto pedido) e re-apresente
+               - Se o dev discordar de uma hipotese ou trouxer contexto novo,
+                 re-analise antes de avancar
+               - Se o dev quiser ver codigo/trecho especifico, mostre em chat
+                 sem criar arquivo ainda
+               - Repetir o ciclo "resumo + perguntas + ajustes" quantas vezes
+                 forem necessarias
+
+             Sinais de que voce esta racionalizando para pular este passo:
+               - "o dev ja sabe o que quer, eh so escrever"
+               - "sao 3 perguntas, vou listar e ja escrever junto"
+               - "tenho a solucao obvia, posso escrever o report e ele revisa"
+               - "o bug eh simples, nem precisa discutir"
+             Todos esses pensamentos significam: PARE. Apresente em chat,
+             abra Q&A, aguarde decisoes.
+
+             So avance para o Passo 4 quando o dev confirmar EXPLICITAMENTE
+             algo equivalente a: "ok, pode documentar" / "pode escrever o report" /
+             "fechado, escreve" / "manda gerar o plano".
+
+ Passo 4  — Gerar o RELATORIO de diagnostico (docs/plans/bugfix-<slug>-report.md)
+             Baseado nas decisoes ja alinhadas no Passo 3. Conteudo obrigatorio:
              - Resumo do bug (1-2 linhas)
              - Comportamento atual vs esperado
              - Causa raiz (com arquivo:linha quando aplicavel)
              - Arquivos afetados
              - Riscos / efeitos colaterais da correcao
-             - Solucao RECOMENDADA (descricao tecnica detalhada)
-             - Solucoes ALTERNATIVAS (listar 1-2 com trade-offs:
-               por que nao foi escolhida, quando usar)
+             - Solucao RECOMENDADA (a escolhida pelo dev no Passo 3,
+               com descricao tecnica detalhada)
+             - Solucoes ALTERNATIVAS (as outras opcoes apresentadas no Passo 3,
+               com trade-offs e por que nao foram escolhidas)
 
- Passo 4  — Gerar o PLANO de execucao (docs/plans/bugfix-<slug>-plan.md)
+ Passo 5  — Gerar o PLANO de execucao (docs/plans/bugfix-<slug>-plan.md)
              Este e o documento que a skill /flow-dev-guide vai executar.
              Deve ser AUTO-CONTIDO — o executor nao precisa inferir nada.
 
@@ -271,10 +333,10 @@ Se o dev corrigir, ajuste sem questionar.
              codigo-fonte de novo. Copiar trechos relevantes do atual
              (antes) e do proposto (depois) quando ajudar.
 
- Passo 4b — Escrever "## Stack & Skills" no topo do PLANO
+ Passo 5b — Escrever "## Stack & Skills" no topo do PLANO
              (contrato com /flow-dev-guide — stack detectado + skills a carregar)
 
- Passo 5  — Oferecer salvar o RELATORIO na issue do GitHub
+ Passo 6  — Oferecer salvar o RELATORIO na issue do GitHub
              Apos report + plan escritos, perguntar ao dev:
              > "Quer que eu salve o relatorio na descricao da issue do card?"
 
@@ -290,9 +352,9 @@ Se o dev corrigir, ajuste sem questionar.
              - Confirmar com o dev ANTES de sobrescrever
              - Apos sucesso, mostrar o link da issue atualizada
 
-             Se NAO: seguir para o Passo 6.
+             Se NAO: seguir para o Passo 7.
 
- Passo 6  — Oferecer criar sub-issues por fase (so se houver fases)
+ Passo 7  — Oferecer criar sub-issues por fase (so se houver fases)
              Inspecionar o PLANO (`bugfix-<slug>-plan.md`) para detectar fases:
              - "Fase" = unidade de trabalho separavel (ex: mudanca em arquivos
                diferentes, refactor independente, migration separada do codigo).
@@ -304,7 +366,7 @@ Se o dev corrigir, ajuste sem questionar.
              Se houver fases, perguntar:
              > "O plano tem [N] fases. Quer que eu crie uma sub-issue pra cada fase?"
 
-             Se SIM (requer que o Passo 5 tenha salvado a issue pai, ou que o dev
+             Se SIM (requer que o Passo 6 tenha salvado a issue pai, ou que o dev
              passe a referencia do pai agora):
              - Para cada fase: criar uma sub-issue linkada a issue pai
              - Titulo da sub-issue: "[Fase N] <nome da fase>"
@@ -321,14 +383,17 @@ Se o dev corrigir, ajuste sem questionar.
 ```
 
 **Regras especificas do W4:**
-- **PEDIR REFERENCIA PRIMEIRO** — economia de tokens e default.
+- **COLETAR REFERENCIA + CONTEXTO PRIMEIRO (Passo 1)** — duas dimensoes (tecnica e contexto). Nao repetir o que o dev ja deu; perguntar so o que ficou em branco e parece relevante.
+- **DISCUSSAO EM CHAT ANTES DE DOCUMENTAR (Passo 3 — bloqueante)** — NUNCA pule da investigacao direto para o relatorio. Apresentar achados, abrir Q&A com `AskUserQuestion`, iterar ate o dev confirmar explicitamente. O dev deve sentir que esta discutindo o bug, nao recebendo um documento pronto.
+- **APRESENTAR OPCOES, NAO CONCLUSOES FECHADAS** — no Passo 3, listar solucoes candidatas como opcoes com trade-offs. Pedir a escolha do dev, mesmo se voce tem uma preferida.
+- **ITERAR SE O DEV PUSHAR** — pedido de mais investigacao, discordancia de hipotese ou contexto novo = voltar ao Passo 2 cirurgicamente antes de avancar. Repetir o ciclo "resumo + perguntas + ajustes" quantas vezes precisar.
 - **/map-project so como FALLBACK** — quando o dev nao tem nenhuma referencia pra dar. Avisar o dev antes de invocar (consome mais tokens).
 - **NAO** escrever codigo da correcao de verdade (nao edita arquivos do projeto). Esta skill so planeja — mas o plano DEVE conter pseudo-codigo, diffs propostos ou esqueletos suficientes pro /flow-dev-guide implementar sem re-investigar.
 - **SEMPRE** incluir o teste que simula o bug como **primeiro passo de execucao** do plano. Sem excecao. Se for dificil escrever teste unitario, documente o motivo e proponha integracao ou E2E equivalente — mas algum teste que falhe antes e passe depois precisa existir.
 - **SEMPRE** listar pelo menos a solucao recomendada + 1-2 alternativas no RELATORIO, com trade-offs. O PLANO usa a recomendada e pode citar a alternativa como fallback.
 - **NAO** pular o Step 2 (confirmar red) no plano — e o que garante que o teste realmente cobre o bug.
-- **SEMPRE oferecer salvar o RELATORIO na issue** (Passo 5) apos report+plan escritos — nunca salvar sem confirmar; nunca sobrescrever descricao existente sem confirmar se e pra sobrescrever ou anexar.
-- **Sub-issues por fase sao condicionais** (Passo 6) — so oferecer se o plano realmente tiver fases separaveis; nao forcar sub-issues em bugfix simples de steps lineares.
+- **SEMPRE oferecer salvar o RELATORIO na issue** (Passo 6) apos report+plan escritos — nunca salvar sem confirmar; nunca sobrescrever descricao existente sem confirmar se e pra sobrescrever ou anexar.
+- **Sub-issues por fase sao condicionais** (Passo 7) — so oferecer se o plano realmente tiver fases separaveis; nao forcar sub-issues em bugfix simples de steps lineares.
 - **Publicacao no GitHub e opt-in** — se o dev disser nao em qualquer um dos passos, seguir para a conclusao sem insistir.
 
 #### W5: Refactoring
@@ -593,7 +658,9 @@ Quer comecar algo novo?
 
 - **Nunca implementa codigo** — esta skill so planeja
 - **Nunca avanca sem confirmacao** do dev
-- **Bug fix (W4) sempre comeca pedindo referencia** — economia de tokens e investigacao cirurgica. `/map-project` so como fallback quando o dev nao tem nenhuma pista, e com aviso previo.
+- **Bug fix (W4) sempre comeca coletando referencia + contexto** — duas dimensoes (tecnica e contexto). `/map-project` so como fallback quando o dev nao tem nenhuma pista, e com aviso previo.
+- **Bug fix (W4) sempre apresenta achados em chat e itera antes de documentar** — Passo 3 eh bloqueante; nunca pule da investigacao direto pro relatorio. O dev deve sentir que esta discutindo o bug, nao recebendo um documento pronto.
+- **Bug fix (W4) apresenta solucoes como opcoes, nao como conclusoes fechadas** — listar candidatas com trade-offs e pedir escolha do dev, mesmo tendo uma preferida.
 - **Bug fix (W4) sempre inclui teste que simula o bug como primeiro passo de execucao** — red antes de green, sem excecao
 - **Bug fix (W4) sempre inclui solucoes concretas no plano** — solucao recomendada com pseudo-codigo/diff + alternativas no relatorio, pra que /flow-dev-guide implemente sem precisar re-investigar
 - **Nunca perde o contexto** do passo atual — mesmo apos responder duvidas, volta ao passo
