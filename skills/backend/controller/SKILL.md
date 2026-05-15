@@ -219,13 +219,13 @@ public async upload(@UploadedFile() file: Express.Multer.File): Promise<void> {
 
 ## Register in HttpModule
 
-Add the controller in `src/access/http/http.module.ts`:
+Two registrations in `src/access/http/http.module.ts`. Both required.
+
+### 1. The `controllers` array
 
 ```typescript
-// 1. Import at the top
 import { MyFeatureController } from './controllers/my-feature/my-feature.controller';
 
-// 2. In the controllers array of @Module
 @Module({
     imports: [...],
     controllers: [
@@ -235,6 +235,19 @@ import { MyFeatureController } from './controllers/my-feature/my-feature.control
     ]
 })
 export class HttpModule {}
+```
+
+### 2. AuthMiddleware in `configure(consumer)`
+
+**Apply `AuthMiddleware` for standard authenticated controllers. Always.**
+
+```typescript
+export class HttpModule implements NestModule {
+    public configure(consumer: MiddlewareConsumer): void {
+        // ...existing lines...
+        consumer.apply(HmacAuthMiddleware({ strict: false }), AuthMiddleware).forRoutes(MyFeatureController);
+    }
+}
 ```
 
 ---
@@ -264,5 +277,6 @@ Follow the project's REST conventions:
 - [ ] `@ExceptionInterceptor()` on all endpoints
 - [ ] `@HttpCode(HttpStatus.OK)` when not using status 201
 - [ ] Business logic only in the Application, not in the controller
-- [ ] Controller registered in `HttpModule`
+- [ ] Controller added to the `controllers: [...]` array in `HttpModule`
+- [ ] **Standard authenticated controller wired with `AuthMiddleware` in `HttpModule.configure(consumer)`** — always
 - [ ] Integration tests written (see skill-tdd)
