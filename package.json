@@ -1,0 +1,17 @@
+{
+    "name": "zoppy-github-defaults",
+    "version": "0.0.1",
+    "description": "Zoppy organization defaults (issue templates, workflows, shared skills).",
+    "private": true,
+    "license": "UNLICENSED",
+    "scripts": {
+        "pretty": "npx prettier --write .",
+        "pre-commit": "pretty-quick --staged",
+        "prepare": "husky install"
+    },
+    "devDependencies": {
+        "husky": "^7.0.0",
+        "prettier": "^2.7.1",
+        "pretty-quick": "^3.1.3"
+    }
+}
