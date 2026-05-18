@@ -7,6 +7,14 @@ description: Create new skills, modify and improve existing skills, and measure 
 
 A skill for creating new skills and iteratively improving them.
 
+> ⚠️ **All skill source files live in the `Zoppy-crm/.github` repository.**
+>
+> Skills surfaced to agents (controller, migration, domain, testing, code-review, etc.) are loaded from this repo's `skills/` tree and synced to other repos. **Edits made anywhere else — for example, `<some-repo>/.claude/skills/<name>/SKILL.md` inside `zoppy-api`, `zoppy-fe`, etc. — are not source of truth and will be overwritten on the next sync.** They cost time and look correct in review but achieve nothing.
+>
+> Always make skill changes in this repo (`Zoppy-crm/.github`), open a PR against the default branch (`development`), and let the sync propagate.
+>
+> Local path on the user's machine: `/home/acer-nitro/Zoppy/.github/skills/`.
+
 At a high level, the process of creating a skill goes like this:
 
 - Decide what you want the skill to do and roughly how it should do it
