@@ -1,12 +1,12 @@
 ---
 name: partners-api
 description: >
-  Partners API specifics for zoppy-api: port 8082, ExternalToken authentication, no /api prefix,
-  separate Swagger. Use this skill whenever working on the Partners API environment, creating or
-  modifying partners endpoints, or asked about external partner integrations. Triggers on:
-  "partners API", "Partners environment", "PARTNERS service", "external token", "ExternalToken",
-  "port 8082", "partners endpoint", "api parceiros", "autenticação parceiros", "partners swagger",
-  "PartnersExternalAuthMiddleware", "initializePartnersSwagger".
+    Partners API specifics for zoppy-api: port 8082, ExternalToken authentication, no /api prefix,
+    separate Swagger. Use this skill whenever working on the Partners API environment, creating or
+    modifying partners endpoints, or asked about external partner integrations. Triggers on:
+    "partners API", "Partners environment", "PARTNERS service", "external token", "ExternalToken",
+    "port 8082", "partners endpoint", "api parceiros", "autenticação parceiros", "partners swagger",
+    "PartnersExternalAuthMiddleware", "initializePartnersSwagger".
 ---
 
 # Partners API
@@ -15,13 +15,13 @@ The Partners API runs as a separate service environment (`API_SERVICE_ENVIRONMEN
 
 ## Key Differences from the Main API
 
-| | Main API | Partners API |
-|---|---|---|
-| Port | 8080 | 8082 |
-| URL prefix | `/api/...` | `/` (no prefix) |
-| Authentication | JWT Bearer token | `ExternalToken` lookup |
+|                 | Main API                                 | Partners API              |
+| --------------- | ---------------------------------------- | ------------------------- |
+| Port            | 8080                                     | 8082                      |
+| URL prefix      | `/api/...`                               | `/` (no prefix)           |
+| Authentication  | JWT Bearer token                         | `ExternalToken` lookup    |
 | Validation pipe | Strict (whitelist, forbidNonWhitelisted) | Permissive (no whitelist) |
-| Swagger | `/api/docs` | `/docs` |
+| Swagger         | `/api/docs`                              | `/docs`                   |
 
 ## Endpoints
 
@@ -51,6 +51,6 @@ The Partners API has its own Swagger instance initialized via `initializePartner
 
 ## Important Notes
 
-- **SysMiddle endpoints were intentionally removed** (partnership cancelled) — do not re-add them
-- The more permissive validation pipe means partners can send extra fields without a 400 error — this is intentional for forward compatibility
-- Partners controllers live in `src/access/http/controllers/partners/` (or similar) — keep them separate from main API controllers
+-   **SysMiddle endpoints were intentionally removed** (partnership cancelled) — do not re-add them
+-   The more permissive validation pipe means partners can send extra fields without a 400 error — this is intentional for forward compatibility
+-   Partners controllers live in `src/access/http/controllers/partners/` (or similar) — keep them separate from main API controllers

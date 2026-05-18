@@ -1,12 +1,12 @@
-name: "Revisão de PR"
-description: "Card pra registrar tempo gasto revisando PRs. 1 card por dev por roadmap (ou sub-issue de bug, se for revisão de PR de bug)"
-labels: ["work: revisao-pr"]
+name: 'Revisão de PR'
+description: 'Card pra registrar tempo gasto revisando PRs. 1 card por dev por roadmap (ou sub-issue de bug, se for revisão de PR de bug)'
+labels: ['work: revisao-pr']
 body:
-  - type: textarea
-    id: notes
-    attributes:
-      label: Observações
-      description: "Notas livres sobre a revisão (opcional). Use o field 'Horas Gastas' do Project pra registrar o tempo"
-      placeholder: "Ex: PRs revisados, principais pontos levantados, etc."
-    validations:
-      required: false
+    - type: textarea
+      id: notes
+      attributes:
+          label: Observações
+          description: "Notas livres sobre a revisão (opcional). Use o field 'Horas Gastas' do Project pra registrar o tempo"
+          placeholder: 'Ex: PRs revisados, principais pontos levantados, etc.'
+      validations:
+          required: false

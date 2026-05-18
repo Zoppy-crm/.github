@@ -49,13 +49,13 @@ public async getMetrics(type: string, id: string): Promise<IntegrationMetricsRes
 
 ## Limites de complexidade
 
-| Métrica | Limite | Ação quando excede |
-|---------|--------|--------------------|
-| **Linhas por método público** | ~20-25 | Extrair para métodos privados |
-| **Linhas por método privado** | ~15-20 | Extrair para helper ou subdividir |
-| **Nesting depth** | 2 níveis | Usar early returns ou extrair |
-| **Parâmetros** | 4 max | Usar options object / interface |
-| **Responsabilidades** | 1 por método | Separar validação, query, cálculo, response |
+| Métrica                       | Limite       | Ação quando excede                          |
+| ----------------------------- | ------------ | ------------------------------------------- |
+| **Linhas por método público** | ~20-25       | Extrair para métodos privados               |
+| **Linhas por método privado** | ~15-20       | Extrair para helper ou subdividir           |
+| **Nesting depth**             | 2 níveis     | Usar early returns ou extrair               |
+| **Parâmetros**                | 4 max        | Usar options object / interface             |
+| **Responsabilidades**         | 1 por método | Separar validação, query, cálculo, response |
 
 ---
 
@@ -63,21 +63,21 @@ public async getMetrics(type: string, id: string): Promise<IntegrationMetricsRes
 
 ### Quando extrair
 
-- Bloco de código tem um **propósito nomeável** ("calcular métricas", "construir response")
-- Método público excede ~25 linhas
-- Lógica de `reduce`, `map`, `filter` com mais de 1 transformação
-- Condicional complexa (if/else com lógica de negócio nos dois branches)
+-   Bloco de código tem um **propósito nomeável** ("calcular métricas", "construir response")
+-   Método público excede ~25 linhas
+-   Lógica de `reduce`, `map`, `filter` com mais de 1 transformação
+-   Condicional complexa (if/else com lógica de negócio nos dois branches)
 
 ### Nomenclatura de métodos privados
 
-| Prefixo | Uso | Exemplo |
-|---------|-----|---------|
-| `validate` | Validação com throw | `validateType(type)` |
-| `find` / `fetch` | Query ao domain | `findOrderSyncs(type, id)` |
-| `calculate` / `compute` | Lógica de cálculo puro | `calculateMetrics(syncs)` |
-| `build` / `map` | Construção de DTO/response | `buildMetricsResponse(metrics)` |
-| `create` / `save` | Persistência | `createIntegration(request)` |
-| `queue` / `dispatch` | Enfileiramento | `queueProcessing(data)` |
+| Prefixo                 | Uso                        | Exemplo                         |
+| ----------------------- | -------------------------- | ------------------------------- |
+| `validate`              | Validação com throw        | `validateType(type)`            |
+| `find` / `fetch`        | Query ao domain            | `findOrderSyncs(type, id)`      |
+| `calculate` / `compute` | Lógica de cálculo puro     | `calculateMetrics(syncs)`       |
+| `build` / `map`         | Construção de DTO/response | `buildMetricsResponse(metrics)` |
+| `create` / `save`       | Persistência               | `createIntegration(request)`    |
+| `queue` / `dispatch`    | Enfileiramento             | `queueProcessing(data)`         |
 
 ### Posição no arquivo
 
@@ -211,13 +211,13 @@ private buildMetricsResponse(
 
 ## Checklist antes de finalizar um application service
 
-- [ ] Nenhum método público excede ~25 linhas
-- [ ] Cada método tem uma única responsabilidade
-- [ ] Nesting máximo de 2 níveis
-- [ ] Nenhum `any` em variáveis — tudo tipado
-- [ ] Variáveis com nomes completos e descritivos (nunca `i`, `s`, `k`)
-- [ ] Validações no início com early returns
-- [ ] Cálculos complexos extraídos para métodos privados
-- [ ] Interfaces para dados intermediários (não objetos anônimos)
-- [ ] Response construído em método separado (quando > 5 campos)
-- [ ] `companyId` vem de `this.session.getCompany().id`
+-   [ ] Nenhum método público excede ~25 linhas
+-   [ ] Cada método tem uma única responsabilidade
+-   [ ] Nesting máximo de 2 níveis
+-   [ ] Nenhum `any` em variáveis — tudo tipado
+-   [ ] Variáveis com nomes completos e descritivos (nunca `i`, `s`, `k`)
+-   [ ] Validações no início com early returns
+-   [ ] Cálculos complexos extraídos para métodos privados
+-   [ ] Interfaces para dados intermediários (não objetos anônimos)
+-   [ ] Response construído em método separado (quando > 5 campos)
+-   [ ] `companyId` vem de `this.session.getCompany().id`

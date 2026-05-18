@@ -23,21 +23,23 @@ O usuário deve fornecer:
 
 1. **Screenshot da tela** — print do Figma, Figma Dev Mode, ou qualquer captura visual
 2. **Notas do design** (quanto mais, melhor):
-   - Cores e tipografia (`#1A1A2E`, `font-size: 14px`, tokens como `--color-primary`)
-   - Espaçamentos relevantes (`padding: 16px 24px`, `gap: 8px`)
-   - Comportamentos interativos (hover, click, estados: empty, loading, error)
-   - Componentes do design system já identificados (ex: "esse botão é o `<zoppy-button>` primário")
-   - Breakpoints relevantes (mobile/desktop)
+    - Cores e tipografia (`#1A1A2E`, `font-size: 14px`, tokens como `--color-primary`)
+    - Espaçamentos relevantes (`padding: 16px 24px`, `gap: 8px`)
+    - Comportamentos interativos (hover, click, estados: empty, loading, error)
+    - Componentes do design system já identificados (ex: "esse botão é o `<zoppy-button>` primário")
+    - Breakpoints relevantes (mobile/desktop)
 
 Se o usuário não forneceu a imagem, peça:
+
 > "Anexe o screenshot da tela e, se possível, as propriedades copiadas do Figma Dev Mode (cores, espaçamentos, tipografia)."
 
 ### Salvar design recebido no plano
 
 Quando o usuário fornecer imagens de design, salvar no plano da fase para uso futuro nas implementações:
-- Tentar incorporar a imagem diretamente no markdown do plano via `![descricao](caminho)`
-- Se não for possível (imagem muito grande, formato incompatível), salvar em `docs/plans/assets/<nome-do-plano>/` e referenciar no markdown
-- Adicionar/atualizar a seção `## Design de Referência` no plano com imagem + notas de estilo extraídas
+
+-   Tentar incorporar a imagem diretamente no markdown do plano via `![descricao](caminho)`
+-   Se não for possível (imagem muito grande, formato incompatível), salvar em `docs/plans/assets/<nome-do-plano>/` e referenciar no markdown
+-   Adicionar/atualizar a seção `## Design de Referência` no plano com imagem + notas de estilo extraídas
 
 ## Workflow
 
@@ -45,29 +47,32 @@ Quando o usuário fornecer imagens de design, salvar no plano da fase para uso f
 
 Observe a imagem com atenção e identifique:
 
-- **Estrutura geral**: é uma página completa, um modal, um card, um formulário?
-- **Regiões visuais**: header, sidebar, conteúdo principal, footer, painéis
-- **Componentes presentes**: tabelas, listas, botões, inputs, badges, ícones, avatares
-- **Estados visíveis**: loading skeleton, empty state, erro, selecionado, desabilitado
-- **Interações inferíveis**: cliques, hovers, expansão, paginação, filtros
+-   **Estrutura geral**: é uma página completa, um modal, um card, um formulário?
+-   **Regiões visuais**: header, sidebar, conteúdo principal, footer, painéis
+-   **Componentes presentes**: tabelas, listas, botões, inputs, badges, ícones, avatares
+-   **Estados visíveis**: loading skeleton, empty state, erro, selecionado, desabilitado
+-   **Interações inferíveis**: cliques, hovers, expansão, paginação, filtros
 
 ### 2. Cruzar com as notas do desenvolvedor
 
 Use as notas fornecidas para preencher os detalhes que a imagem não revela:
-- Substitua cores visuais por tokens ou variáveis reais quando fornecidos
-- Use os espaçamentos exatos em vez de estimados
-- Confirme quais componentes do design system já cobrem os elementos identificados
+
+-   Substitua cores visuais por tokens ou variáveis reais quando fornecidos
+-   Use os espaçamentos exatos em vez de estimados
+-   Confirme quais componentes do design system já cobrem os elementos identificados
 
 ### 3. Explorar o projeto para reuso
 
 Busque no codebase:
-- Componentes existentes em `@Zoppy-crm/ui-*` que cobrem elementos do design
-- Features similares em `src/core/pages/dashboard/` como referência de estrutura
-- State services que já gerenciam dados relacionados
+
+-   Componentes existentes em `@Zoppy-crm/ui-*` que cobrem elementos do design
+-   Features similares em `src/core/pages/dashboard/` como referência de estrutura
+-   State services que já gerenciam dados relacionados
 
 ### 4. Produzir o plano de implementação
 
 #### 4.1 — Resumo Visual
+
 2–3 frases descrevendo o que a tela faz e as interações principais. Mencione incertezas da análise visual (ex: "não está claro se o filtro colapsa ou abre um dropdown — confirme com o designer").
 
 #### 4.2 — Hierarquia de Componentes
@@ -89,10 +94,11 @@ Busque no codebase:
 ```
 
 Regras:
-- Smart container = 1 por feature; injeta services, não recebe `input()`
-- Dumb components = só `input()` e `output()`, sem injeção de service
-- Nenhum componente > ~150 linhas; extraia sub-componentes quando crescer
-- Use componentes do `@Zoppy-crm/ui-*` em vez de reimplementar (liste quais)
+
+-   Smart container = 1 por feature; injeta services, não recebe `input()`
+-   Dumb components = só `input()` e `output()`, sem injeção de service
+-   Nenhum componente > ~150 linhas; extraia sub-componentes quando crescer
+-   Use componentes do `@Zoppy-crm/ui-*` em vez de reimplementar (liste quais)
 
 #### 4.3 — Estrutura de Pastas
 
@@ -113,38 +119,41 @@ src/core/pages/dashboard/<feature-name>/
 
 #### 4.4 — Plano de Estado
 
-| Dado | Onde | Por quê |
-|------|------|---------|
-| Lista de itens da API | `WritableSignal` no StateService | Compartilhado entre tabela e modal |
-| Item selecionado | `WritableSignal` no StateService | Necessário em múltiplos componentes |
-| Modal aberto/fechado | `signal()` no Smart Container | Estado local de UI |
-| Valores de formulário | `signal()` no Dumb Component | Encapsulado no form |
+| Dado                  | Onde                             | Por quê                             |
+| --------------------- | -------------------------------- | ----------------------------------- |
+| Lista de itens da API | `WritableSignal` no StateService | Compartilhado entre tabela e modal  |
+| Item selecionado      | `WritableSignal` no StateService | Necessário em múltiplos componentes |
+| Modal aberto/fechado  | `signal()` no Smart Container    | Estado local de UI                  |
+| Valores de formulário | `signal()` no Dumb Component     | Encapsulado no form                 |
 
 Regra: estado que cruza mais de 1 nível de componente → state service. Estado local de 1 componente → `signal()` dentro dele.
 
 #### 4.5 — Reuso do Design System
 
 Liste o mapeamento entre elementos do design e componentes existentes:
-- ex: "Botão primário → `<zoppy-button variant='primary'>`"
-- ex: "Tabela com paginação → `<zoppy-table>`"
-- ex: "Campo de texto → `<zoppy-input>`"
+
+-   ex: "Botão primário → `<zoppy-button variant='primary'>`"
+-   ex: "Tabela com paginação → `<zoppy-table>`"
+-   ex: "Campo de texto → `<zoppy-input>`"
 
 Liste elementos sem componente existente que precisarão ser criados do zero.
 
 #### 4.6 — Estilização (Tailwind)
 
 Classes-chave inferidas do design ou das notas:
-- Layout: `flex`, `grid`, colunas, gaps
-- Espaçamentos: padding/margin relevantes
-- Cores: classes ou CSS custom properties (`var(--color-primary)`)
-- Tipografia: tamanhos, pesos
+
+-   Layout: `flex`, `grid`, colunas, gaps
+-   Espaçamentos: padding/margin relevantes
+-   Cores: classes ou CSS custom properties (`var(--color-primary)`)
+-   Tipografia: tamanhos, pesos
 
 #### 4.7 — Incertezas e Perguntas
 
 Liste o que não ficou claro na imagem e precisa de confirmação antes de implementar:
-- ex: "O estado vazio da tabela tem uma ilustração ou apenas texto?"
-- ex: "O modal fecha ao clicar fora ou só pelo botão X?"
-- ex: "Qual endpoint alimenta esta lista?"
+
+-   ex: "O estado vazio da tabela tem uma ilustração ou apenas texto?"
+-   ex: "O modal fecha ao clicar fora ou só pelo botão X?"
+-   ex: "Qual endpoint alimenta esta lista?"
 
 #### 4.8 — Sequência de Implementação
 
@@ -168,8 +177,8 @@ Liste o que não ficou claro na imagem e precisa de confirmação antes de imple
 
 ## Regras
 
-- **Nunca comece a implementar** — esta skill só planeja
-- Se a imagem for ambígua em algum ponto, registre na seção 4.7 (Incertezas) em vez de assumir
-- Se as notas do desenvolvedor conflitarem com a imagem, pergunte antes de decidir
-- Se a tela for complexa (>5 componentes), sugira dividir em fases
-- Sempre verifique features similares em `src/core/pages/dashboard/` antes de propor novos padrões
+-   **Nunca comece a implementar** — esta skill só planeja
+-   Se a imagem for ambígua em algum ponto, registre na seção 4.7 (Incertezas) em vez de assumir
+-   Se as notas do desenvolvedor conflitarem com a imagem, pergunte antes de decidir
+-   Se a tela for complexa (>5 componentes), sugira dividir em fases
+-   Sempre verifique features similares em `src/core/pages/dashboard/` antes de propor novos padrões

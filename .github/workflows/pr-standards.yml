@@ -1,165 +1,165 @@
 name: PR Standards Check
 
 on:
-  pull_request:
-    types: [opened, edited, synchronize]
+    pull_request:
+        types: [opened, edited, synchronize]
 
 permissions:
-  pull-requests: write
-  contents: read
+    pull-requests: write
+    contents: read
 
 jobs:
-  pr-standards:
-    runs-on: self-hosted
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            const warnings = [];
-            const tips = [];
+    pr-standards:
+        runs-on: self-hosted
+        steps:
+            - uses: actions/github-script@v7
+              with:
+                  script: |
+                      const pr = context.payload.pull_request;
+                      const warnings = [];
+                      const tips = [];
 
-            // ── 1. Branch naming ──────────────────────────────────
-            const branch = pr.head.ref;
-            const validPrefixes = [
-              'milestone/', 'task/', 'bugfix/', 'hotfix/',
-              'chore/', 'refactor/', 'feat/', 'feature/',
-              'release/', 'dependabot/'
-            ];
-            const hasValidPrefix = validPrefixes.some(p => branch.startsWith(p));
+                      // ── 1. Branch naming ──────────────────────────────────
+                      const branch = pr.head.ref;
+                      const validPrefixes = [
+                        'milestone/', 'task/', 'bugfix/', 'hotfix/',
+                        'chore/', 'refactor/', 'feat/', 'feature/',
+                        'release/', 'dependabot/'
+                      ];
+                      const hasValidPrefix = validPrefixes.some(p => branch.startsWith(p));
 
-            if (!hasValidPrefix) {
-              warnings.push(
-                `**Branch naming:** \`${branch}\` não segue o padrão esperado.\n` +
-                `Prefixos válidos: ${validPrefixes.map(p => '\`' + p + '\`').join(', ')}\n` +
-                `Ex: \`milestone/nova-feature\`, \`task/nova-feature/criar-endpoint\`, \`bugfix/corrigir-bug-x\`, \`hotfix/fix-producao\``
-              );
-            }
+                      if (!hasValidPrefix) {
+                        warnings.push(
+                          `**Branch naming:** \`${branch}\` não segue o padrão esperado.\n` +
+                          `Prefixos válidos: ${validPrefixes.map(p => '\`' + p + '\`').join(', ')}\n` +
+                          `Ex: \`milestone/nova-feature\`, \`task/nova-feature/criar-endpoint\`, \`bugfix/corrigir-bug-x\`, \`hotfix/fix-producao\``
+                        );
+                      }
 
-            // Validate task/ branches target a milestone/ branch
-            if (branch.startsWith('task/') && !pr.base.ref.startsWith('milestone/')) {
-              tips.push(
-                `**Task branch flow:** \`task/\` branches normalmente apontam para uma \`milestone/\` branch, ` +
-                `mas este PR aponta para \`${pr.base.ref}\`. Confira se é intencional.`
-              );
-            }
+                      // Validate task/ branches target a milestone/ branch
+                      if (branch.startsWith('task/') && !pr.base.ref.startsWith('milestone/')) {
+                        tips.push(
+                          `**Task branch flow:** \`task/\` branches normalmente apontam para uma \`milestone/\` branch, ` +
+                          `mas este PR aponta para \`${pr.base.ref}\`. Confira se é intencional.`
+                        );
+                      }
 
-            // ── 2. PR size ────────────────────────────────────────
-            const files = await github.paginate(github.rest.pulls.listFiles, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              per_page: 100,
-            });
+                      // ── 2. PR size ────────────────────────────────────────
+                      const files = await github.paginate(github.rest.pulls.listFiles, {
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: pr.number,
+                        per_page: 100,
+                      });
 
-            const testPatterns = [/\.spec\.ts$/, /\.test\.ts$/, /\.spec\.js$/, /\.test\.js$/, /\.mock\.ts$/];
-            const migrationPattern = /\/migrations\//;
-            const lockfilePattern = /(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$/;
+                      const testPatterns = [/\.spec\.ts$/, /\.test\.ts$/, /\.spec\.js$/, /\.test\.js$/, /\.mock\.ts$/];
+                      const migrationPattern = /\/migrations\//;
+                      const lockfilePattern = /(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$/;
 
-            let linesChanged = 0;
-            let linesChangedTotal = 0;
-            let nonRelatedFiles = new Set();
-            const filesByDir = {};
+                      let linesChanged = 0;
+                      let linesChangedTotal = 0;
+                      let nonRelatedFiles = new Set();
+                      const filesByDir = {};
 
-            for (const file of files) {
-              const changes = (file.additions || 0) + (file.deletions || 0);
-              linesChangedTotal += changes;
+                      for (const file of files) {
+                        const changes = (file.additions || 0) + (file.deletions || 0);
+                        linesChangedTotal += changes;
 
-              const isTest = testPatterns.some(p => p.test(file.filename));
-              const isMigration = migrationPattern.test(file.filename);
-              const isLockfile = lockfilePattern.test(file.filename);
+                        const isTest = testPatterns.some(p => p.test(file.filename));
+                        const isMigration = migrationPattern.test(file.filename);
+                        const isLockfile = lockfilePattern.test(file.filename);
 
-              if (!isTest && !isMigration && !isLockfile) {
-                linesChanged += changes;
-              }
+                        if (!isTest && !isMigration && !isLockfile) {
+                          linesChanged += changes;
+                        }
 
-              // Track top-level directories for focus check
-              const topDir = file.filename.split('/').slice(0, 2).join('/');
-              filesByDir[topDir] = (filesByDir[topDir] || 0) + 1;
-            }
+                        // Track top-level directories for focus check
+                        const topDir = file.filename.split('/').slice(0, 2).join('/');
+                        filesByDir[topDir] = (filesByDir[topDir] || 0) + 1;
+                      }
 
-            const softLimit = 400;
-            const hardLimit = 800;
+                      const softLimit = 400;
+                      const hardLimit = 800;
 
-            if (linesChanged > hardLimit) {
-              warnings.push(
-                `**PR muito grande:** ${linesChanged} linhas alteradas (excluindo testes, migrations e lockfiles).\n` +
-                `O limite recomendado é **${softLimit} linhas**. PRs acima de ${hardLimit} linhas dificultam o review e aumentam o risco de bugs.\n` +
-                `Considere fatiar em tasks menores usando \`task/<milestone>/<task>\`.`
-              );
-            } else if (linesChanged > softLimit) {
-              tips.push(
-                `**PR acima do recomendado:** ${linesChanged} linhas alteradas (excluindo testes, migrations e lockfiles).\n` +
-                `O ideal é manter abaixo de **${softLimit} linhas** para facilitar o review.`
-              );
-            }
+                      if (linesChanged > hardLimit) {
+                        warnings.push(
+                          `**PR muito grande:** ${linesChanged} linhas alteradas (excluindo testes, migrations e lockfiles).\n` +
+                          `O limite recomendado é **${softLimit} linhas**. PRs acima de ${hardLimit} linhas dificultam o review e aumentam o risco de bugs.\n` +
+                          `Considere fatiar em tasks menores usando \`task/<milestone>/<task>\`.`
+                        );
+                      } else if (linesChanged > softLimit) {
+                        tips.push(
+                          `**PR acima do recomendado:** ${linesChanged} linhas alteradas (excluindo testes, migrations e lockfiles).\n` +
+                          `O ideal é manter abaixo de **${softLimit} linhas** para facilitar o review.`
+                        );
+                      }
 
-            // ── 3. PR description ─────────────────────────────────
-            const body = (pr.body || '').trim();
+                      // ── 3. PR description ─────────────────────────────────
+                      const body = (pr.body || '').trim();
 
-            if (!body) {
-              warnings.push(
-                '**Descrição vazia:** o PR não tem descrição. Adicione pelo menos:\n' +
-                '- **O que muda** (resumo da alteração)\n' +
-                '- **Por que** (contexto/motivação)\n' +
-                '- **Como testar** (passos para validar)'
-              );
-            } else if (body.length < 50) {
-              tips.push(
-                '**Descrição curta:** considere detalhar um pouco mais o PR. Uma boa descrição inclui: o que muda, por que, e como testar.'
-              );
-            }
+                      if (!body) {
+                        warnings.push(
+                          '**Descrição vazia:** o PR não tem descrição. Adicione pelo menos:\n' +
+                          '- **O que muda** (resumo da alteração)\n' +
+                          '- **Por que** (contexto/motivação)\n' +
+                          '- **Como testar** (passos para validar)'
+                        );
+                      } else if (body.length < 50) {
+                        tips.push(
+                          '**Descrição curta:** considere detalhar um pouco mais o PR. Uma boa descrição inclui: o que muda, por que, e como testar.'
+                        );
+                      }
 
-            // ── 4. Build comment ──────────────────────────────────
-            if (warnings.length === 0 && tips.length === 0) {
-              core.info('PR standards check passed. No warnings or tips.');
-              return;
-            }
+                      // ── 4. Build comment ──────────────────────────────────
+                      if (warnings.length === 0 && tips.length === 0) {
+                        core.info('PR standards check passed. No warnings or tips.');
+                        return;
+                      }
 
-            let comment = '';
+                      let comment = '';
 
-            if (warnings.length > 0) {
-              comment += '## ⚠️ PR Standards — Atenção\n\n';
-              comment += warnings.map((w, i) => `${i + 1}. ${w}`).join('\n\n');
-              comment += '\n\n';
-            }
+                      if (warnings.length > 0) {
+                        comment += '## ⚠️ PR Standards — Atenção\n\n';
+                        comment += warnings.map((w, i) => `${i + 1}. ${w}`).join('\n\n');
+                        comment += '\n\n';
+                      }
 
-            if (tips.length > 0) {
-              comment += '## 💡 Dicas\n\n';
-              comment += tips.map((t, i) => `${i + 1}. ${t}`).join('\n\n');
-              comment += '\n\n';
-            }
+                      if (tips.length > 0) {
+                        comment += '## 💡 Dicas\n\n';
+                        comment += tips.map((t, i) => `${i + 1}. ${t}`).join('\n\n');
+                        comment += '\n\n';
+                      }
 
-            comment += '---\n';
-            comment += `📏 **${linesChanged}** linhas alteradas (código) · **${linesChangedTotal - linesChanged}** linhas em testes/migrations/lockfiles · **${files.length}** arquivos\n\n`;
-            comment += '_Este check é informativo e não bloqueia o merge._';
+                      comment += '---\n';
+                      comment += `📏 **${linesChanged}** linhas alteradas (código) · **${linesChangedTotal - linesChanged}** linhas em testes/migrations/lockfiles · **${files.length}** arquivos\n\n`;
+                      comment += '_Este check é informativo e não bloqueia o merge._';
 
-            // Find and update existing comment, or create new one
-            const marker = '<!-- pr-standards-check -->';
-            comment = marker + '\n' + comment;
+                      // Find and update existing comment, or create new one
+                      const marker = '<!-- pr-standards-check -->';
+                      comment = marker + '\n' + comment;
 
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.number,
-            });
+                      const comments = await github.rest.issues.listComments({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: pr.number,
+                      });
 
-            const existing = comments.data.find(c => c.body && c.body.includes(marker));
+                      const existing = comments.data.find(c => c.body && c.body.includes(marker));
 
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body: comment,
-              });
-              core.info('Updated existing PR standards comment.');
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                body: comment,
-              });
-              core.info('Created PR standards comment.');
-            }
+                      if (existing) {
+                        await github.rest.issues.updateComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          comment_id: existing.id,
+                          body: comment,
+                        });
+                        core.info('Updated existing PR standards comment.');
+                      } else {
+                        await github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: pr.number,
+                          body: comment,
+                        });
+                        core.info('Created PR standards comment.');
+                      }

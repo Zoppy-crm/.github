@@ -13,7 +13,7 @@ Domain validations encapsulate business rules that should be checked before pers
 // src/domain/validation/interfaces/domain-validation.ts
 export abstract class DomainValidation<T extends Model> {
     protected validationErrors: string[] = [];
-    protected domain: RepositoryAdapter<T>;  // injected by the framework
+    protected domain: RepositoryAdapter<T>; // injected by the framework
 
     public async execute(request: T): Promise<void> {
         this.validationErrors = [];
@@ -70,11 +70,11 @@ export class YourEntityCreateValidation extends DomainValidation<YourEntity> {
 
 ### Key points
 
-- Always `@Injectable({ scope: Scope.REQUEST })` — needed for database access via session
-- `this.domain` gives access to the associated `RepositoryAdapter<T>` — use it for async checks
-- Accumulate multiple errors in `this.validationErrors[]` when possible (better UX than throwing on first failure)
-- For hard stops (uniqueness violation), throwing directly is acceptable
-- `execute()` throws `UnprocessableEntityException` with all collected errors at the end
+-   Always `@Injectable({ scope: Scope.REQUEST })` — needed for database access via session
+-   `this.domain` gives access to the associated `RepositoryAdapter<T>` — use it for async checks
+-   Accumulate multiple errors in `this.validationErrors[]` when possible (better UX than throwing on first failure)
+-   For hard stops (uniqueness violation), throwing directly is acceptable
+-   `execute()` throws `UnprocessableEntityException` with all collected errors at the end
 
 ## File naming convention
 
@@ -117,16 +117,16 @@ Validations are `Scope.REQUEST` providers — register in the appropriate module
 // In ApplicationModule or a feature module
 providers: [
     YourEntityApplication,
-    YourEntityCreateValidation,
+    YourEntityCreateValidation
     // ...
-]
+];
 ```
 
 ## When to use DomainValidation vs inline checks
 
-| Use `DomainValidation` | Use inline check in Application Service |
-|---|---|
-| Multiple rules that should be collected | Single guard condition |
-| Async uniqueness checks | Simple `if (!entity) throw NotFoundException` |
-| Rules reused across multiple application services | One-off validation for a specific use case |
-| Complex format/business rule validation | Existence check after `findById()` |
+| Use `DomainValidation`                            | Use inline check in Application Service       |
+| ------------------------------------------------- | --------------------------------------------- |
+| Multiple rules that should be collected           | Single guard condition                        |
+| Async uniqueness checks                           | Simple `if (!entity) throw NotFoundException` |
+| Rules reused across multiple application services | One-off validation for a specific use case    |
+| Complex format/business rule validation           | Existence check after `findById()`            |

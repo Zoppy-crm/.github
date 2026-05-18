@@ -595,9 +595,9 @@ AGENT_BROWSER_IDLE_TIMEOUT_MS=60000 agent-browser open example.com
 
 Refs (`@e1`, `@e2`, etc.) are invalidated when the page changes. Always re-snapshot after:
 
-- Clicking links or buttons that navigate
-- Form submissions
-- Dynamic content loading (dropdowns, modals)
+-   Clicking links or buttons that navigate
+-   Form submissions
+-   Dynamic content loading (dropdowns, modals)
 
 ```bash
 agent-browser click @e5              # Navigates to new page
@@ -620,10 +620,10 @@ agent-browser click @e2              # Click using ref from annotated screenshot
 
 Use annotated screenshots when:
 
-- The page has unlabeled icon buttons or visual-only elements
-- You need to verify visual layout or styling
-- Canvas or chart elements are present (invisible to text snapshots)
-- You need spatial reasoning about element positions
+-   The page has unlabeled icon buttons or visual-only elements
+-   You need to verify visual layout or styling
+-   Canvas or chart elements are present (invisible to text snapshots)
+-   You need spatial reasoning about element positions
 
 ## Semantic Locators (Alternative to Refs)
 
@@ -663,9 +663,9 @@ agent-browser eval -b "$(echo -n 'Array.from(document.querySelectorAll("a")).map
 
 **Rules of thumb:**
 
-- Single-line, no nested quotes -> regular `eval 'expression'` with single quotes is fine
-- Nested quotes, arrow functions, template literals, or multiline -> use `eval --stdin <<'EVALEOF'`
-- Programmatic/generated scripts -> use `eval -b` with base64
+-   Single-line, no nested quotes -> regular `eval 'expression'` with single quotes is fine
+-   Nested quotes, arrow functions, template literals, or multiline -> use `eval --stdin <<'EVALEOF'`
+-   Programmatic/generated scripts -> use `eval -b` with base64
 
 ## Configuration File
 
@@ -673,9 +673,9 @@ Create `agent-browser.json` in the project root for persistent settings:
 
 ```json
 {
-  "headed": true,
-  "proxy": "http://localhost:8080",
-  "profile": "./browser-data"
+    "headed": true,
+    "proxy": "http://localhost:8080",
+    "profile": "./browser-data"
 }
 ```
 
@@ -710,8 +710,9 @@ agent-browser --engine lightpanda --executable-path /path/to/lightpanda open exa
 ```
 
 Supported engines:
-- `chrome` (default) -- Chrome/Chromium via CDP
-- `lightpanda` -- Lightpanda headless browser via CDP (10x faster, 10x less memory than Chrome)
+
+-   `chrome` (default) -- Chrome/Chromium via CDP
+-   `lightpanda` -- Lightpanda headless browser via CDP (10x faster, 10x less memory than Chrome)
 
 Lightpanda does not support `--extension`, `--profile`, `--state`, or `--allow-file-access`. Install Lightpanda from https://lightpanda.io/docs/open-source/installation.
 

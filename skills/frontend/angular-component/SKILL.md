@@ -24,30 +24,30 @@ feature/
 import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
 
 @Component({
-  selector: 'app-user-card',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './user-card.component.html',
+    selector: 'app-user-card',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    templateUrl: './user-card.component.html'
 })
 export class UserCard {
-  // Required input
-  name = input.required<string>();
+    // Required input
+    name = input.required<string>();
 
-  // Optional input with default
-  email = input<string>('');
-  showEmail = input(false);
+    // Optional input with default
+    email = input<string>('');
+    showEmail = input(false);
 
-  // Input with transform
-  isActive = input(false, { transform: booleanAttribute });
+    // Input with transform
+    isActive = input(false, { transform: booleanAttribute });
 
-  // Computed from inputs
-  avatarUrl = computed(() => `https://api.example.com/avatar/${this.name()}`);
+    // Computed from inputs
+    avatarUrl = computed(() => `https://api.example.com/avatar/${this.name()}`);
 
-  // Output
-  selected = output<string>();
+    // Output
+    selected = output<string>();
 
-  handleClick() {
-    this.selected.emit(this.name());
-  }
+    handleClick() {
+        this.selected.emit(this.name());
+    }
 }
 ```
 
@@ -56,7 +56,7 @@ export class UserCard {
 <img [src]="avatarUrl()" [alt]="name() + ' avatar'" />
 <h2>{{ name() }}</h2>
 @if (showEmail()) {
-  <p>{{ email() }}</p>
+<p>{{ email() }}</p>
 }
 ```
 
@@ -108,41 +108,41 @@ Use the `host` object in `@Component`—do NOT use `@HostBinding` or `@HostListe
 ```typescript
 // button.component.ts
 @Component({
-  selector: 'app-button',
-  templateUrl: './button.component.html',
-  host: {
-    // Static attributes
-    'role': 'button',
+    selector: 'app-button',
+    templateUrl: './button.component.html',
+    host: {
+        // Static attributes
+        role: 'button',
 
-    // Dynamic class bindings
-    '[class.primary]': 'variant() === "primary"',
-    '[class.disabled]': 'disabled()',
+        // Dynamic class bindings
+        '[class.primary]': 'variant() === "primary"',
+        '[class.disabled]': 'disabled()',
 
-    // Dynamic style bindings
-    '[style.--btn-color]': 'color()',
+        // Dynamic style bindings
+        '[style.--btn-color]': 'color()',
 
-    // Attribute bindings
-    '[attr.aria-disabled]': 'disabled()',
-    '[attr.tabindex]': 'disabled() ? -1 : 0',
+        // Attribute bindings
+        '[attr.aria-disabled]': 'disabled()',
+        '[attr.tabindex]': 'disabled() ? -1 : 0',
 
-    // Event listeners
-    '(click)': 'onClick($event)',
-    '(keydown.enter)': 'onClick($event)',
-    '(keydown.space)': 'onClick($event)',
-  },
+        // Event listeners
+        '(click)': 'onClick($event)',
+        '(keydown.enter)': 'onClick($event)',
+        '(keydown.space)': 'onClick($event)'
+    }
 })
 export class Button {
-  variant = input<'primary' | 'secondary'>('primary');
-  disabled = input(false, { transform: booleanAttribute });
-  color = input('#007bff');
+    variant = input<'primary' | 'secondary'>('primary');
+    disabled = input(false, { transform: booleanAttribute });
+    color = input('#007bff');
 
-  clicked = output<void>();
+    clicked = output<void>();
 
-  onClick(event: Event) {
-    if (!this.disabled()) {
-      this.clicked.emit();
+    onClick(event: Event) {
+        if (!this.disabled()) {
+            this.clicked.emit();
+        }
     }
-  }
 }
 ```
 
@@ -156,8 +156,8 @@ export class Button {
 ```typescript
 // card.component.ts
 @Component({
-  selector: 'app-card',
-  templateUrl: './card.component.html',
+    selector: 'app-card',
+    templateUrl: './card.component.html'
 })
 export class Card {}
 ```
@@ -165,22 +165,23 @@ export class Card {}
 ```html
 <!-- card.component.html -->
 <header>
-  <ng-content select="[card-header]" />
+    <ng-content select="[card-header]" />
 </header>
 <main>
-  <ng-content />
+    <ng-content />
 </main>
 <footer>
-  <ng-content select="[card-footer]" />
+    <ng-content select="[card-footer]" />
 </footer>
 ```
 
 Uso:
+
 ```html
 <app-card>
-  <h2 card-header>Title</h2>
-  <p>Main content</p>
-  <button card-footer>Action</button>
+    <h2 card-header>Title</h2>
+    <p>Main content</p>
+    <button card-footer>Action</button>
 </app-card>
 ```
 
@@ -190,61 +191,66 @@ Uso:
 import { OnDestroy, OnInit, afterNextRender, afterRender } from '@angular/core';
 
 export class MyComponent implements OnInit, OnDestroy {
-  constructor() {
-    // For DOM manipulation after render (SSR-safe)
-    afterNextRender(() => {
-      // Runs once after first render
-    });
+    constructor() {
+        // For DOM manipulation after render (SSR-safe)
+        afterNextRender(() => {
+            // Runs once after first render
+        });
 
-    afterRender(() => {
-      // Runs after every render
-    });
-  }
+        afterRender(() => {
+            // Runs after every render
+        });
+    }
 
-  ngOnInit() { /* Component initialized */ }
-  ngOnDestroy() { /* Cleanup */ }
+    ngOnInit() {
+        /* Component initialized */
+    }
+    ngOnDestroy() {
+        /* Cleanup */
+    }
 }
 ```
 
 ## Accessibility Requirements
 
 Components MUST:
-- Pass AXE accessibility checks
-- Meet WCAG AA standards
-- Include proper ARIA attributes for interactive elements
-- Support keyboard navigation
-- Maintain visible focus indicators
+
+-   Pass AXE accessibility checks
+-   Meet WCAG AA standards
+-   Include proper ARIA attributes for interactive elements
+-   Support keyboard navigation
+-   Maintain visible focus indicators
 
 ```typescript
 // toggle.component.ts
 @Component({
-  selector: 'app-toggle',
-  templateUrl: './toggle.component.html',
-  host: {
-    'role': 'switch',
-    '[attr.aria-checked]': 'checked()',
-    '[attr.aria-label]': 'label()',
-    'tabindex': '0',
-    '(click)': 'toggle()',
-    '(keydown.enter)': 'toggle()',
-    '(keydown.space)': 'toggle(); $event.preventDefault()',
-  },
+    selector: 'app-toggle',
+    templateUrl: './toggle.component.html',
+    host: {
+        role: 'switch',
+        '[attr.aria-checked]': 'checked()',
+        '[attr.aria-label]': 'label()',
+        tabindex: '0',
+        '(click)': 'toggle()',
+        '(keydown.enter)': 'toggle()',
+        '(keydown.space)': 'toggle(); $event.preventDefault()'
+    }
 })
 export class Toggle {
-  label = input.required<string>();
-  checked = input(false, { transform: booleanAttribute });
-  checkedChange = output<boolean>();
+    label = input.required<string>();
+    checked = input(false, { transform: booleanAttribute });
+    checkedChange = output<boolean>();
 
-  toggle() {
-    this.checkedChange.emit(!this.checked());
-  }
+    toggle() {
+        this.checkedChange.emit(!this.checked());
+    }
 }
 ```
 
 ```html
 <!-- toggle.component.html -->
 <span class="toggle-track">
-  <span class="toggle-thumb"></span>
+    <span class="toggle-thumb"></span>
 </span>
 ```
 
@@ -255,26 +261,22 @@ Use native control flow—do NOT use `*ngIf`, `*ngFor`, `*ngSwitch`.
 ```html
 <!-- Conditionals -->
 @if (isLoading()) {
-  <app-spinner />
+<app-spinner />
 } @else if (error()) {
-  <app-error [message]="error()" />
+<app-error [message]="error()" />
 } @else {
-  <app-content [data]="data()" />
+<app-content [data]="data()" />
 }
 
 <!-- Loops -->
 @for (item of items(); track item.id) {
-  <app-item [item]="item" />
+<app-item [item]="item" />
 } @empty {
-  <p>No items found</p>
+<p>No items found</p>
 }
 
 <!-- Switch -->
-@switch (status()) {
-  @case ('pending') { <span>Pending</span> }
-  @case ('active') { <span>Active</span> }
-  @default { <span>Unknown</span> }
-}
+@switch (status()) { @case ('pending') { <span>Pending</span> } @case ('active') { <span>Active</span> } @default { <span>Unknown</span> } }
 ```
 
 ## Class and Style Bindings
@@ -300,11 +302,11 @@ Use `NgOptimizedImage` for static images:
 import { NgOptimizedImage } from '@angular/common';
 
 @Component({
-  imports: [NgOptimizedImage],
-  templateUrl: './hero.component.html',
+    imports: [NgOptimizedImage],
+    templateUrl: './hero.component.html'
 })
 export class Hero {
-  imageUrl = input.required<string>();
+    imageUrl = input.required<string>();
 }
 ```
 

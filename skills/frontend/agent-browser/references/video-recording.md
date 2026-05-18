@@ -6,12 +6,12 @@ Capture browser automation as video for debugging, documentation, or verificatio
 
 ## Contents
 
-- [Basic Recording](#basic-recording)
-- [Recording Commands](#recording-commands)
-- [Use Cases](#use-cases)
-- [Best Practices](#best-practices)
-- [Output Format](#output-format)
-- [Limitations](#limitations)
+-   [Basic Recording](#basic-recording)
+-   [Recording Commands](#recording-commands)
+-   [Use Cases](#use-cases)
+-   [Best Practices](#best-practices)
+-   [Output Format](#output-format)
+-   [Limitations](#limitations)
 
 ## Basic Recording
 
@@ -162,12 +162,12 @@ agent-browser record stop
 
 ## Output Format
 
-- Default format: WebM (VP8/VP9 codec)
-- Compatible with all modern browsers and video players
-- Compressed but high quality
+-   Default format: WebM (VP8/VP9 codec)
+-   Compatible with all modern browsers and video players
+-   Compressed but high quality
 
 ## Limitations
 
-- Recording adds slight overhead to automation
-- Large recordings can consume significant disk space
-- Some headless environments may have codec limitations
+-   Recording adds slight overhead to automation
+-   Large recordings can consume significant disk space
+-   Some headless environments may have codec limitations

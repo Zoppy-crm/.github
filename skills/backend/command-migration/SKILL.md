@@ -381,18 +381,18 @@ cron fires
 1. Read the source command in `zoppy-command` (usually `src/application/<feature>/<name>.command.ts`).
 2. Extract and document:
 
-| Aspect                       | Value                                                   |
-| ---------------------------- | ------------------------------------------------------- |
-| **Command class**            | Full path + class name                                  |
-| **Cron schedule**            | Key / cron expression / timezone                        |
-| **Eligibility rule**         | Exact WHERE clause / filter used to select entities     |
-| **Per-entity action**        | What method is called per eligible entity (HTTP? call?) |
-| **HTTP trigger endpoint**    | Does the command expose a manual POST? (if yes — URL)   |
-| **ProcessDataManagement**    | Does it create DSMs? If yes, where (command vs api)?    |
-| **Guard clauses**            | Boundary guards (e.g. `chargeDay > 28`, `plan != null`) |
-| **Target queue in api**      | Existing queue the per-entity processor lives on        |
-| **Per-entity job name**      | Existing `QueueJobEnum` entry to reuse                  |
-| **Per-entity processor**     | Existing processor class + file                         |
+| Aspect                    | Value                                                   |
+| ------------------------- | ------------------------------------------------------- |
+| **Command class**         | Full path + class name                                  |
+| **Cron schedule**         | Key / cron expression / timezone                        |
+| **Eligibility rule**      | Exact WHERE clause / filter used to select entities     |
+| **Per-entity action**     | What method is called per eligible entity (HTTP? call?) |
+| **HTTP trigger endpoint** | Does the command expose a manual POST? (if yes — URL)   |
+| **ProcessDataManagement** | Does it create DSMs? If yes, where (command vs api)?    |
+| **Guard clauses**         | Boundary guards (e.g. `chargeDay > 28`, `plan != null`) |
+| **Target queue in api**   | Existing queue the per-entity processor lives on        |
+| **Per-entity job name**   | Existing `QueueJobEnum` entry to reuse                  |
+| **Per-entity processor**  | Existing processor class + file                         |
 
 **Gate:** Confirm target queue and per-entity processor exist. If they don't, this isn't a Variant B migration — it's a full rebuild.
 
@@ -400,13 +400,13 @@ cron fires
 
 Formal delta check against source:
 
-| # | Aspect                  | Source (command) | Target (api) | Impact | Decision |
-| - | ----------------------- | ---------------- | ------------ | ------ | -------- |
-| 1 | Cron schedule           |                  |              |        |          |
-| 2 | Eligibility filter      |                  |              |        |          |
-| 3 | Guard clauses           |                  |              |        |          |
-| 4 | DSM creation            |                  |              |        |          |
-| 5 | Timezone                |                  |              |        |          |
+| #   | Aspect             | Source (command) | Target (api) | Impact | Decision |
+| --- | ------------------ | ---------------- | ------------ | ------ | -------- |
+| 1   | Cron schedule      |                  |              |        |          |
+| 2   | Eligibility filter |                  |              |        |          |
+| 3   | Guard clauses      |                  |              |        |          |
+| 4   | DSM creation       |                  |              |        |          |
+| 5   | Timezone           |                  |              |        |          |
 
 **Impact levels:** CRITICAL (drops or duplicates eligibility), MEDIUM (behavior difference), LOW.
 
@@ -416,21 +416,21 @@ Formal delta check against source:
 
 **Files to CREATE:**
 
-| File                                                          | Description                                                |
-| ------------------------------------------------------------- | ---------------------------------------------------------- |
-| `src/access/queues/command/<feature>/<name>.command.ts`       | Scheduler, extends `BaseCommand<void>`, enqueues aggregator |
-| `src/application/<feature>/<feature>.application.spec.ts`     | Unit tests for the new aggregator method                   |
+| File                                                      | Description                                                 |
+| --------------------------------------------------------- | ----------------------------------------------------------- |
+| `src/access/queues/command/<feature>/<name>.command.ts`   | Scheduler, extends `BaseCommand<void>`, enqueues aggregator |
+| `src/application/<feature>/<feature>.application.spec.ts` | Unit tests for the new aggregator method                    |
 
 **Files to MODIFY:**
 
-| File                                                                                  | Change                                                        |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `src/access/queues/base.command.ts`                                                   | Add 1 `CommandKeyEnum` entry + schedule mapping               |
-| `src/access/queues/constants/queue.constants.ts`                                      | Add 1 `QueueJobEnum` entry (`*_AGGREGATOR`)                   |
-| `src/access/queues/command.module.ts`                                                 | Register the new command in providers                         |
-| `src/access/queues/processors/<existing>.queue.processor.ts`                          | New switch case for `*_AGGREGATOR` → calls application method |
-| `src/access/queues/services/<existing>.queue.service.ts`                              | Add new job name to `jobs` array                              |
-| `src/application/<feature>/<feature>.application.ts`                                  | New method `queue<Entity>ForEligible<X>(today?: Date)`        |
+| File                                                         | Change                                                        |
+| ------------------------------------------------------------ | ------------------------------------------------------------- |
+| `src/access/queues/base.command.ts`                          | Add 1 `CommandKeyEnum` entry + schedule mapping               |
+| `src/access/queues/constants/queue.constants.ts`             | Add 1 `QueueJobEnum` entry (`*_AGGREGATOR`)                   |
+| `src/access/queues/command.module.ts`                        | Register the new command in providers                         |
+| `src/access/queues/processors/<existing>.queue.processor.ts` | New switch case for `*_AGGREGATOR` → calls application method |
+| `src/access/queues/services/<existing>.queue.service.ts`     | Add new job name to `jobs` array                              |
+| `src/application/<feature>/<feature>.application.ts`         | New method `queue<Entity>ForEligible<X>(today?: Date)`        |
 
 **Design rules:**
 
@@ -479,7 +479,7 @@ npm run lint
 
 ### Variant B reference
 
-| Case                                  | PRs                                                                                                                                                                                       |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ChargeCompanyAggregateCommand`       | api: [#6487](https://github.com/Zoppy-crm/zoppy-api/pull/6487) / command: [#1208](https://github.com/Zoppy-crm/zoppy-command/pull/1208)                                                   |
-| Earlier aggregator migrations         | #6311, #6338 (same pattern, different features)                                                                                                                                           |
+| Case                            | PRs                                                                                                                                     |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `ChargeCompanyAggregateCommand` | api: [#6487](https://github.com/Zoppy-crm/zoppy-api/pull/6487) / command: [#1208](https://github.com/Zoppy-crm/zoppy-command/pull/1208) |
+| Earlier aggregator migrations   | #6311, #6338 (same pattern, different features)                                                                                         |

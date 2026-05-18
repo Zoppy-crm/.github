@@ -16,9 +16,9 @@ Lê o design diretamente do Figma via MCP e produz um plano estruturado de compo
 
 Parse the URL provided by the user:
 
-- `figma.com/design/:fileKey/:name?node-id=:nodeId` → extract `fileKey` and `nodeId` (replace `-` with `:` in nodeId)
-- `figma.com/design/:fileKey/branch/:branchKey/...` → use `branchKey` as fileKey
-- If no URL provided, ask: "Qual é a URL do Figma para esta tela?"
+-   `figma.com/design/:fileKey/:name?node-id=:nodeId` → extract `fileKey` and `nodeId` (replace `-` with `:` in nodeId)
+-   `figma.com/design/:fileKey/branch/:branchKey/...` → use `branchKey` as fileKey
+-   If no URL provided, ask: "Qual é a URL do Figma para esta tela?"
 
 ### 2. Fetch the design
 
@@ -34,18 +34,21 @@ Study both outputs carefully before proceeding.
 ### 3. Explore project for reuse
 
 Search the codebase for:
-- Existing components in `@Zoppy-crm/ui-*` that match design elements (buttons, inputs, cards, modals, tables)
-- Similar feature pages in `src/core/pages/dashboard/` for structural patterns
-- Existing state services that might already manage related data
+
+-   Existing components in `@Zoppy-crm/ui-*` that match design elements (buttons, inputs, cards, modals, tables)
+-   Similar feature pages in `src/core/pages/dashboard/` for structural patterns
+-   Existing state services that might already manage related data
 
 ### 4. Produce the implementation plan
 
 Output a structured plan with these sections:
 
 #### 4.1 — Visual Summary
+
 Brief description of what the screen does (2–3 sentences) and the main user interactions.
 
 #### 4.2 — Component Hierarchy
+
 ```
 <feature-name-page> (Smart Container)
   ├── Injects: FeatureNameStateService
@@ -60,12 +63,14 @@ Brief description of what the screen does (2–3 sentences) and the main user in
 ```
 
 Rules:
-- Smart container = 1 per feature; owns data fetching and state service
-- Dumb components = receive `input()`, emit via `output()`, no service injection
-- No component > ~150 lines; extract sub-components when growing
-- Use `@Zoppy-crm/ui-*` components instead of reimplementing (list which ones)
+
+-   Smart container = 1 per feature; owns data fetching and state service
+-   Dumb components = receive `input()`, emit via `output()`, no service injection
+-   No component > ~150 lines; extract sub-components when growing
+-   Use `@Zoppy-crm/ui-*` components instead of reimplementing (list which ones)
 
 #### 4.3 — Folder Structure
+
 ```
 src/core/pages/dashboard/<feature-name>/
 ├── <feature-name>.component.ts        ← Smart container
@@ -79,30 +84,36 @@ src/core/pages/dashboard/<feature-name>/
 ```
 
 #### 4.4 — State Plan
+
 Decide what goes where:
 
-| Data | Where | Why |
-|------|-------|-----|
+| Data                   | Where                            | Why                      |
+| ---------------------- | -------------------------------- | ------------------------ |
 | List of items from API | `WritableSignal` in StateService | Shared across components |
-| Selected item | `WritableSignal` in StateService | Needed in modal + table |
-| Modal open/close | `signal()` in Smart Container | Local UI state |
-| Form field values | `signal()` in Dumb Component | Encapsulated in form |
+| Selected item          | `WritableSignal` in StateService | Needed in modal + table  |
+| Modal open/close       | `signal()` in Smart Container    | Local UI state           |
+| Form field values      | `signal()` in Dumb Component     | Encapsulated in form     |
 
 Rule: If state crosses more than 1 component level → state service. If local to 1 component → `signal()` inside it.
 
 #### 4.5 — Design System Reuse
+
 List components from `@Zoppy-crm/ui-*` that map to design elements:
-- e.g., "Header card → `<zoppy-page-header>`"
-- e.g., "Table → `<zoppy-table>`"
-- e.g., "Primary button → `<zoppy-button variant='primary'>`"
+
+-   e.g., "Header card → `<zoppy-page-header>`"
+-   e.g., "Table → `<zoppy-table>`"
+-   e.g., "Primary button → `<zoppy-button variant='primary'>`"
 
 List any design elements that have NO existing component and need to be created.
 
 #### 4.6 — Tailwind Notes
+
 Key layout classes derived from the design (spacing, colors, flex/grid patterns).
 
 #### 4.7 — Implementation Sequence
+
 Ordered list of what to build:
+
 1. State service skeleton (signals + API method stubs)
 2. Smart container (layout + service injection)
 3. [Sub-component 1] — start with simplest, no dependencies
@@ -112,6 +123,7 @@ Ordered list of what to build:
 7. Validate visually with `/agent-browser`
 
 #### 4.8 — Skills to Invoke
+
 ```
 Next steps:
 1. /angular-component    → implement each component
@@ -123,8 +135,8 @@ Next steps:
 
 ## Rules
 
-- **Never start implementing** — this skill only plans; execution is done by the Angular skills
-- If `get_design_context` returns Code Connect snippets (codebase component mappings), use those components directly instead of creating new ones
-- If the design has annotations or designer notes, include them in the Visual Summary
-- If the screen is complex (>5 components), suggest splitting into phases
-- Always check for existing similar features in `src/core/pages/dashboard/` before proposing new patterns
+-   **Never start implementing** — this skill only plans; execution is done by the Angular skills
+-   If `get_design_context` returns Code Connect snippets (codebase component mappings), use those components directly instead of creating new ones
+-   If the design has annotations or designer notes, include them in the Visual Summary
+-   If the screen is complex (>5 components), suggest splitting into phases
+-   Always check for existing similar features in `src/core/pages/dashboard/` before proposing new patterns

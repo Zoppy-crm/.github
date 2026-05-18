@@ -14,55 +14,67 @@ Copiloto de planejamento **stack-agnostic**: identifica qual workflow seguir, de
 Mapa de referencia que associa cada stack ao kit de skills que o dev-guide-v2 devera carregar durante a implementacao. Este mapa e usado na Fase B para escrever a secao `## Stack & Skills` no plano geral.
 
 ### frontend
+
 **Skills de implementacao:**
-- `design-to-plan` — analise de design Figma e mapeamento para componentes do design system
-- `angular-component` — padroes de componentes Angular v19+ (standalone, signal inputs/outputs, OnPush)
-- `angular-signals` — estado reativo com signal(), computed(), linkedSignal(), effect()
-- `feature-composition` — estrutura de pastas, smart vs sub-components, regra de ~150 linhas
-- `feature-state` — state services colocalizados, scoped providers
-- `frontend-angular` — convencoes gerais do projeto FE (TailwindCSS, design system, control flow, lazy loading)
-- `beta-template-guard` — valida templates de referencia antes de implementar
+
+-   `design-to-plan` — analise de design Figma e mapeamento para componentes do design system
+-   `angular-component` — padroes de componentes Angular v19+ (standalone, signal inputs/outputs, OnPush)
+-   `angular-signals` — estado reativo com signal(), computed(), linkedSignal(), effect()
+-   `feature-composition` — estrutura de pastas, smart vs sub-components, regra de ~150 linhas
+-   `feature-state` — state services colocalizados, scoped providers
+-   `frontend-angular` — convencoes gerais do projeto FE (TailwindCSS, design system, control flow, lazy loading)
+-   `beta-template-guard` — valida templates de referencia antes de implementar
 
 **Skills de teste:**
-- `e2e-zoppy` — regras e padroes para testes E2E Playwright
-- `playwright-best-practices` — boas praticas Playwright
+
+-   `e2e-zoppy` — regras e padroes para testes E2E Playwright
+-   `playwright-best-practices` — boas praticas Playwright
 
 **Validacoes especificas:**
-- ui-text exige htmlTag + type + className
-- ps-icon com [icon] binding
-- Classes Tailwind: nao usar PascalCase (tokens Figma devem ser convertidos)
-- OnPush obrigatorio, tipagem explicita em signals
+
+-   ui-text exige htmlTag + type + className
+-   ps-icon com [icon] binding
+-   Classes Tailwind: nao usar PascalCase (tokens Figma devem ser convertidos)
+-   OnPush obrigatorio, tipagem explicita em signals
 
 ### backend
+
 **Skills de implementacao:**
-- `nestjs-best-practices` — padroes NestJS (modules, DI, guards, pipes, interceptors)
-- `controller` — padroes de controllers HTTP (guards, decorators, DTOs)
-- `application-service` — padroes de application services (orchestracao, DI, erros)
-- `clean-code-backend` — separacao de responsabilidades, limites de complexidade, nomenclatura
+
+-   `nestjs-best-practices` — padroes NestJS (modules, DI, guards, pipes, interceptors)
+-   `controller` — padroes de controllers HTTP (guards, decorators, DTOs)
+-   `application-service` — padroes de application services (orchestracao, DI, erros)
+-   `clean-code-backend` — separacao de responsabilidades, limites de complexidade, nomenclatura
 
 **Skills de teste:**
-- `tdd` — TDD workflow Red-Green-Refactor com in-memory SQLite
-- `testing` — regras gerais de testes no zoppy-api (nunca mockar domains, boilerplate)
+
+-   `tdd` — TDD workflow Red-Green-Refactor com in-memory SQLite
+-   `testing` — regras gerais de testes no zoppy-api (nunca mockar domains, boilerplate)
 
 **Validacoes especificas:**
-- DTOs com class-validator
-- Guards com @UseGuards
-- Services injetaveis via @Injectable
-- Extends ApiService para HTTP (se aplicavel ao projeto)
+
+-   DTOs com class-validator
+-   Guards com @UseGuards
+-   Services injetaveis via @Injectable
+-   Extends ApiService para HTTP (se aplicavel ao projeto)
 
 ### fullstack
-- Combina **frontend** + **backend** (todas as skills de ambos)
-- Fases podem ser mistas ou separadas por stack — o plano da fase indica qual
+
+-   Combina **frontend** + **backend** (todas as skills de ambos)
+-   Fases podem ser mistas ou separadas por stack — o plano da fase indica qual
 
 ### e2e
+
 **Skills de implementacao:**
-- `e2e-zoppy` — regras e padroes para testes E2E Playwright
-- `playwright-best-practices` — boas praticas Playwright
+
+-   `e2e-zoppy` — regras e padroes para testes E2E Playwright
+-   `playwright-best-practices` — boas praticas Playwright
 
 **Validacoes especificas:**
-- Independencia entre testes
-- Resistencia a flaky tests
-- Page Object Model quando aplicavel
+
+-   Independencia entre testes
+-   Resistencia a flaky tests
+-   Page Object Model quando aplicavel
 
 > **Nota:** Este mapa pode ser estendido. Se o projeto tiver um `docs/stack-skills-map.md` ou `.claude/custom/stack-skills-map.md`, ele tem prioridade sobre este mapa built-in.
 
@@ -73,6 +85,7 @@ Mapa de referencia que associa cada stack ao kit de skills que o dev-guide-v2 de
 ### 1. Carregar o workflow do projeto
 
 Procure o arquivo de workflow nesta ordem:
+
 1. `docs/workflow.md` no diretorio atual
 2. `.claude/custom/workflow.md`
 3. Se nao encontrar nenhum, avise: "Nao encontrei um `docs/workflow.md` neste projeto. Vou usar o workflow padrao."
@@ -80,6 +93,7 @@ Procure o arquivo de workflow nesta ordem:
 ### 2. Carregar o Stack Skills Map
 
 Procure o mapa de stacks nesta ordem:
+
 1. `docs/stack-skills-map.md` no diretorio atual
 2. `.claude/custom/stack-skills-map.md`
 3. Se nao encontrar nenhum, usar o mapa built-in desta skill (secao acima)
@@ -87,10 +101,11 @@ Procure o mapa de stacks nesta ordem:
 ### 3. Entender o contexto atual
 
 Verifique antes de perguntar:
-- Branch atual (`git branch --show-current`) — pode indicar trabalho em andamento
-- Arquivos modificados (`git status --short`) — confirma se ha algo em progresso
-- Plano existente em `docs/plans/` cujo nome bate com a branch atual
-- `project-conventions.md` — se existir, ja revela o stack do projeto
+
+-   Branch atual (`git branch --show-current`) — pode indicar trabalho em andamento
+-   Arquivos modificados (`git status --short`) — confirma se ha algo em progresso
+-   Plano existente em `docs/plans/` cujo nome bate com a branch atual
+-   `project-conventions.md` — se existir, ja revela o stack do projeto
 
 Se o contexto nao estiver claro, pergunte de forma direta:
 
@@ -108,31 +123,31 @@ E se necessario:
 
 Com base na descricao do dev, identifique o workflow e **confirme antes de continuar**:
 
-| Intencao detectada | Workflow |
-|--------------------|----------|
-| Conhecer projeto novo, primeira vez | **W1: Setup do Projeto** |
-| Feature nova com backend + frontend | **W9: Full Stack** |
-| So tela, componente ou UI do Figma | **W8: Feature Frontend** |
-| Feature de backend/API, complexa ou arquitetural | **W2: Feature Grande (Backend)** |
-| Feature de backend/API, pequena e isolada | **W3: Feature Pequena (Backend)** |
-| Corrigir comportamento errado | **W4: Bug Fix** |
-| Melhorar codigo sem mudar comportamento | **W5: Refactoring** |
-| Revisar PR de outra pessoa | **W6: Code Review** |
-| Criar ou corrigir testes E2E | **W7: Testes E2E** |
+| Intencao detectada                               | Workflow                          |
+| ------------------------------------------------ | --------------------------------- |
+| Conhecer projeto novo, primeira vez              | **W1: Setup do Projeto**          |
+| Feature nova com backend + frontend              | **W9: Full Stack**                |
+| So tela, componente ou UI do Figma               | **W8: Feature Frontend**          |
+| Feature de backend/API, complexa ou arquitetural | **W2: Feature Grande (Backend)**  |
+| Feature de backend/API, pequena e isolada        | **W3: Feature Pequena (Backend)** |
+| Corrigir comportamento errado                    | **W4: Bug Fix**                   |
+| Melhorar codigo sem mudar comportamento          | **W5: Refactoring**               |
+| Revisar PR de outra pessoa                       | **W6: Code Review**               |
+| Criar ou corrigir testes E2E                     | **W7: Testes E2E**                |
 
 ### 2. Detectar o stack
 
 Com base no workflow escolhido, detectar o stack:
 
-| Workflow | Stack |
-|----------|-------|
-| W1 | (nao se aplica) |
-| W2, W3 | `backend` |
-| W4, W5 | Perguntar — pode ser frontend, backend ou fullstack |
-| W6 | Detectar do PR |
-| W7 | `e2e` |
-| W8 | `frontend` |
-| W9 | `fullstack` |
+| Workflow | Stack                                               |
+| -------- | --------------------------------------------------- |
+| W1       | (nao se aplica)                                     |
+| W2, W3   | `backend`                                           |
+| W4, W5   | Perguntar — pode ser frontend, backend ou fullstack |
+| W6       | Detectar do PR                                      |
+| W7       | `e2e`                                               |
+| W8       | `frontend`                                          |
+| W9       | `fullstack`                                         |
 
 Se nao for possivel detectar automaticamente:
 
@@ -153,16 +168,17 @@ Se o dev corrigir, ajuste sem questionar.
 **Nota sobre detalhamento de fases:** Em workflows que possuem `/prd-to-plan`, apos o plano geral ser criado, cada fase deve ser detalhada individualmente com um plano tecnico granular (arquivos a criar, interfaces, dependencias, exemplos de codigo). Isso permite que agentes executem a implementacao de forma autonoma. O detalhamento e a revisao de cada fase acontecem **antes** de qualquer implementacao — todo o planejamento e concluido primeiro.
 
 **Skills de planejamento por stack:** Ao detalhar fases, **sempre carregar as skills do stack** (conforme o Stack Skills Map) para que os planos sigam os padroes corretos. Exemplos:
-- **frontend:** carregar `design-to-plan`, `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular` — os exemplos de codigo nos planos devem seguir os padroes dessas skills
-- **backend:** carregar `nestjs-best-practices` — exemplos devem seguir padroes NestJS
-- **fullstack:** carregar todas as skills relevantes
+
+-   **frontend:** carregar `design-to-plan`, `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular` — os exemplos de codigo nos planos devem seguir os padroes dessas skills
+-   **backend:** carregar `nestjs-best-practices` — exemplos devem seguir padroes NestJS
+-   **fullstack:** carregar todas as skills relevantes
 
 **Design nos planos (quando stack inclui frontend):** Ao detalhar cada fase que envolve frontend, **sempre perguntar ao dev se possui imagens do design (Figma, screenshots) ou informacoes de estilo** para aquela fase antes de escrever o plano:
 
-- **No detalhamento (passo 5a):** Perguntar "Voce tem imagens do design ou informacoes de estilo para esta fase?" antes de escrever o plano. Se o dev fornecer, usar `/design-to-plan` para analisar o design, mapear componentes do design system, e gerar o plano com hierarquia, estado, reuso e template de referencia.
-- **Salvar design no plano:** Tentar incorporar a imagem diretamente no markdown do plano via `![descricao](caminho)`. Se nao for possivel, salvar em `docs/plans/assets/<nome-do-plano>/` e referenciar no markdown. O plano deve conter a secao `## Design de Referencia` com: imagem, tokens extraidos, e mapeamento com componentes do design system. Isso serve de fonte de verdade para a implementacao.
-- Se o dev nao tiver design, registrar `> Design: nao fornecido — implementar estrutura funcional` no plano.
-- **Se o stack for backend ou e2e**, pular esta etapa.
+-   **No detalhamento (passo 5a):** Perguntar "Voce tem imagens do design ou informacoes de estilo para esta fase?" antes de escrever o plano. Se o dev fornecer, usar `/design-to-plan` para analisar o design, mapear componentes do design system, e gerar o plano com hierarquia, estado, reuso e template de referencia.
+-   **Salvar design no plano:** Tentar incorporar a imagem diretamente no markdown do plano via `![descricao](caminho)`. Se nao for possivel, salvar em `docs/plans/assets/<nome-do-plano>/` e referenciar no markdown. O plano deve conter a secao `## Design de Referencia` com: imagem, tokens extraidos, e mapeamento com componentes do design system. Isso serve de fonte de verdade para a implementacao.
+-   Se o dev nao tiver design, registrar `> Design: nao fornecido — implementar estrutura funcional` no plano.
+-   **Se o stack for backend ou e2e**, pular esta etapa.
 
 #### W1: Setup do Projeto
 
@@ -383,18 +399,19 @@ Se o dev corrigir, ajuste sem questionar.
 ```
 
 **Regras especificas do W4:**
-- **COLETAR REFERENCIA + CONTEXTO PRIMEIRO (Passo 1)** — duas dimensoes (tecnica e contexto). Nao repetir o que o dev ja deu; perguntar so o que ficou em branco e parece relevante.
-- **DISCUSSAO EM CHAT ANTES DE DOCUMENTAR (Passo 3 — bloqueante)** — NUNCA pule da investigacao direto para o relatorio. Apresentar achados, abrir Q&A com `AskUserQuestion`, iterar ate o dev confirmar explicitamente. O dev deve sentir que esta discutindo o bug, nao recebendo um documento pronto.
-- **APRESENTAR OPCOES, NAO CONCLUSOES FECHADAS** — no Passo 3, listar solucoes candidatas como opcoes com trade-offs. Pedir a escolha do dev, mesmo se voce tem uma preferida.
-- **ITERAR SE O DEV PUSHAR** — pedido de mais investigacao, discordancia de hipotese ou contexto novo = voltar ao Passo 2 cirurgicamente antes de avancar. Repetir o ciclo "resumo + perguntas + ajustes" quantas vezes precisar.
-- **/map-project so como FALLBACK** — quando o dev nao tem nenhuma referencia pra dar. Avisar o dev antes de invocar (consome mais tokens).
-- **NAO** escrever codigo da correcao de verdade (nao edita arquivos do projeto). Esta skill so planeja — mas o plano DEVE conter pseudo-codigo, diffs propostos ou esqueletos suficientes pro /flow-dev-guide implementar sem re-investigar.
-- **SEMPRE** incluir o teste que simula o bug como **primeiro passo de execucao** do plano. Sem excecao. Se for dificil escrever teste unitario, documente o motivo e proponha integracao ou E2E equivalente — mas algum teste que falhe antes e passe depois precisa existir.
-- **SEMPRE** listar pelo menos a solucao recomendada + 1-2 alternativas no RELATORIO, com trade-offs. O PLANO usa a recomendada e pode citar a alternativa como fallback.
-- **NAO** pular o Step 2 (confirmar red) no plano — e o que garante que o teste realmente cobre o bug.
-- **SEMPRE oferecer salvar o RELATORIO na issue** (Passo 6) apos report+plan escritos — nunca salvar sem confirmar; nunca sobrescrever descricao existente sem confirmar se e pra sobrescrever ou anexar.
-- **Sub-issues por fase sao condicionais** (Passo 7) — so oferecer se o plano realmente tiver fases separaveis; nao forcar sub-issues em bugfix simples de steps lineares.
-- **Publicacao no GitHub e opt-in** — se o dev disser nao em qualquer um dos passos, seguir para a conclusao sem insistir.
+
+-   **COLETAR REFERENCIA + CONTEXTO PRIMEIRO (Passo 1)** — duas dimensoes (tecnica e contexto). Nao repetir o que o dev ja deu; perguntar so o que ficou em branco e parece relevante.
+-   **DISCUSSAO EM CHAT ANTES DE DOCUMENTAR (Passo 3 — bloqueante)** — NUNCA pule da investigacao direto para o relatorio. Apresentar achados, abrir Q&A com `AskUserQuestion`, iterar ate o dev confirmar explicitamente. O dev deve sentir que esta discutindo o bug, nao recebendo um documento pronto.
+-   **APRESENTAR OPCOES, NAO CONCLUSOES FECHADAS** — no Passo 3, listar solucoes candidatas como opcoes com trade-offs. Pedir a escolha do dev, mesmo se voce tem uma preferida.
+-   **ITERAR SE O DEV PUSHAR** — pedido de mais investigacao, discordancia de hipotese ou contexto novo = voltar ao Passo 2 cirurgicamente antes de avancar. Repetir o ciclo "resumo + perguntas + ajustes" quantas vezes precisar.
+-   **/map-project so como FALLBACK** — quando o dev nao tem nenhuma referencia pra dar. Avisar o dev antes de invocar (consome mais tokens).
+-   **NAO** escrever codigo da correcao de verdade (nao edita arquivos do projeto). Esta skill so planeja — mas o plano DEVE conter pseudo-codigo, diffs propostos ou esqueletos suficientes pro /flow-dev-guide implementar sem re-investigar.
+-   **SEMPRE** incluir o teste que simula o bug como **primeiro passo de execucao** do plano. Sem excecao. Se for dificil escrever teste unitario, documente o motivo e proponha integracao ou E2E equivalente — mas algum teste que falhe antes e passe depois precisa existir.
+-   **SEMPRE** listar pelo menos a solucao recomendada + 1-2 alternativas no RELATORIO, com trade-offs. O PLANO usa a recomendada e pode citar a alternativa como fallback.
+-   **NAO** pular o Step 2 (confirmar red) no plano — e o que garante que o teste realmente cobre o bug.
+-   **SEMPRE oferecer salvar o RELATORIO na issue** (Passo 6) apos report+plan escritos — nunca salvar sem confirmar; nunca sobrescrever descricao existente sem confirmar se e pra sobrescrever ou anexar.
+-   **Sub-issues por fase sao condicionais** (Passo 7) — so oferecer se o plano realmente tiver fases separaveis; nao forcar sub-issues em bugfix simples de steps lineares.
+-   **Publicacao no GitHub e opt-in** — se o dev disser nao em qualquer um dos passos, seguir para a conclusao sem insistir.
 
 #### W5: Refactoring
 
@@ -488,13 +505,16 @@ Se o dev corrigir, ajuste sem questionar.
 **Stack:** [frontend | backend | fullstack | e2e]
 
 **Skills de implementacao:**
-- [lista do Stack Skills Map para o stack detectado]
+
+-   [lista do Stack Skills Map para o stack detectado]
 
 **Skills de teste:**
-- [lista do Stack Skills Map para o stack detectado]
+
+-   [lista do Stack Skills Map para o stack detectado]
 
 **Validacoes especificas:**
-- [lista do Stack Skills Map para o stack detectado]
+
+-   [lista do Stack Skills Map para o stack detectado]
 ```
 
 Para **fullstack**, separar por stack quando relevante:
@@ -506,30 +526,35 @@ Para **fullstack**, separar por stack quando relevante:
 **Stack:** fullstack
 
 **Skills de implementacao (frontend):**
-- design-to-plan
-- angular-component
-- angular-signals
-- feature-composition
-- feature-state
-- frontend-angular
-- beta-template-guard
+
+-   design-to-plan
+-   angular-component
+-   angular-signals
+-   feature-composition
+-   feature-state
+-   frontend-angular
+-   beta-template-guard
 
 **Skills de implementacao (backend):**
-- nestjs-best-practices
+
+-   nestjs-best-practices
 
 **Skills de teste:**
-- e2e-zoppy
-- playwright-best-practices
+
+-   e2e-zoppy
+-   playwright-best-practices
 
 **Validacoes especificas (frontend):**
-- ui-text exige htmlTag + type + className
-- ps-icon com [icon] binding
-- Classes Tailwind: nao usar PascalCase
+
+-   ui-text exige htmlTag + type + className
+-   ps-icon com [icon] binding
+-   Classes Tailwind: nao usar PascalCase
 
 **Validacoes especificas (backend):**
-- DTOs com class-validator
-- Guards com @UseGuards
-- Services injetaveis via @Injectable
+
+-   DTOs com class-validator
+-   Guards com @UseGuards
+-   Services injetaveis via @Injectable
 ```
 
 ### Passo 5a — Detalhar plano de cada fase
@@ -537,10 +562,11 @@ Para **fullstack**, separar por stack quando relevante:
 **Antes de escrever o plano**, carregar as skills do stack relevantes para a fase usando a `Skill` tool. Isso garante que os exemplos de codigo e padroes no plano sigam as convencoes corretas.
 
 **Skills a carregar por stack:**
-- **frontend:** `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular` (carregar as que forem relevantes para a fase, nao todas sempre)
-- **backend:** `nestjs-best-practices`, `controller`, `application-service`, `tdd`, `testing` (sempre carregar as skills de teste junto com as de implementacao)
-- **fullstack:** combinar frontend + backend conforme a fase
-- **e2e:** `e2e-zoppy`, `playwright-best-practices`
+
+-   **frontend:** `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular` (carregar as que forem relevantes para a fase, nao todas sempre)
+-   **backend:** `nestjs-best-practices`, `controller`, `application-service`, `tdd`, `testing` (sempre carregar as skills de teste junto com as de implementacao)
+-   **fullstack:** combinar frontend + backend conforme a fase
+-   **e2e:** `e2e-zoppy`, `playwright-best-practices`
 
 > **Regra:** Nao detalhar uma fase sem ter carregado ao menos as skills principais do stack. Os planos devem refletir os padroes das skills (ex: OnPush, signals, state services scoped, sem `standalone: true`).
 
@@ -561,9 +587,9 @@ Para fases fullstack, indicar claramente quais partes sao frontend e quais sao b
 
 > "Plano da Fase [N] escrito. Quer prosseguir para a proxima fase ou rodar `/grill-me` para revisar este plano antes?"
 
-- Se o dev disser "prosseguir", "proximo", "ok", "avanca" → avance para o Passo 5a da proxima fase
-- Se o dev disser "grill-me", "revisar", "quero revisar" → execute o `/grill-me` no plano da fase (Passo 5c)
-- Apos o `/grill-me`, aplique os ajustes necessarios no plano e volte a perguntar se quer prosseguir
+-   Se o dev disser "prosseguir", "proximo", "ok", "avanca" → avance para o Passo 5a da proxima fase
+-   Se o dev disser "grill-me", "revisar", "quero revisar" → execute o `/grill-me` no plano da fase (Passo 5c)
+-   Apos o `/grill-me`, aplique os ajustes necessarios no plano e volte a perguntar se quer prosseguir
 
 **Objetivo:** Garantir que nenhum detalhe ficou para tras antes de avançar, sem forcar uma revisao quando o dev esta confiante no plano.
 
@@ -596,11 +622,11 @@ Concluido quando: [criterio objetivo]
 
 ### Progressao
 
-- Avance **somente** quando o dev confirmar ("feito", "pronto", "ok", "conclui", "proximo", "avanca")
-- Nunca pule passos sozinho, mas **sugira pulos explicitamente** quando o passo for opcional para a complexidade do trabalho:
-  > "Este passo (/grill-me) e opcional para features pequenas. Quer pular?"
-- Se o dev pular sem avisar, registre o risco:
-  > "Voce pulou o /write-a-prd. Tudo bem para features simples, mas se surgir duvida sobre escopo no meio da implementacao, pode ser sinal de que valeria ter documentado antes."
+-   Avance **somente** quando o dev confirmar ("feito", "pronto", "ok", "conclui", "proximo", "avanca")
+-   Nunca pule passos sozinho, mas **sugira pulos explicitamente** quando o passo for opcional para a complexidade do trabalho:
+    > "Este passo (/grill-me) e opcional para features pequenas. Quer pular?"
+-   Se o dev pular sem avisar, registre o risco:
+    > "Voce pulou o /write-a-prd. Tudo bem para features simples, mas se surgir duvida sobre escopo no meio da implementacao, pode ser sinal de que valeria ter documentado antes."
 
 ### Se houver plano em `docs/plans/`
 
@@ -619,6 +645,7 @@ Marque as fases concluidas quando o dev confirmar.
 ## Fase D — Respostas a duvidas durante o processo
 
 Quando o dev fizer uma pergunta fora do passo atual, responda com base em:
+
 1. O workflow em andamento
 2. As convencoes do projeto (`project-conventions.md` se existir)
 3. Seu conhecimento do stack detectado
@@ -656,19 +683,19 @@ Quer comecar algo novo?
 
 ## Regras
 
-- **Nunca implementa codigo** — esta skill so planeja
-- **Nunca avanca sem confirmacao** do dev
-- **Bug fix (W4) sempre comeca coletando referencia + contexto** — duas dimensoes (tecnica e contexto). `/map-project` so como fallback quando o dev nao tem nenhuma pista, e com aviso previo.
-- **Bug fix (W4) sempre apresenta achados em chat e itera antes de documentar** — Passo 3 eh bloqueante; nunca pule da investigacao direto pro relatorio. O dev deve sentir que esta discutindo o bug, nao recebendo um documento pronto.
-- **Bug fix (W4) apresenta solucoes como opcoes, nao como conclusoes fechadas** — listar candidatas com trade-offs e pedir escolha do dev, mesmo tendo uma preferida.
-- **Bug fix (W4) sempre inclui teste que simula o bug como primeiro passo de execucao** — red antes de green, sem excecao
-- **Bug fix (W4) sempre inclui solucoes concretas no plano** — solucao recomendada com pseudo-codigo/diff + alternativas no relatorio, pra que /flow-dev-guide implemente sem precisar re-investigar
-- **Nunca perde o contexto** do passo atual — mesmo apos responder duvidas, volta ao passo
-- **Sempre escreve Stack & Skills no plano geral** — e o contrato com o dev-guide-v2
-- **Sempre carrega skills do stack antes de detalhar fases** — para que os planos sigam os padroes corretos
-- **Sempre pergunta sobre design quando o stack inclui frontend** — antes de detalhar cada fase
-- **Nao assume stack** — detecta ou pergunta
-- **Adapta o tom**: se o dev parece experiente (respostas curtas, pula confirmacoes), seja mais direto; se parece novo, explique mais
-- **Nao repete instrucoes completas** desnecessariamente — apos o dev confirmar que sabe o que esta fazendo, seja conciso
-- **Se o dev der contexto suficiente**, nao faca perguntas obvias — infira e confirme
-- **O output final sao planos documentados** — nao codigo, nao PRs, nao commits
+-   **Nunca implementa codigo** — esta skill so planeja
+-   **Nunca avanca sem confirmacao** do dev
+-   **Bug fix (W4) sempre comeca coletando referencia + contexto** — duas dimensoes (tecnica e contexto). `/map-project` so como fallback quando o dev nao tem nenhuma pista, e com aviso previo.
+-   **Bug fix (W4) sempre apresenta achados em chat e itera antes de documentar** — Passo 3 eh bloqueante; nunca pule da investigacao direto pro relatorio. O dev deve sentir que esta discutindo o bug, nao recebendo um documento pronto.
+-   **Bug fix (W4) apresenta solucoes como opcoes, nao como conclusoes fechadas** — listar candidatas com trade-offs e pedir escolha do dev, mesmo tendo uma preferida.
+-   **Bug fix (W4) sempre inclui teste que simula o bug como primeiro passo de execucao** — red antes de green, sem excecao
+-   **Bug fix (W4) sempre inclui solucoes concretas no plano** — solucao recomendada com pseudo-codigo/diff + alternativas no relatorio, pra que /flow-dev-guide implemente sem precisar re-investigar
+-   **Nunca perde o contexto** do passo atual — mesmo apos responder duvidas, volta ao passo
+-   **Sempre escreve Stack & Skills no plano geral** — e o contrato com o dev-guide-v2
+-   **Sempre carrega skills do stack antes de detalhar fases** — para que os planos sigam os padroes corretos
+-   **Sempre pergunta sobre design quando o stack inclui frontend** — antes de detalhar cada fase
+-   **Nao assume stack** — detecta ou pergunta
+-   **Adapta o tom**: se o dev parece experiente (respostas curtas, pula confirmacoes), seja mais direto; se parece novo, explique mais
+-   **Nao repete instrucoes completas** desnecessariamente — apos o dev confirmar que sabe o que esta fazendo, seja conciso
+-   **Se o dev der contexto suficiente**, nao faca perguntas obvias — infira e confirme
+-   **O output final sao planos documentados** — nao codigo, nao PRs, nao commits

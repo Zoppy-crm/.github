@@ -6,13 +6,13 @@ Capture Chrome DevTools performance profiles during browser automation for perfo
 
 ## Contents
 
-- [Basic Profiling](#basic-profiling)
-- [Profiler Commands](#profiler-commands)
-- [Categories](#categories)
-- [Use Cases](#use-cases)
-- [Output Format](#output-format)
-- [Viewing Profiles](#viewing-profiles)
-- [Limitations](#limitations)
+-   [Basic Profiling](#basic-profiling)
+-   [Profiler Commands](#profiler-commands)
+-   [Categories](#categories)
+-   [Use Cases](#use-cases)
+-   [Output Format](#output-format)
+-   [Viewing Profiles](#viewing-profiles)
+-   [Limitations](#limitations)
 
 ## Basic Profiling
 
@@ -46,13 +46,13 @@ agent-browser profiler stop ./trace.json
 
 The `--categories` flag accepts a comma-separated list of Chrome trace categories. Default categories include:
 
-- `devtools.timeline` -- standard DevTools performance traces
-- `v8.execute` -- time spent running JavaScript
-- `blink` -- renderer events
-- `blink.user_timing` -- `performance.mark()` / `performance.measure()` calls
-- `latencyInfo` -- input-to-latency tracking
-- `renderer.scheduler` -- task scheduling and execution
-- `toplevel` -- broad-spectrum basic events
+-   `devtools.timeline` -- standard DevTools performance traces
+-   `v8.execute` -- time spent running JavaScript
+-   `blink` -- renderer events
+-   `blink.user_timing` -- `performance.mark()` / `performance.measure()` calls
+-   `latencyInfo` -- input-to-latency tracking
+-   `renderer.scheduler` -- task scheduling and execution
+-   `toplevel` -- broad-spectrum basic events
 
 Several `disabled-by-default-*` categories are also included for detailed timeline, call stack, and V8 CPU profiling data.
 
@@ -109,12 +109,12 @@ The `metadata.clock-domain` field is set based on the host platform (Linux or ma
 
 Load the output JSON file in any of these tools:
 
-- **Chrome DevTools**: Performance panel > Load profile (Ctrl+Shift+I > Performance)
-- **Perfetto UI**: https://ui.perfetto.dev/ -- drag and drop the JSON file
-- **Trace Viewer**: `chrome://tracing` in any Chromium browser
+-   **Chrome DevTools**: Performance panel > Load profile (Ctrl+Shift+I > Performance)
+-   **Perfetto UI**: https://ui.perfetto.dev/ -- drag and drop the JSON file
+-   **Trace Viewer**: `chrome://tracing` in any Chromium browser
 
 ## Limitations
 
-- Only works with Chromium-based browsers (Chrome, Edge). Not supported on Firefox or WebKit.
-- Trace data accumulates in memory while profiling is active (capped at 5 million events). Stop profiling promptly after the area of interest.
-- Data collection on stop has a 30-second timeout. If the browser is unresponsive, the stop command may fail.
+-   Only works with Chromium-based browsers (Chrome, Edge). Not supported on Firefox or WebKit.
+-   Trace data accumulates in memory while profiling is active (capped at 5 million events). Stop profiling promptly after the area of interest.
+-   Data collection on stop has a 30-second timeout. If the browser is unresponsive, the stop command may fail.

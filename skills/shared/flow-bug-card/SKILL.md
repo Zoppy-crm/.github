@@ -28,8 +28,9 @@ Formato consistente com os bugs existentes do repo:
 ```
 
 Exemplos:
-- `[AIAMI] [MODELOS DE MENSAGENS / WHATSAPP] [Ordem dos cards alterada ao duplicar modelo]`
-- `[VINOTECA VINHO PROSA] [MODELOS DE MENSAGENS / WHATSAPP] [Não é possível criar template com Carousel associado]`
+
+-   `[AIAMI] [MODELOS DE MENSAGENS / WHATSAPP] [Ordem dos cards alterada ao duplicar modelo]`
+-   `[VINOTECA VINHO PROSA] [MODELOS DE MENSAGENS / WHATSAPP] [Não é possível criar template com Carousel associado]`
 
 Se a empresa for "N/A", use `[INTERNO]` ou descrição da origem.
 
@@ -43,6 +44,7 @@ Se a empresa for "N/A", use `[INTERNO]` ou descrição da origem.
 ---
 
 **Relato do cliente:**
+
 > <citação do cliente, ou "N/A">
 
 **Interpretação do CSM:**
@@ -66,10 +68,10 @@ Se a informação não existir, escreva "N/A". **Não invente** relato/interpret
 
 Sempre incluir:
 
-- `work: bug`
-- `origin: master`
-- `client:report` — se foi reportado por cliente real (empresa preenchida). Se for bug interno/QA, omitir
-- `epic: <nome>` — se houver epic relacionado e a label existir no repo
+-   `work: bug`
+-   `origin: master`
+-   `client:report` — se foi reportado por cliente real (empresa preenchida). Se for bug interno/QA, omitir
+-   `epic: <nome>` — se houver epic relacionado e a label existir no repo
 
 ## Criação
 
@@ -92,20 +94,20 @@ gh project item-add 7 --owner Zoppy-crm --url <URL retornada pelo gh issue creat
 
 ## Diretrizes
 
-- **Mantenha o card enxuto**. Detalhamento técnico, causa raiz e arquivos afetados **não vão aqui** — vão no `return-solution` / `flow-bug-solution-reply` quando o bug for resolvido
-- **Não preencha** seções de detalhamento técnico, critérios de aceite, estratégia de testes ou roteiro de QA — esse template é diferente do refinement
-- **Não invente sintoma**. Se o usuário deu pouca informação, peça mais ou registre "N/A" nos campos do relato
-- **Confirme labels antes de aplicar** — `gh label list --repo Zoppy-crm/<repo> --search "<termo>"` para validar epic labels
-- Sempre incluir `--assignee @me`
-- Sempre adicionar ao project 7 após criar
+-   **Mantenha o card enxuto**. Detalhamento técnico, causa raiz e arquivos afetados **não vão aqui** — vão no `return-solution` / `flow-bug-solution-reply` quando o bug for resolvido
+-   **Não preencha** seções de detalhamento técnico, critérios de aceite, estratégia de testes ou roteiro de QA — esse template é diferente do refinement
+-   **Não invente sintoma**. Se o usuário deu pouca informação, peça mais ou registre "N/A" nos campos do relato
+-   **Confirme labels antes de aplicar** — `gh label list --repo Zoppy-crm/<repo> --search "<termo>"` para validar epic labels
+-   Sempre incluir `--assignee @me`
+-   Sempre adicionar ao project 7 após criar
 
 ## Diferença vs `flow-refinement`
 
-| Critério | `flow-refinement` | `flow-bug-card` |
-|----------|-------------------|-----------------|
-| Quando | Nova feature, refinamento técnico, milestone | Bug reportado / defeito |
-| Labels | `refinement`, `work: feature` | `work: bug`, `client:report` |
-| Template | Resumo / Objetivo / Critérios / Detalhamento técnico extenso | Cabeçalho + Relato + Descrição / Atual / Esperado |
-| Detalhamento técnico no card | Sim, exaustivo | Não — vai no retorno de solução depois |
+| Critério                     | `flow-refinement`                                            | `flow-bug-card`                                   |
+| ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------- |
+| Quando                       | Nova feature, refinamento técnico, milestone                 | Bug reportado / defeito                           |
+| Labels                       | `refinement`, `work: feature`                                | `work: bug`, `client:report`                      |
+| Template                     | Resumo / Objetivo / Critérios / Detalhamento técnico extenso | Cabeçalho + Relato + Descrição / Atual / Esperado |
+| Detalhamento técnico no card | Sim, exaustivo                                               | Não — vai no retorno de solução depois            |
 
 Se o usuário pediu "criar bug" mas descreveu uma feature, redirecione para `flow-refinement`. Se pediu "criar refinamento" mas é claramente um defeito, sugira este fluxo.

@@ -1,28 +1,28 @@
-name: "General Card"
-description: "Card genérico para demandas, bugs e investigações agrupados"
+name: 'General Card'
+description: 'Card genérico para demandas, bugs e investigações agrupados'
 labels: []
 body:
-  - type: textarea
-    id: body
-    attributes:
-      label: Descrição
-      description: "Descreva o conteúdo do card em markdown livre"
-    validations:
-      required: true
+    - type: textarea
+      id: body
+      attributes:
+          label: Descrição
+          description: 'Descreva o conteúdo do card em markdown livre'
+      validations:
+          required: true
 
-  - type: textarea
-    id: evidence
-    attributes:
-      label: Evidências
-      description: "Screenshots, logs, vídeos ou qualquer evidência relevante"
-      placeholder: "Arraste imagens ou cole logs aqui"
-    validations:
-      required: false
+    - type: textarea
+      id: evidence
+      attributes:
+          label: Evidências
+          description: 'Screenshots, logs, vídeos ou qualquer evidência relevante'
+          placeholder: 'Arraste imagens ou cole logs aqui'
+      validations:
+          required: false
 
-  - type: textarea
-    id: blocked
-    attributes:
-      label: Blocked
-      description: "Existe algo bloqueado por este card?"
-    validations:
-      required: false
+    - type: textarea
+      id: blocked
+      attributes:
+          label: Blocked
+          description: 'Existe algo bloqueado por este card?'
+      validations:
+          required: false

@@ -12,49 +12,57 @@ Scan the current project, identify technologies, patterns, and architecture, and
 ### 1. Identify the project root
 
 Look for the main manifest file in this order:
-- `package.json` → Node.js/JavaScript/TypeScript
-- `go.mod` → Go
-- `Cargo.toml` → Rust
-- `pom.xml` / `build.gradle` / `build.gradle.kts` → Java/Kotlin
-- `pyproject.toml` / `setup.py` / `requirements.txt` → Python
-- `composer.json` → PHP
-- `Gemfile` → Ruby
-- `*.csproj` / `*.sln` → C#/.NET
-- `mix.exs` → Elixir
-- `pubspec.yaml` → Dart/Flutter
+
+-   `package.json` → Node.js/JavaScript/TypeScript
+-   `go.mod` → Go
+-   `Cargo.toml` → Rust
+-   `pom.xml` / `build.gradle` / `build.gradle.kts` → Java/Kotlin
+-   `pyproject.toml` / `setup.py` / `requirements.txt` → Python
+-   `composer.json` → PHP
+-   `Gemfile` → Ruby
+-   `*.csproj` / `*.sln` → C#/.NET
+-   `mix.exs` → Elixir
+-   `pubspec.yaml` → Dart/Flutter
 
 ### 2. Collect project information
 
 Run in parallel:
 
 **Stack and dependencies:**
-- Read the main manifest (package.json, go.mod, etc.)
-- Identify: primary runtime/language, frameworks, test libraries, bundler, linter/formatter
+
+-   Read the main manifest (package.json, go.mod, etc.)
+-   Identify: primary runtime/language, frameworks, test libraries, bundler, linter/formatter
 
 **Folder structure:**
-- List 2–3 levels deep (excluding node_modules, .git, dist, build, __pycache__, .venv)
-- Identify the organization pattern: by feature, by layer (MVC), monorepo, etc.
+
+-   List 2–3 levels deep (excluding node_modules, .git, dist, build, **pycache**, .venv)
+-   Identify the organization pattern: by feature, by layer (MVC), monorepo, etc.
 
 **Quality configuration:**
-- Read `.eslintrc*`, `.prettierrc*`, `tsconfig.json`, `pyproject.toml[tool.ruff]`, `.rubocop.yml`, `golangci.yml`, `rustfmt.toml`, etc.
-- Identify: style rules, prohibited imports, naming conventions
+
+-   Read `.eslintrc*`, `.prettierrc*`, `tsconfig.json`, `pyproject.toml[tool.ruff]`, `.rubocop.yml`, `golangci.yml`, `rustfmt.toml`, etc.
+-   Identify: style rules, prohibited imports, naming conventions
 
 **Code patterns (sampling):**
-- Read 3–5 representative source files from different parts of the project
-- Prioritize: a controller/handler, a model/entity, a service/usecase, a test
-- Identify: naming conventions (camelCase, snake_case, PascalCase), function structure, type usage, error patterns
+
+-   Read 3–5 representative source files from different parts of the project
+-   Prioritize: a controller/handler, a model/entity, a service/usecase, a test
+-   Identify: naming conventions (camelCase, snake_case, PascalCase), function structure, type usage, error patterns
 
 **Test patterns:**
-- Read 2–3 existing test files
-- Identify: test framework, organization pattern (describe/it, test suites), mock usage, test file naming convention
+
+-   Read 2–3 existing test files
+-   Identify: test framework, organization pattern (describe/it, test suites), mock usage, test file naming convention
 
 **CI/CD:**
-- Check `.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, `Dockerfile`, `docker-compose.yml`
-- Identify: existing pipelines, environments, build/test/deploy commands
+
+-   Check `.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, `Dockerfile`, `docker-compose.yml`
+-   Identify: existing pipelines, environments, build/test/deploy commands
 
 **Existing documentation:**
-- Read `README.md`, `CONTRIBUTING.md`, `docs/` if they exist
-- Extract already-documented conventions
+
+-   Read `README.md`, `CONTRIBUTING.md`, `docs/` if they exist
+-   Extract already-documented conventions
 
 ### 3. Generate the conventions document
 
@@ -70,26 +78,28 @@ Write `.claude/custom/project-conventions.md` following this template:
 
 ## Stack Principal
 
-- **Linguagem:** [ex: TypeScript 5.x]
-- **Runtime:** [ex: Node.js 20]
-- **Framework:** [ex: NestJS 10]
-- **Banco de dados:** [ex: PostgreSQL via Prisma ORM]
-- **Testes:** [ex: Jest + Supertest]
-- **Build:** [ex: esbuild via tsup]
-- **Linting/Format:** [ex: ESLint + Prettier]
+-   **Linguagem:** [ex: TypeScript 5.x]
+-   **Runtime:** [ex: Node.js 20]
+-   **Framework:** [ex: NestJS 10]
+-   **Banco de dados:** [ex: PostgreSQL via Prisma ORM]
+-   **Testes:** [ex: Jest + Supertest]
+-   **Build:** [ex: esbuild via tsup]
+-   **Linting/Format:** [ex: ESLint + Prettier]
 
 ## Arquitetura
 
 [Descreva o padrão arquitetural identificado, ex:]
-- Arquitetura hexagonal / Clean Architecture / MVC / CQRS
-- Separação em camadas (ex: controllers → services → repositories)
-- Módulos ou bounded contexts identificados
+
+-   Arquitetura hexagonal / Clean Architecture / MVC / CQRS
+-   Separação em camadas (ex: controllers → services → repositories)
+-   Módulos ou bounded contexts identificados
 
 ## Estrutura de Pastas
+```
 
-```
 [Cole a estrutura de pastas relevante com descrição de cada diretório]
-```
+
+````
 
 ## Convenções de Código
 
@@ -133,7 +143,7 @@ Write `.claude/custom/project-conventions.md` following this template:
 
 # Linting
 [comando para lint/format]
-```
+````
 
 ## Padrões Específicos do Projeto
 
@@ -142,7 +152,8 @@ Write `.claude/custom/project-conventions.md` following this template:
 ## O que NÃO Fazer
 
 [Antipadrões identificados no projeto, regras do linter, comentários em código ou README indicando o que deve ser evitado]
-```
+
+````
 
 ### 4. Register in the project instructions
 
@@ -160,12 +171,11 @@ Sempre que solicitado a implementar, criar, modificar ou refatorar código:
 1. Leia `.claude/custom/project-conventions.md`
 2. Siga as convenções de naming, arquitetura e padrões definidos
 3. Se o arquivo não existir, avise o usuário e sugira executar `/map-project`
-```
+````
 
 **If it already exists**, append at the end (only if the "Antes de Implementar" section does not already exist):
 
 ```markdown
-
 ## Antes de Implementar
 
 Sempre que solicitado a implementar, criar, modificar ou refatorar código:
@@ -193,7 +203,7 @@ Para atualizar após mudanças no projeto: /map-project
 
 ## Important Notes
 
-- **Do not modify project code** — this skill is read-only (except for `.claude/`)
-- **If the project is large**, prioritize representative sampling rather than reading all files
-- **If there are conflicting conventions** between what is configured (eslint/linter) and what is in the code, document both and flag the conflict
-- **Update rather than replace** — if `.claude/custom/project-conventions.md` already exists, update its content while preserving sections the user may have edited manually (preserve `<!-- manual -->` comments)
+-   **Do not modify project code** — this skill is read-only (except for `.claude/`)
+-   **If the project is large**, prioritize representative sampling rather than reading all files
+-   **If there are conflicting conventions** between what is configured (eslint/linter) and what is in the code, document both and flag the conflict
+-   **Update rather than replace** — if `.claude/custom/project-conventions.md` already exists, update its content while preserving sections the user may have edited manually (preserve `<!-- manual -->` comments)

@@ -1,15 +1,15 @@
 ---
 name: code-conventions
 description: >
-  Coding conventions specific to zoppy-api: logging with LogService, which exception to throw,
-  method complexity limits, clean code patterns, general imports, ApplicationValidationBase, and
-  the queue integration rule. Use this skill whenever writing new code in the project, when asked
-  how to handle an error, how to log an operation, what exception to throw, how to structure a
-  method, or how to import models/utilities. Triggers on: "how to log", "which exception", "what
-  error to throw", "LogService", "NotFoundException", "UnprocessableEntityException",
-  "BadRequestException", "ApplicationValidationBase", "@Zoppy-crm/models", "StringUtil",
-  "generateUuid", "console.log", "método longo", "complexidade", "early return", "validação",
-  "validation class", "queue integration", "api-signatures".
+    Coding conventions specific to zoppy-api: logging with LogService, which exception to throw,
+    method complexity limits, clean code patterns, general imports, ApplicationValidationBase, and
+    the queue integration rule. Use this skill whenever writing new code in the project, when asked
+    how to handle an error, how to log an operation, what exception to throw, how to structure a
+    method, or how to import models/utilities. Triggers on: "how to log", "which exception", "what
+    error to throw", "LogService", "NotFoundException", "UnprocessableEntityException",
+    "BadRequestException", "ApplicationValidationBase", "@Zoppy-crm/models", "StringUtil",
+    "generateUuid", "console.log", "método longo", "complexidade", "early return", "validação",
+    "validation class", "queue integration", "api-signatures".
 ---
 
 # Code Conventions
@@ -44,11 +44,12 @@ await this.logService.error({
 ```
 
 **Rules:**
-- `logService.info()` at start and end of mutations
-- `logService.info()` before queue dispatches (include queue name)
-- `logService.error()` in catch blocks
-- Do NOT log read operations (find, list) — only log mutations
-- Never interpolate user-supplied strings directly into log messages
+
+-   `logService.info()` at start and end of mutations
+-   `logService.info()` before queue dispatches (include queue name)
+-   `logService.error()` in catch blocks
+-   Do NOT log read operations (find, list) — only log mutations
+-   Never interpolate user-supplied strings directly into log messages
 
 ---
 
@@ -56,11 +57,11 @@ await this.logService.error({
 
 Map errors to the correct HTTP exception — don't use a generic `Error` or wrap everything in `BadRequestException`.
 
-| Situation | Exception | HTTP Status |
-|---|---|---|
-| Entity not found by ID, code, phone, etc. | `NotFoundException` | 404 |
-| Business rule violation, validation failure | `UnprocessableEntityException` | 422 |
-| Malformed request, missing required fields | `BadRequestException` | 400 |
+| Situation                                   | Exception                      | HTTP Status |
+| ------------------------------------------- | ------------------------------ | ----------- |
+| Entity not found by ID, code, phone, etc.   | `NotFoundException`            | 404         |
+| Business rule violation, validation failure | `UnprocessableEntityException` | 422         |
+| Malformed request, missing required fields  | `BadRequestException`          | 400         |
 
 ```typescript
 const feature = await this.featureDomain.findOne({ where: { id } });
@@ -120,19 +121,19 @@ If you find existing code using `@Zoppy-crm/api-signatures` for internal calls, 
 
 Keep methods readable — a method should fit in a single screen.
 
-- **Nesting depth**: more than 2–3 levels of `if` nesting is a red flag — extract into helper methods with descriptive names
-- **Method length**: if a method exceeds ~40–50 lines, break into smaller private methods placed at the end of the class
-- **Parameter lists**: more than 4–5 parameters suggest the need for an options object
+-   **Nesting depth**: more than 2–3 levels of `if` nesting is a red flag — extract into helper methods with descriptive names
+-   **Method length**: if a method exceeds ~40–50 lines, break into smaller private methods placed at the end of the class
+-   **Parameter lists**: more than 4–5 parameters suggest the need for an options object
 
 ---
 
 ## Clean Code
 
-- Use **early returns** to reduce nesting — check for error conditions first and return/throw, then the happy path
-- Extract repeated blocks into private methods (at the end of the class)
-- Prefer `reduce` over `forEach` with mutable state when transforming collections
-- Name variables clearly — `enrichedLineItems` not `lineItemsFiltered` if the operation is enrichment
-- Remove dead code (unreachable branches, unused imports) — don't leave commented-out code
+-   Use **early returns** to reduce nesting — check for error conditions first and return/throw, then the happy path
+-   Extract repeated blocks into private methods (at the end of the class)
+-   Prefer `reduce` over `forEach` with mutable state when transforming collections
+-   Name variables clearly — `enrichedLineItems` not `lineItemsFiltered` if the operation is enrichment
+-   Remove dead code (unreachable branches, unused imports) — don't leave commented-out code
 
 ---
 
@@ -162,7 +163,7 @@ export class MyService {
 
 ## General Conventions
 
-- **Models**: import from `@Zoppy-crm/models`; utilities from `@Zoppy-crm/utilities`
-- **UUIDs**: use `StringUtil.generateUuid()` — never `uuidv4()` directly or `Math.random()`-based IDs
-- **Company context**: use `SessionService` for `companyId` — never pass `companyId` manually as a parameter unless explicitly required (the RepositoryAdapter auto-applies it)
-- **TypeScript**: avoid `any` — use proper types or generics
+-   **Models**: import from `@Zoppy-crm/models`; utilities from `@Zoppy-crm/utilities`
+-   **UUIDs**: use `StringUtil.generateUuid()` — never `uuidv4()` directly or `Math.random()`-based IDs
+-   **Company context**: use `SessionService` for `companyId` — never pass `companyId` manually as a parameter unless explicitly required (the RepositoryAdapter auto-applies it)
+-   **TypeScript**: avoid `any` — use proper types or generics

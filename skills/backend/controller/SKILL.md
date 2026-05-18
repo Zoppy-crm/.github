@@ -1,13 +1,13 @@
 ---
 name: controller
 description: >
-  Guide for creating and modifying HTTP Controllers in the zoppy-api project. Use this skill
-  whenever you need to create a new controller, add endpoints to an existing controller, configure
-  authentication and authorization guards, use standard decorators (@UsingTransaction,
-  @ExceptionInterceptor, @RateLimit), create Request/Response DTOs, or register the controller in
-  HttpModule. Trigger this skill when the user mentions: "create controller", "new endpoint",
-  "HTTP route", "guards", "RoleGuard", "BlockFreeTierGuard", "FeatureGuard", "NestJS controller",
-  "register in http module", or when exposing a use case via REST API.
+    Guide for creating and modifying HTTP Controllers in the zoppy-api project. Use this skill
+    whenever you need to create a new controller, add endpoints to an existing controller, configure
+    authentication and authorization guards, use standard decorators (@UsingTransaction,
+    @ExceptionInterceptor, @RateLimit), create Request/Response DTOs, or register the controller in
+    HttpModule. Trigger this skill when the user mentions: "create controller", "new endpoint",
+    "HTTP route", "guards", "RoleGuard", "BlockFreeTierGuard", "FeatureGuard", "NestJS controller",
+    "register in http module", or when exposing a use case via REST API.
 ---
 
 # Creating an HTTP Controller in zoppy-api
@@ -15,6 +15,7 @@ description: >
 ## Controller Role
 
 Controllers in `src/access/http/controllers/` are thin facades — thin layers that only:
+
 1. Receive the HTTP request
 2. Apply guards and decorators
 3. Delegate to the Application Service
@@ -84,11 +85,13 @@ guards are evaluated bottom-up (the last `@UseGuards` is evaluated first).
 ```
 
 **Available roles in `AppConstants.ROLES`:**
-- `MASTER` — full access
-- `ADMIN` — company administrator
-- `USER` — regular user
+
+-   `MASTER` — full access
+-   `ADMIN` — company administrator
+-   `USER` — regular user
 
 **FeatureGuard** — for endpoints that require a feature flag:
+
 ```typescript
 import { FeatureGuard } from 'src/cross-cutting/guards/feature.guard';
 import { Features } from '@Zoppy-crm/utilities';
@@ -99,6 +102,7 @@ import { Features } from '@Zoppy-crm/utilities';
 ```
 
 **Public endpoints** (no JWT authentication):
+
 ```typescript
 import { IsPublic } from 'src/cross-cutting/decorators/is-public.decorator';
 
@@ -113,6 +117,7 @@ public async receiveWebhook(@Body() request: WebhookRequest): Promise<void> { ..
 
 **`@UsingTransaction()`** — use on any endpoint that writes (POST, PUT, DELETE).
 Enables automatic rollback if the request fails:
+
 ```typescript
 @Post()
 @UsingTransaction()
@@ -121,12 +126,14 @@ public async create(@Body() request: CreateRequest): Promise<Response> { ... }
 ```
 
 **`@ExceptionInterceptor()`** — enables HTTP exception logging. Use on all endpoints:
+
 ```typescript
 @ExceptionInterceptor()
 public async myMethod(): Promise<void> { ... }
 ```
 
 **`@RateLimit()`** — for endpoints sensitive to abuse:
+
 ```typescript
 import { RateLimit } from 'src/cross-cutting/decorators/rate-limit.decorator';
 
@@ -187,6 +194,7 @@ export class MyFeatureRequest {
 ```
 
 **Response DTOs** — simple, only with `declare`:
+
 ```typescript
 // src/access/http/response/my-feature/my-feature.response.ts
 export class MyFeatureResponse {
@@ -256,27 +264,27 @@ export class HttpModule implements NestModule {
 
 Follow the project's REST conventions:
 
-| Operation | Method | URL |
-|----------|--------|-----|
-| Create | POST | `/my-feature` |
-| List | GET | `/my-feature` |
-| Find by ID | GET | `/my-feature/:id` |
-| Update | PUT | `/my-feature/:id` |
-| Delete | DELETE | `/my-feature/:id` |
-| Specific action | POST | `/my-feature/:id/action-name` |
+| Operation       | Method | URL                           |
+| --------------- | ------ | ----------------------------- |
+| Create          | POST   | `/my-feature`                 |
+| List            | GET    | `/my-feature`                 |
+| Find by ID      | GET    | `/my-feature/:id`             |
+| Update          | PUT    | `/my-feature/:id`             |
+| Delete          | DELETE | `/my-feature/:id`             |
+| Specific action | POST   | `/my-feature/:id/action-name` |
 
 ---
 
 ## Pre-finalization checklist
 
-- [ ] `@ApiTags()` and `@Controller()` on the class
-- [ ] `@ApiBearerAuth('access-token')` on authenticated endpoints
-- [ ] `@UseGuards(BlockFreeTierGuard())` on customer endpoints
-- [ ] `@UseGuards(RoleGuard([...]))` with correct roles
-- [ ] `@UsingTransaction()` on write endpoints (POST/PUT/DELETE)
-- [ ] `@ExceptionInterceptor()` on all endpoints
-- [ ] `@HttpCode(HttpStatus.OK)` when not using status 201
-- [ ] Business logic only in the Application, not in the controller
-- [ ] Controller added to the `controllers: [...]` array in `HttpModule`
-- [ ] **Standard authenticated controller wired with `AuthMiddleware` in `HttpModule.configure(consumer)`** — always
-- [ ] Integration tests written (see skill-tdd)
+-   [ ] `@ApiTags()` and `@Controller()` on the class
+-   [ ] `@ApiBearerAuth('access-token')` on authenticated endpoints
+-   [ ] `@UseGuards(BlockFreeTierGuard())` on customer endpoints
+-   [ ] `@UseGuards(RoleGuard([...]))` with correct roles
+-   [ ] `@UsingTransaction()` on write endpoints (POST/PUT/DELETE)
+-   [ ] `@ExceptionInterceptor()` on all endpoints
+-   [ ] `@HttpCode(HttpStatus.OK)` when not using status 201
+-   [ ] Business logic only in the Application, not in the controller
+-   [ ] Controller added to the `controllers: [...]` array in `HttpModule`
+-   [ ] **Standard authenticated controller wired with `AuthMiddleware` in `HttpModule.configure(consumer)`** — always
+-   [ ] Integration tests written (see skill-tdd)

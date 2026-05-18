@@ -1,42 +1,42 @@
-name: "POC Técnica"
-description: "Prova de conceito para validar uma hipótese técnica antes de uma decisão de implementação"
-labels: ["work: poc"]
+name: 'POC Técnica'
+description: 'Prova de conceito para validar uma hipótese técnica antes de uma decisão de implementação'
+labels: ['work: poc']
 body:
-  - type: textarea
-    id: objective
-    attributes:
-      label: Objetivo
-      description: "O que esta POC vai investigar ou demonstrar?"
-      placeholder: "Ex: Avaliar viabilidade de usar Redis Streams como replacement do BullMQ pra fila de eventos."
-    validations:
-      required: true
+    - type: textarea
+      id: objective
+      attributes:
+          label: Objetivo
+          description: 'O que esta POC vai investigar ou demonstrar?'
+          placeholder: 'Ex: Avaliar viabilidade de usar Redis Streams como replacement do BullMQ pra fila de eventos.'
+      validations:
+          required: true
 
-  - type: textarea
-    id: hypothesis
-    attributes:
-      label: Hipótese
-      description: "O que você espera descobrir? Qual a tese a ser validada (ou refutada)?"
-      placeholder: "Ex: Redis Streams suporta o volume atual com latência abaixo de 100ms p99."
-    validations:
-      required: true
+    - type: textarea
+      id: hypothesis
+      attributes:
+          label: Hipótese
+          description: 'O que você espera descobrir? Qual a tese a ser validada (ou refutada)?'
+          placeholder: 'Ex: Redis Streams suporta o volume atual com latência abaixo de 100ms p99.'
+      validations:
+          required: true
 
-  - type: textarea
-    id: success-criteria
-    attributes:
-      label: Critério de Sucesso
-      description: "Como saber se a POC resolveu a pergunta? O que precisa ser entregue/medido?"
-      placeholder: |
-        - [ ] Benchmark com volume X
-        - [ ] Resultado documentado em comentário do card
-        - [ ] Recomendação final (avançar / não avançar)
-    validations:
-      required: true
+    - type: textarea
+      id: success-criteria
+      attributes:
+          label: Critério de Sucesso
+          description: 'Como saber se a POC resolveu a pergunta? O que precisa ser entregue/medido?'
+          placeholder: |
+              - [ ] Benchmark com volume X
+              - [ ] Resultado documentado em comentário do card
+              - [ ] Recomendação final (avançar / não avançar)
+      validations:
+          required: true
 
-  - type: input
-    id: timebox
-    attributes:
-      label: Tempo-caixa
-      description: "Quanto tempo no máximo a POC deve consumir antes de virar decisão"
-      placeholder: "Ex: 2 dias úteis"
-    validations:
-      required: false
+    - type: input
+      id: timebox
+      attributes:
+          label: Tempo-caixa
+          description: 'Quanto tempo no máximo a POC deve consumir antes de virar decisão'
+          placeholder: 'Ex: 2 dias úteis'
+      validations:
+          required: false

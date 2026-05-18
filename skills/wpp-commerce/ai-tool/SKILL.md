@@ -1,25 +1,25 @@
 ---
 name: ai-tool
 description: >
-  How to create and modify LangChain/LangGraph tools in
-  zoppy-whatsapp-commerce. Covers the @tool decorator, the
-  create_<feature>_tools(...) factory pattern with closure-captured
-  config, the company-wide tools registry (create_tools_for_company),
-  the wrap_subagent_as_tool envelope that exposes sub-agents as tools,
-  feature-flag gating, return-shape conventions (the __transfer__ marker
-  for handoff, JSON-stringified payloads), tenant-context propagation
-  via request_context, and middleware that compacts tool responses
-  before they hit the LLM. Use this skill whenever creating a new
-  tool, gating one by company config, returning data the supervisor
-  must see, troubleshooting a tool that breaks the agent loop, or
-  registering a new tool in the company-wide registry. Triggers on:
-  "create tool", "nova tool", "add tool", "@tool", "StructuredTool",
-  "create_<provider>_tools", "register tool", "tools registry",
-  "create_tools_for_company", "wrap_subagent_as_tool",
-  "subagent as tool", "transfer_to_human", "__transfer__",
-  "ToolCallLimitMiddleware", "ShopifyResponseCompactorMiddleware",
-  "tool docstring", "tool description", "request_context tool",
-  "_context_customer_phone".
+    How to create and modify LangChain/LangGraph tools in
+    zoppy-whatsapp-commerce. Covers the @tool decorator, the
+    create_<feature>_tools(...) factory pattern with closure-captured
+    config, the company-wide tools registry (create_tools_for_company),
+    the wrap_subagent_as_tool envelope that exposes sub-agents as tools,
+    feature-flag gating, return-shape conventions (the __transfer__ marker
+    for handoff, JSON-stringified payloads), tenant-context propagation
+    via request_context, and middleware that compacts tool responses
+    before they hit the LLM. Use this skill whenever creating a new
+    tool, gating one by company config, returning data the supervisor
+    must see, troubleshooting a tool that breaks the agent loop, or
+    registering a new tool in the company-wide registry. Triggers on:
+    "create tool", "nova tool", "add tool", "@tool", "StructuredTool",
+    "create_<provider>_tools", "register tool", "tools registry",
+    "create_tools_for_company", "wrap_subagent_as_tool",
+    "subagent as tool", "transfer_to_human", "__transfer__",
+    "ToolCallLimitMiddleware", "ShopifyResponseCompactorMiddleware",
+    "tool docstring", "tool description", "request_context tool",
+    "_context_customer_phone".
 ---
 
 # AI Tools — zoppy-whatsapp-commerce
@@ -31,12 +31,12 @@ sub-agents call them through LangGraph's standard tool node.
 
 The system has three families of tools:
 
-- **Common** — `transfer_to_human` (always present).
-- **Provider tools** — Shopify (search + order status), Nuvemshop,
-  Cart (Shopify-only), Knowledge (RAG retrieval), Giftback (Zoppy
-  Partners API).
-- **Sub-agents wrapped as tools** — `catalog_search_agent` and
-  `knowledge_search_agent` from the `wrap_subagent_as_tool` envelope.
+-   **Common** — `transfer_to_human` (always present).
+-   **Provider tools** — Shopify (search + order status), Nuvemshop,
+    Cart (Shopify-only), Knowledge (RAG retrieval), Giftback (Zoppy
+    Partners API).
+-   **Sub-agents wrapped as tools** — `catalog_search_agent` and
+    `knowledge_search_agent` from the `wrap_subagent_as_tool` envelope.
 
 ## Layer & file map
 
@@ -63,41 +63,41 @@ src/ai/tools/
 Toda tool segue um padrão de 2 arquivos irmãos no mesmo nível de
 `src/ai/tools/`:
 
-- **`<feature>.py`** — núcleo da feature: classes (HTTP client, manager),
-  factory `create_<feature>_tools(...)` e os `@tool` decorados. É o que
-  outros módulos (registries, orchestrator) importam.
-- **`<feature>_helpers.py`** — funções privadas (prefix `_`) que o
-  núcleo consome: formatters PT-BR, parsers, tradução de erros,
-  builders de payload. Helpers usados **só** pela feature.
+-   **`<feature>.py`** — núcleo da feature: classes (HTTP client, manager),
+    factory `create_<feature>_tools(...)` e os `@tool` decorados. É o que
+    outros módulos (registries, orchestrator) importam.
+-   **`<feature>_helpers.py`** — funções privadas (prefix `_`) que o
+    núcleo consome: formatters PT-BR, parsers, tradução de erros,
+    builders de payload. Helpers usados **só** pela feature.
 
 Regras práticas:
 
-- **Sempre que houver pelo menos 1 helper privado** (função `_underscore`,
-  formatter, parser, builder, translator), ele vai para o
-  `<feature>_helpers.py`. Mesmo que seja apenas 1 função e 10 linhas —
-  o ganho é consistência: olhando qualquer feature, o padrão é o mesmo.
-  Features sem nenhum helper privado (`common.py`, `knowledge.py`,
-  `agent_wrappers.py`, `shopify.py` hoje) ficam em arquivo único.
-- **`__all__` no `<feature>.py`** lista a public API + os helpers que
-  testes importam direto, garantindo que `from src.ai.tools.<feature>
-  import _format_X` continue funcionando após o split.
-- **Forward references com `TYPE_CHECKING`** quando o helper precisa
-  do tipo de uma classe definida em `<feature>.py` (evita circular
-  import). Exemplo: `cart_helpers.py` usa
-  `if TYPE_CHECKING: from src.ai.tools.cart import CartItem`.
-- **Não criar pasta** `<feature>/` enquanto houver só núcleo + helpers.
-  Pasta só se justifica quando aparecem 3+ módulos coesos (schemas,
-  client, helpers, tools, etc.).
+-   **Sempre que houver pelo menos 1 helper privado** (função `_underscore`,
+    formatter, parser, builder, translator), ele vai para o
+    `<feature>_helpers.py`. Mesmo que seja apenas 1 função e 10 linhas —
+    o ganho é consistência: olhando qualquer feature, o padrão é o mesmo.
+    Features sem nenhum helper privado (`common.py`, `knowledge.py`,
+    `agent_wrappers.py`, `shopify.py` hoje) ficam em arquivo único.
+-   **`__all__` no `<feature>.py`** lista a public API + os helpers que
+    testes importam direto, garantindo que `from src.ai.tools.<feature>
+import _format_X` continue funcionando após o split.
+-   **Forward references com `TYPE_CHECKING`** quando o helper precisa
+    do tipo de uma classe definida em `<feature>.py` (evita circular
+    import). Exemplo: `cart_helpers.py` usa
+    `if TYPE_CHECKING: from src.ai.tools.cart import CartItem`.
+-   **Não criar pasta** `<feature>/` enquanto houver só núcleo + helpers.
+    Pasta só se justifica quando aparecem 3+ módulos coesos (schemas,
+    client, helpers, tools, etc.).
 
 Two registries call into here:
 
-- **`src/ai/agents/registry.py`** — supervisor-side: `_get_sales_tools`
-  picks which provider tools the **sales** agent gets based on
-  capabilities (provider, integrations, partners_token).
-- **`src/ai/tools/registry.py`** — sub-agent-side:
-  `create_tools_for_company` returns the full bag-of-tools grouped by
-  category (`common`, `catalog`, `cart`, `support`). Sub-agents pick the
-  group they need (knowledge agent picks `support`).
+-   **`src/ai/agents/registry.py`** — supervisor-side: `_get_sales_tools`
+    picks which provider tools the **sales** agent gets based on
+    capabilities (provider, integrations, partners_token).
+-   **`src/ai/tools/registry.py`** — sub-agent-side:
+    `create_tools_for_company` returns the full bag-of-tools grouped by
+    category (`common`, `catalog`, `cart`, `support`). Sub-agents pick the
+    group they need (knowledge agent picks `support`).
 
 The split exists because the supervisor's toolset depends on the agent
 type + capabilities, while sub-agents always need the same group.
@@ -144,7 +144,7 @@ Anatomy:
 2. **Inner `@tool async def`** is what LangGraph actually invokes.
 3. **`async def`** always — every tool touches I/O.
 4. **Triple-quoted docstring** is the LLM-visible description.
-   *Treat it as production code.*
+   _Treat it as production code._
 5. **Args / Returns sections** in the docstring are how the LLM learns
    the tool's contract. Keep them concrete and short.
 6. **`_context_customer_phone.get()`** pulls tenant context from the
@@ -164,24 +164,24 @@ Anatomy:
 The docstring is the only thing the model sees about the tool. It
 informs:
 
-- **Whether to call it.** "Use esta ferramenta quando o cliente..." +
-  concrete trigger phrases.
-- **What to pass.** `Args:` section with one bullet per parameter,
-  with examples.
-- **What to expect back.** `Returns:` section.
+-   **Whether to call it.** "Use esta ferramenta quando o cliente..." +
+    concrete trigger phrases.
+-   **What to pass.** `Args:` section with one bullet per parameter,
+    with examples.
+-   **What to expect back.** `Returns:` section.
 
 Conventions in this codebase:
 
-- Docstrings are in **Portuguese** when the tool is consumer-facing
-  (giftback, cart, order_status). The model is multilingual; the
-  customer's language wins.
-- Use `Args:` and `Returns:` sections (NumPy-ish style).
-- Include 1-3 example inputs in the param description when ambiguous
-  values are possible (`order_number: "1001", "#1001", "BR1001"`).
-- Don't over-constrain. Let the model decide when to call —
-  one-paragraph description usually beats a checklist.
-- Tools that don't take parameters (like `giftback_check`) make that
-  explicit: "Nao e necessario fornecer nenhum parametro."
+-   Docstrings are in **Portuguese** when the tool is consumer-facing
+    (giftback, cart, order_status). The model is multilingual; the
+    customer's language wins.
+-   Use `Args:` and `Returns:` sections (NumPy-ish style).
+-   Include 1-3 example inputs in the param description when ambiguous
+    values are possible (`order_number: "1001", "#1001", "BR1001"`).
+-   Don't over-constrain. Let the model decide when to call —
+    one-paragraph description usually beats a checklist.
+-   Tools that don't take parameters (like `giftback_check`) make that
+    explicit: "Nao e necessario fornecer nenhum parametro."
 
 ## Provider tools with multiple variants
 
@@ -245,21 +245,21 @@ The orchestrator scans tool outputs for the `__transfer__` marker
 short-circuits the response, persists a `HandoffEvent`, sets the
 cooldown, and clears the LangGraph session. Two consequences:
 
-- **The marker shape is load-bearing.** Don't change `__transfer__`,
-  `reason`, `detail` keys without updating the extractor.
-- **`reason` MUST be one of the codes the supervisor lists in
-  `<tools>`.** The codes come from `SYSTEM_HANDOFF_REASONS` plus the
-  customer's `agent_config.handoff_reasons`. See the `ai-agent` skill's
-  `references/prompts.md` for the prompt section.
+-   **The marker shape is load-bearing.** Don't change `__transfer__`,
+    `reason`, `detail` keys without updating the extractor.
+-   **`reason` MUST be one of the codes the supervisor lists in
+    `<tools>`.** The codes come from `SYSTEM_HANDOFF_REASONS` plus the
+    customer's `agent_config.handoff_reasons`. See the `ai-agent` skill's
+    `references/prompts.md` for the prompt section.
 
 ## Return shapes
 
 Tools always return `str`. Two flavors are common:
 
-| When | Shape | Why |
-|---|---|---|
-| Human-readable summary | Plain text formatted for the model to relay verbatim or rewrite | Catalog search results (after middleware compaction), giftback summary |
-| Structured payload | `json.dumps({...})` with named fields | `transfer_to_human`, errors that carry codes, anything the orchestrator parses |
+| When                   | Shape                                                           | Why                                                                            |
+| ---------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Human-readable summary | Plain text formatted for the model to relay verbatim or rewrite | Catalog search results (after middleware compaction), giftback summary         |
+| Structured payload     | `json.dumps({...})` with named fields                           | `transfer_to_human`, errors that carry codes, anything the orchestrator parses |
 
 For structured payloads:
 
@@ -316,17 +316,17 @@ return StructuredTool.from_function(
 
 Key points:
 
-- **`subagent_usage_accumulator`** is a contextvar reset by the
-  orchestrator before each turn (`subagent_usage_accumulator.set([])`).
-  Token usage from each sub-agent invocation gets appended; the
-  `UsageCalculator` reads it back for cost accounting. Don't bypass
-  this — if you call a sub-agent outside the wrapper, costs disappear
-  from metrics.
-- **`@observe(name=f"tool.{name}", as_type="tool")`** turns each
-  sub-agent invocation into its own langfuse span, which is how we
-  see "supervisor → catalog_agent → product results" trees in the UI.
-- **`_normalize_content`** flattens content blocks (vision payloads)
-  into a string.
+-   **`subagent_usage_accumulator`** is a contextvar reset by the
+    orchestrator before each turn (`subagent_usage_accumulator.set([])`).
+    Token usage from each sub-agent invocation gets appended; the
+    `UsageCalculator` reads it back for cost accounting. Don't bypass
+    this — if you call a sub-agent outside the wrapper, costs disappear
+    from metrics.
+-   **`@observe(name=f"tool.{name}", as_type="tool")`** turns each
+    sub-agent invocation into its own langfuse span, which is how we
+    see "supervisor → catalog_agent → product results" trees in the UI.
+-   **`_normalize_content`** flattens content blocks (vision payloads)
+    into a string.
 
 ## The company-wide registry — `create_tools_for_company`
 
@@ -357,15 +357,15 @@ def create_tools_for_company(company_config: CompanyConfig) -> dict[str, list]:
 
 Conventions:
 
-- **Buckets are stable.** `common` / `catalog` / `cart` / `support` —
-  sub-agent factories ask for one bucket. Don't rename or split without
-  updating every caller.
-- **Empty buckets stay empty.** If a company has no integration URL,
-  `catalog` and `cart` lists are simply empty. Sub-agents handle that
-  gracefully (the catalog sub-agent returns an "unavailable" message).
-- **Logger when a config is partially set up.** `nuvemshop_missing_key`
-  is exactly the kind of shape that helps debug a misconfigured
-  company in production.
+-   **Buckets are stable.** `common` / `catalog` / `cart` / `support` —
+    sub-agent factories ask for one bucket. Don't rename or split without
+    updating every caller.
+-   **Empty buckets stay empty.** If a company has no integration URL,
+    `catalog` and `cart` lists are simply empty. Sub-agents handle that
+    gracefully (the catalog sub-agent returns an "unavailable" message).
+-   **Logger when a config is partially set up.** `nuvemshop_missing_key`
+    is exactly the kind of shape that helps debug a misconfigured
+    company in production.
 
 The supervisor doesn't use `create_tools_for_company` — it uses
 `agents/registry.py:_get_sales_tools` which speaks in capability
@@ -388,26 +388,26 @@ if not customer_phone:
 This is how `giftback_check` knows whose coupons to fetch without the
 LLM having to pass the phone number as a parameter. Two consequences:
 
-- **Tools called outside `run_conversation` won't see the context.**
-  Test fixtures must `bind_context(...)` before invoking the tool, or
-  the tool gets `None`.
-- **Background tasks lose the context.** If a tool spawns a Celery
-  job, re-bind in the worker (see `multi-tenant-context` skill).
+-   **Tools called outside `run_conversation` won't see the context.**
+    Test fixtures must `bind_context(...)` before invoking the tool, or
+    the tool gets `None`.
+-   **Background tasks lose the context.** If a tool spawns a Celery
+    job, re-bind in the worker (see `multi-tenant-context` skill).
 
 ## Middleware that touches tools
 
 The supervisor stacks four middlewares (see `ai-agent` skill):
 
-| Middleware | Purpose |
-|---|---|
-| `ModelRetryMiddleware` | Retry the LLM call on transient failures |
-| `ToolRetryMiddleware` | Retry a failed tool call up to 2 times with backoff |
+| Middleware                                                                              | Purpose                                                                                  |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `ModelRetryMiddleware`                                                                  | Retry the LLM call on transient failures                                                 |
+| `ToolRetryMiddleware`                                                                   | Retry a failed tool call up to 2 times with backoff                                      |
 | `ToolCallErrorHandlerMiddleware` (project-local, `src/ai/middlewares/error_handler.py`) | Convert tool exceptions into model-readable error messages so the supervisor can recover |
-| `ToolCallLimitMiddleware(run_limit=10)` | Hard cap on tool calls per turn — last-line defense against tool loops |
+| `ToolCallLimitMiddleware(run_limit=10)`                                                 | Hard cap on tool calls per turn — last-line defense against tool loops                   |
 
 There's also a **response compactor** for Shopify
 (`src/ai/middlewares/shopify.py:ShopifyResponseCompactorMiddleware`)
-that runs *between* the tool returning and the LLM seeing the result.
+that runs _between_ the tool returning and the LLM seeing the result.
 It parses MCP catalog payloads (large) into a compact dict (small).
 The compactor uses `parse_mcp_json_to_catalog` from the same file —
 a pure parser exposed for tests.
@@ -435,11 +435,11 @@ deactivatable for debugging.
 6. **Log structured events.** `logger.info("<provider>.<action>.started", ...)`
    then `.completed` / `.failed` with relevant fields.
 7. **Register**:
-   - For supervisor tools: extend `_get_sales_tools` in
-     `src/ai/agents/registry.py` with the gating condition that
-     decides who gets it.
-   - For sub-agent tools: extend `create_tools_for_company` in
-     `src/ai/tools/registry.py` with the right bucket.
+    - For supervisor tools: extend `_get_sales_tools` in
+      `src/ai/agents/registry.py` with the gating condition that
+      decides who gets it.
+    - For sub-agent tools: extend `create_tools_for_company` in
+      `src/ai/tools/registry.py` with the right bucket.
 8. **Test.** Unit test in `tests/unit/ai/tools/test_<feature>.py`
    covering: happy path, error path (4xx, 5xx, timeout), missing
    tenant context, empty result.
@@ -448,11 +448,11 @@ deactivatable for debugging.
 
 Three patterns coexist; pick whichever matches the gate:
 
-| Gate | Where to check |
-|---|---|
-| **Per-company integration present** (token, shop domain) | Inside the registry function (`if company.integrations.url: ...`) |
-| **Per-company partners_token present** (giftback) | Inside `_get_sales_tools` — only adds the tool if `company.partners_token` |
-| **Per-company feature flag** (knowledge, catalog) | Inside the agent's `enabled_features` / `enabled_subagents` — checked at sub-agent registry time, not at tool time |
+| Gate                                                     | Where to check                                                                                                     |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Per-company integration present** (token, shop domain) | Inside the registry function (`if company.integrations.url: ...`)                                                  |
+| **Per-company partners_token present** (giftback)        | Inside `_get_sales_tools` — only adds the tool if `company.partners_token`                                         |
+| **Per-company feature flag** (knowledge, catalog)        | Inside the agent's `enabled_features` / `enabled_subagents` — checked at sub-agent registry time, not at tool time |
 
 Don't gate inside the tool function itself with an `if not allowed:`
 return-error pattern. The agent will see the tool listed and try to
@@ -460,47 +460,47 @@ call it; gating at registry time avoids the failed-call detour.
 
 ## Gotchas / anti-patterns
 
-- **Never put business logic in `wrap_subagent_as_tool`.** It's a
-  pass-through with usage capture. Logic belongs in the sub-agent's
-  prompt + tools.
-- **Never return raw exception objects** from a tool. Either return
-  a friendly string or a JSON error payload — the LLM has to read it.
-- **Never let a tool raise.** The retry/error middleware catches
-  exceptions, but the model gets a generic error message and may try
-  again. Catch internally, return a structured error string.
-- **Never forget to register the tool.** A `@tool`-decorated function
-  with no caller is dead code.
-- **Never make a tool call out without an HTTP timeout.** Default to
-  15-30 s; longer hangs the LangGraph node and burns the run_limit.
-- **Don't add `from src.api.*` to a tool.** Layer rule.
-- **Don't call `_context_customer_phone` directly inside a sync `@tool`.**
-  Sync tools run on a different worker and the contextvar isn't
-  guaranteed to propagate. All real tools in this codebase are async.
-- **Don't change `transfer_to_human`'s return shape** (`__transfer__`
-  / `reason` / `detail`). The orchestrator's extractor is brittle by
-  design.
+-   **Never put business logic in `wrap_subagent_as_tool`.** It's a
+    pass-through with usage capture. Logic belongs in the sub-agent's
+    prompt + tools.
+-   **Never return raw exception objects** from a tool. Either return
+    a friendly string or a JSON error payload — the LLM has to read it.
+-   **Never let a tool raise.** The retry/error middleware catches
+    exceptions, but the model gets a generic error message and may try
+    again. Catch internally, return a structured error string.
+-   **Never forget to register the tool.** A `@tool`-decorated function
+    with no caller is dead code.
+-   **Never make a tool call out without an HTTP timeout.** Default to
+    15-30 s; longer hangs the LangGraph node and burns the run_limit.
+-   **Don't add `from src.api.*` to a tool.** Layer rule.
+-   **Don't call `_context_customer_phone` directly inside a sync `@tool`.**
+    Sync tools run on a different worker and the contextvar isn't
+    guaranteed to propagate. All real tools in this codebase are async.
+-   **Don't change `transfer_to_human`'s return shape** (`__transfer__`
+    / `reason` / `detail`). The orchestrator's extractor is brittle by
+    design.
 
 ## Pre-PR checklist
 
-- [ ] Tool lives in the right file (`tools/<provider>.py`,
-      `tools/common.py`, or a new dedicated module)
-- [ ] Async function with `@tool` decorator (or `StructuredTool` for
-      composed tools)
-- [ ] Docstring includes Use cases, Args, Returns
-- [ ] Per-company config captured by closure in
-      `create_<feature>_tools(...)` factory
-- [ ] HTTP client wrapped in `async with` with explicit timeout
-- [ ] Structured logger calls (`<feature>.<action>.started/completed/failed`)
-- [ ] Registered in `_get_sales_tools` or `create_tools_for_company`
-      (or both) with the correct gate
-- [ ] Tenant context (if needed) read via `_context_customer_phone.get()`,
-      with a fallback when it's missing
-- [ ] Tests in `tests/unit/ai/tools/test_<feature>.py` covering happy
-      path + error paths + missing-context path
-- [ ] If response is large, paired compactor middleware (or documented
-      decision not to)
-- [ ] Toda função privada (`_underscore`) — formatter, parser, builder,
-      translator — vai para `<feature>_helpers.py` irmão, mesmo que
-      seja apenas 1; `<feature>.py` re-exporta via `__all__` o que
-      testes importam direto
-- [ ] `uv run pytest tests/unit/ai/tools/ -q` is green
+-   [ ] Tool lives in the right file (`tools/<provider>.py`,
+        `tools/common.py`, or a new dedicated module)
+-   [ ] Async function with `@tool` decorator (or `StructuredTool` for
+        composed tools)
+-   [ ] Docstring includes Use cases, Args, Returns
+-   [ ] Per-company config captured by closure in
+        `create_<feature>_tools(...)` factory
+-   [ ] HTTP client wrapped in `async with` with explicit timeout
+-   [ ] Structured logger calls (`<feature>.<action>.started/completed/failed`)
+-   [ ] Registered in `_get_sales_tools` or `create_tools_for_company`
+        (or both) with the correct gate
+-   [ ] Tenant context (if needed) read via `_context_customer_phone.get()`,
+        with a fallback when it's missing
+-   [ ] Tests in `tests/unit/ai/tools/test_<feature>.py` covering happy
+        path + error paths + missing-context path
+-   [ ] If response is large, paired compactor middleware (or documented
+        decision not to)
+-   [ ] Toda função privada (`_underscore`) — formatter, parser, builder,
+        translator — vai para `<feature>_helpers.py` irmão, mesmo que
+        seja apenas 1; `<feature>.py` re-exporta via `__all__` o que
+        testes importam direto
+-   [ ] `uv run pytest tests/unit/ai/tools/ -q` is green

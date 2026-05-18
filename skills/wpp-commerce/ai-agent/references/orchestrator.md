@@ -126,9 +126,9 @@ content_blocks = await preprocessor.process(messages)
 
 `MessagePreprocessor` (in `src/application/message/message_preprocessor.py`):
 
-- Audio messages → Whisper transcription → `TextContentBlock`
-- Image messages → vision content blocks (OpenAI vision format)
-- Text messages → `TextContentBlock` as-is
+-   Audio messages → Whisper transcription → `TextContentBlock`
+-   Image messages → vision content blocks (OpenAI vision format)
+-   Text messages → `TextContentBlock` as-is
 
 The output is a list of LangChain content blocks ready to drop into a
 `HumanMessage(content=content_blocks)`.
@@ -327,10 +327,10 @@ Process when changing it:
    behavior **before** editing.
 2. The orchestrator has no integration test (it would require Valkey +
    real LLM). Rely on:
-   - The handoff extraction + label resolution unit tests
-   - The cooldown gate logic
-   - The langfuse evaluation suite (separate from `make test`) for
-     end-to-end verification
+    - The handoff extraction + label resolution unit tests
+    - The cooldown gate logic
+    - The langfuse evaluation suite (separate from `make test`) for
+      end-to-end verification
 3. Don't add business logic here — push it into `application/<feature>/`
    or `ai/agents/<feature>/` and call from the orchestrator.
 4. Don't add new entries to the return dict without updating
@@ -341,19 +341,19 @@ Process when changing it:
 
 ## File pointers
 
-- Orchestrator: `src/ai/orchestrator.py`
-- AgentManager: `src/ai/agent_manager.py`
-- CheckpointerManager: `src/infra/checkpointer.py`
-- MessagePreprocessor: `src/application/message/message_preprocessor.py`
-- Response parser: `src/ai/parsers/agent_response.py`
-- Usage calculator: `src/application/usage/usage_calculator.py`
-- Handoff service: `src/application/handoff/handoff_event_service.py`
-- Handoff cooldown: `src/application/handoff/handoff_cooldown.py`
-- Cart manager: `src/ai/tools/cart.py`
-- Sub-agent wrapper: `src/ai/tools/agent_wrappers.py`
-  (`subagent_usage_accumulator`)
-- Langfuse helpers: `src/infra/observability.py`
-  (`build_trace_tags`, `score_usage`, `tag_handoff`)
-- Tests:
-  `tests/unit/ai/test_orchestrator.py`,
-  `tests/unit/ai/test_agent_manager*.py`
+-   Orchestrator: `src/ai/orchestrator.py`
+-   AgentManager: `src/ai/agent_manager.py`
+-   CheckpointerManager: `src/infra/checkpointer.py`
+-   MessagePreprocessor: `src/application/message/message_preprocessor.py`
+-   Response parser: `src/ai/parsers/agent_response.py`
+-   Usage calculator: `src/application/usage/usage_calculator.py`
+-   Handoff service: `src/application/handoff/handoff_event_service.py`
+-   Handoff cooldown: `src/application/handoff/handoff_cooldown.py`
+-   Cart manager: `src/ai/tools/cart.py`
+-   Sub-agent wrapper: `src/ai/tools/agent_wrappers.py`
+    (`subagent_usage_accumulator`)
+-   Langfuse helpers: `src/infra/observability.py`
+    (`build_trace_tags`, `score_usage`, `tag_handoff`)
+-   Tests:
+    `tests/unit/ai/test_orchestrator.py`,
+    `tests/unit/ai/test_agent_manager*.py`

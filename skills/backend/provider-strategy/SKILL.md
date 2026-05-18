@@ -9,11 +9,11 @@ Each e-commerce/ERP provider (Shopify, VTEX, Yampi, Bling, etc.) implements its 
 
 ## Strategy base classes by domain
 
-| Sync type | Base class | Location |
-|---|---|---|
-| Order sync | `OrderSyncRequestStrategyBase` | `src/application/order-sync/strategies/` |
-| Abandoned cart | `AbandonedCartSyncRequestStrategyBase` | `src/application/abandoned-cart/strategies/` |
-| Customer sync | (similar pattern — look for `*SyncRequestStrategyBase`) | `src/application/*/strategies/` |
+| Sync type      | Base class                                              | Location                                     |
+| -------------- | ------------------------------------------------------- | -------------------------------------------- |
+| Order sync     | `OrderSyncRequestStrategyBase`                          | `src/application/order-sync/strategies/`     |
+| Abandoned cart | `AbandonedCartSyncRequestStrategyBase`                  | `src/application/abandoned-cart/strategies/` |
+| Customer sync  | (similar pattern — look for `*SyncRequestStrategyBase`) | `src/application/*/strategies/`              |
 
 ## Creating a new strategy
 
@@ -25,11 +25,7 @@ import { StoreTypeEnum } from '@Zoppy-crm/utilities';
 import { DataNotSyncedRequest } from 'src/access/http/requests/order-sync/data-not-synced.request';
 import { OrderSyncRequestStrategyBase } from './order-sync-request.strategy.base';
 import { DataSyncManagementOrderSyncRequest } from 'src/access/http/requests/hub-sync/data-sync-management-order-sync.request';
-import {
-    YampiOrderService,
-    YampiOrderMapper,
-    YampiAuthService
-} from '@Zoppy-crm/yampi';
+import { YampiOrderService, YampiOrderMapper, YampiAuthService } from '@Zoppy-crm/yampi';
 
 export class YampiOrderSyncRequestStrategy extends OrderSyncRequestStrategyBase {
     public async build(management: DataSyncManagement, ids: string[] = null): Promise<DataSyncManagementOrderSyncRequest> {
@@ -79,18 +75,18 @@ The base class injects all shared domains so you don't need to declare them in t
 
 ```typescript
 // Available via `this.` in your strategy:
-this.findKey()                    // finds the API key for the current company
-this.findOrCreateStore(request)   // finds or creates the Store record
-this.findCompany(key)             // fetches the Company record
-this.updateCompany(company)       // saves company changes
-this.buildDataNotSyncedRequest()  // standardized error object for failed IDs
-this.sessionService               // session access if needed
+this.findKey(); // finds the API key for the current company
+this.findOrCreateStore(request); // finds or creates the Store record
+this.findCompany(key); // fetches the Company record
+this.updateCompany(company); // saves company changes
+this.buildDataNotSyncedRequest(); // standardized error object for failed IDs
+this.sessionService; // session access if needed
 ```
 
 ### The `unprocessable` flag in `buildDataNotSyncedRequest`
 
-- `unprocessable: true` — the record can never be synced (missing required fields, invalid data). Don't retry.
-- `unprocessable: false` — transient error (API timeout, rate limit). Can be retried.
+-   `unprocessable: true` — the record can never be synced (missing required fields, invalid data). Don't retry.
+-   `unprocessable: false` — transient error (API timeout, rate limit). Can be retried.
 
 ## Wiring the provider end-to-end
 
@@ -107,7 +103,7 @@ The enum lives in the shared package `@Zoppy-crm/utilities`. Update it there:
 ```typescript
 export enum CompanyEcommerceProviderEnum {
     YAMPI = 'yampi',
-    YOUR_PROVIDER = 'your-provider'  // add here
+    YOUR_PROVIDER = 'your-provider' // add here
 }
 ```
 
@@ -180,8 +176,7 @@ export class YourProviderOrderSyncQueueProcessor extends QueueProcessorBase {
         public readonly logService: LogService,
         // inject all shared domains that OrderSyncRequestStrategyBase needs:
         private readonly wcStoreDomain: WcStoreDomain,
-        private readonly keyDomain: KeyDomain,
-        // ... other shared domains
+        private readonly keyDomain: KeyDomain // ... other shared domains
     ) {
         super(session, logService);
     }
@@ -191,7 +186,7 @@ export class YourProviderOrderSyncQueueProcessor extends QueueProcessorBase {
 
         const strategy = new YourProviderOrderSyncRequestStrategy(
             this.wcStoreDomain,
-            this.keyDomain,
+            this.keyDomain
             // ... pass all shared deps in the same order as the base constructor
         );
 
@@ -216,12 +211,12 @@ YOUR_PROVIDER_ORDER_SYNC = 'YOUR_PROVIDER_ORDER_SYNC_JOB',
 
 ## Complete checklist for a new provider strategy
 
-- [ ] Create `your-provider-order-sync-request.strategy.ts` extending the correct base
-- [ ] Implement `build(management, ids?)` with try/catch and `unprocessable` flag
-- [ ] Add the provider to `CompanyEcommerceProviderEnum` (in `@Zoppy-crm/utilities`)
-- [ ] Add `QueueEnum` and `QueueJobEnum` entries in `queue.constants.ts`
-- [ ] Create `YourProviderOrderSyncQueueService` and register in `QueueServiceModule`
-- [ ] Add `case` in `OrderSyncBuilderApplication.buildOrderForHub()` + private method
-- [ ] Create the `QueueProcessor` that instantiates the strategy with `new`
-- [ ] Register the processor in the appropriate queue module
-- [ ] Write tests — the base class spec shows the mock pattern to follow
+-   [ ] Create `your-provider-order-sync-request.strategy.ts` extending the correct base
+-   [ ] Implement `build(management, ids?)` with try/catch and `unprocessable` flag
+-   [ ] Add the provider to `CompanyEcommerceProviderEnum` (in `@Zoppy-crm/utilities`)
+-   [ ] Add `QueueEnum` and `QueueJobEnum` entries in `queue.constants.ts`
+-   [ ] Create `YourProviderOrderSyncQueueService` and register in `QueueServiceModule`
+-   [ ] Add `case` in `OrderSyncBuilderApplication.buildOrderForHub()` + private method
+-   [ ] Create the `QueueProcessor` that instantiates the strategy with `new`
+-   [ ] Register the processor in the appropriate queue module
+-   [ ] Write tests — the base class spec shows the mock pattern to follow

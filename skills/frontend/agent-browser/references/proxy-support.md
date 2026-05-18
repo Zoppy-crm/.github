@@ -6,14 +6,14 @@ Proxy configuration for geo-testing, rate limiting avoidance, and corporate envi
 
 ## Contents
 
-- [Basic Proxy Configuration](#basic-proxy-configuration)
-- [Authenticated Proxy](#authenticated-proxy)
-- [SOCKS Proxy](#socks-proxy)
-- [Proxy Bypass](#proxy-bypass)
-- [Common Use Cases](#common-use-cases)
-- [Verifying Proxy Connection](#verifying-proxy-connection)
-- [Troubleshooting](#troubleshooting)
-- [Best Practices](#best-practices)
+-   [Basic Proxy Configuration](#basic-proxy-configuration)
+-   [Authenticated Proxy](#authenticated-proxy)
+-   [SOCKS Proxy](#socks-proxy)
+-   [Proxy Bypass](#proxy-bypass)
+-   [Common Use Cases](#common-use-cases)
+-   [Verifying Proxy Connection](#verifying-proxy-connection)
+-   [Troubleshooting](#troubleshooting)
+-   [Best Practices](#best-practices)
 
 ## Basic Proxy Configuration
 

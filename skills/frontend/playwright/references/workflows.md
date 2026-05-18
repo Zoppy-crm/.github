@@ -77,19 +77,19 @@ Minimal example:
 
 ```json
 {
-  "browser": {
-    "launchOptions": {
-      "headless": false
-    },
-    "contextOptions": {
-      "viewport": { "width": 1280, "height": 720 }
+    "browser": {
+        "launchOptions": {
+            "headless": false
+        },
+        "contextOptions": {
+            "viewport": { "width": 1280, "height": 720 }
+        }
     }
-  }
 }
 ```
 
 ## Troubleshooting
 
-- If an element ref fails, run `pwcli snapshot` again and retry.
-- If the page looks wrong, re-open with `--headed` and resize the window.
-- If a flow depends on prior state, use a named `--session`.
+-   If an element ref fails, run `pwcli snapshot` again and retry.
+-   If the page looks wrong, re-open with `--headed` and resize the window.
+-   If a flow depends on prior state, use a named `--session`.

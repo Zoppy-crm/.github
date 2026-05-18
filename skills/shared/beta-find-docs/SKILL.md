@@ -1,25 +1,25 @@
 ---
 name: beta-find-docs
 description: >-
-  Retrieves authoritative, up-to-date technical documentation, API references,
-  configuration details, and code examples for any developer technology.
+    Retrieves authoritative, up-to-date technical documentation, API references,
+    configuration details, and code examples for any developer technology.
 
-  Use this skill whenever answering technical questions or writing code that
-  interacts with external technologies. This includes libraries, frameworks,
-  programming languages, SDKs, APIs, CLI tools, cloud services, infrastructure
-  tools, and developer platforms.
+    Use this skill whenever answering technical questions or writing code that
+    interacts with external technologies. This includes libraries, frameworks,
+    programming languages, SDKs, APIs, CLI tools, cloud services, infrastructure
+    tools, and developer platforms.
 
-  Common scenarios:
-  - looking up API endpoints, classes, functions, or method parameters
-  - checking configuration options or CLI commands
-  - answering "how do I" technical questions
-  - generating code that uses a specific library or service
-  - debugging issues related to frameworks, SDKs, or APIs
-  - retrieving setup instructions, examples, or migration guides
-  - verifying version-specific behavior or breaking changes
+    Common scenarios:
+    - looking up API endpoints, classes, functions, or method parameters
+    - checking configuration options or CLI commands
+    - answering "how do I" technical questions
+    - generating code that uses a specific library or service
+    - debugging issues related to frameworks, SDKs, or APIs
+    - retrieving setup instructions, examples, or migration guides
+    - verifying version-specific behavior or breaking changes
 
-  Prefer this skill whenever documentation accuracy matters or when model
-  knowledge may be outdated.
+    Prefer this skill whenever documentation accuracy matters or when model
+    knowledge may be outdated.
 ---
 
 # Documentation Lookup
@@ -37,8 +37,8 @@ Before running any `ctx7` command, check if it is available:
 which ctx7
 ```
 
-- If `ctx7` is found: use `ctx7 <command>` directly.
-- If `ctx7` is NOT found: use `npx ctx7@latest <command>` as fallback.
+-   If `ctx7` is found: use `ctx7 <command>` directly.
+-   If `ctx7` is NOT found: use `npx ctx7@latest <command>` as fallback.
 
 ## Workflow
 
@@ -72,23 +72,23 @@ Always pass a `query` argument — it is required and directly affects result ra
 
 Each result includes:
 
-- **Library ID** — Context7-compatible identifier (format: `/org/project`)
-- **Name** — Library or package name
-- **Description** — Short summary
-- **Code Snippets** — Number of available code examples
-- **Source Reputation** — Authority indicator (High, Medium, Low, or Unknown)
-- **Benchmark Score** — Quality indicator (100 is the highest score)
-- **Versions** — List of versions if available. Use one of those versions if the user provides a version in their query. The format is `/org/project/version`.
+-   **Library ID** — Context7-compatible identifier (format: `/org/project`)
+-   **Name** — Library or package name
+-   **Description** — Short summary
+-   **Code Snippets** — Number of available code examples
+-   **Source Reputation** — Authority indicator (High, Medium, Low, or Unknown)
+-   **Benchmark Score** — Quality indicator (100 is the highest score)
+-   **Versions** — List of versions if available. Use one of those versions if the user provides a version in their query. The format is `/org/project/version`.
 
 ### Selection process
 
 1. Analyze the query to understand what library/package the user is looking for
 2. Select the most relevant match based on:
-   - Name similarity to the query (exact matches prioritized)
-   - Description relevance to the query's intent
-   - Documentation coverage (prioritize libraries with higher Code Snippet counts)
-   - Source reputation (consider libraries with High or Medium reputation more authoritative)
-   - Benchmark score (higher is better, 100 is the maximum)
+    - Name similarity to the query (exact matches prioritized)
+    - Description relevance to the query's intent
+    - Documentation coverage (prioritize libraries with higher Code Snippet counts)
+    - Source reputation (consider libraries with High or Medium reputation more authoritative)
+    - Benchmark score (higher is better, 100 is the maximum)
 3. If multiple good matches exist, acknowledge this but proceed with the most relevant one
 4. If no good matches exist, clearly state this and suggest query refinements
 5. For ambiguous queries, request clarification before proceeding with a best-guess match
@@ -121,12 +121,12 @@ ctx7 docs /prisma/prisma "How to define one-to-many relations with cascade delet
 
 The query directly affects the quality of results. Be specific and include relevant details. Do not include any sensitive or confidential information such as API keys, passwords, credentials, personal data, or proprietary code in your query.
 
-| Quality | Example |
-|---------|---------|
-| Good | `"How to set up authentication with JWT in Express.js"` |
-| Good | `"React useEffect cleanup function with async operations"` |
-| Bad | `"auth"` |
-| Bad | `"hooks"` |
+| Quality | Example                                                    |
+| ------- | ---------------------------------------------------------- |
+| Good    | `"How to set up authentication with JWT in Express.js"`    |
+| Good    | `"React useEffect cleanup function with async operations"` |
+| Bad     | `"auth"`                                                   |
+| Bad     | `"hooks"`                                                  |
 
 Use the user's full question as the query when possible, vague one-word queries return generic results.
 
@@ -147,6 +147,7 @@ ctx7 login
 ## Error Handling
 
 If a command fails with a quota error ("Monthly quota reached" or "quota exceeded"):
+
 1. Inform the user their Context7 quota is exhausted
 2. Suggest they authenticate for higher limits: `ctx7 login`
 3. If they cannot or choose not to authenticate, answer from training knowledge and clearly note it may be outdated
@@ -155,7 +156,7 @@ Do not silently fall back to training data — always tell the user why Context7
 
 ## Common Mistakes
 
-- Library IDs require a `/` prefix — `/facebook/react` not `facebook/react`
-- Always run `ctx7 library` first — `ctx7 docs react "hooks"` will fail without a valid ID
-- Use descriptive queries, not single words — `"React useEffect cleanup function"` not `"hooks"`
-- Do not include sensitive information (API keys, passwords, credentials) in queries
+-   Library IDs require a `/` prefix — `/facebook/react` not `facebook/react`
+-   Always run `ctx7 library` first — `ctx7 docs react "hooks"` will fail without a valid ID
+-   Use descriptive queries, not single words — `"React useEffect cleanup function"` not `"hooks"`
+-   Do not include sensitive information (API keys, passwords, credentials) in queries

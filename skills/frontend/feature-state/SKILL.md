@@ -29,10 +29,10 @@ DeepComponent  ← all inject UserService directly
 
 ## Choosing the Right Scope
 
-| Situation | Solution |
-|-----------|----------|
-| State used across the entire app (user, company, sidebar) | `providedIn: 'root'` |
-| State shared between sibling components within a feature | `providedIn: 'root'` state service scoped by feature |
+| Situation                                                     | Solution                                              |
+| ------------------------------------------------------------- | ----------------------------------------------------- |
+| State used across the entire app (user, company, sidebar)     | `providedIn: 'root'`                                  |
+| State shared between sibling components within a feature      | `providedIn: 'root'` state service scoped by feature  |
 | State that must reset when the feature component is destroyed | Service provided in the container's `providers` array |
 
 ---
@@ -77,7 +77,7 @@ Provide the service in the container's `providers` array. This creates a **new i
 import { Injectable, signal, computed } from '@angular/core';
 import { ProductRequest } from 'src/shared/models/requests/product/product.request';
 
-@Injectable()   // <-- no providedIn
+@Injectable() // <-- no providedIn
 export class CreateProductStateService {
     readonly name = signal('');
     readonly price = signal<number | null>(null);
@@ -85,14 +85,12 @@ export class CreateProductStateService {
     readonly loading = signal(false);
     readonly error = signal<string | null>(null);
 
-    readonly isValid = computed(() =>
-        this.name().trim().length > 0 && this.price() !== null && this.categoryId() !== null
-    );
+    readonly isValid = computed(() => this.name().trim().length > 0 && this.price() !== null && this.categoryId() !== null);
 
     readonly formValue = computed<ProductRequest>(() => ({
         name: this.name(),
         price: this.price()!,
-        categoryId: this.categoryId()!,
+        categoryId: this.categoryId()!
     }));
 
     reset(): void {
@@ -111,9 +109,9 @@ Provide it in the smart container:
 @Component({
     selector: 'app-create-product',
     standalone: true,
-    providers: [CreateProductStateService],   // <-- scoped instance
+    providers: [CreateProductStateService], // <-- scoped instance
     imports: [ProductFormComponent, ProductSummaryComponent],
-    templateUrl: './create-product.component.html',
+    templateUrl: './create-product.component.html'
 })
 export class CreateProductComponent {
     readonly state = inject(CreateProductStateService);
@@ -180,11 +178,13 @@ readonly hasItems = computed(() => this.state.items().length > 0);
 
 ```typescript
 // ❌ container passes everything down
-@Component({ template: `
-    <app-step-one [product]="product" [loading]="loading" (productChange)="product = $event" />
-    <app-step-two [product]="product" [categories]="categories" (categoryChange)="product.categoryId = $event" />
-    <app-step-three [product]="product" [loading]="loading" (save)="save()" />
-` })
+@Component({
+    template: `
+        <app-step-one [product]="product" [loading]="loading" (productChange)="product = $event" />
+        <app-step-two [product]="product" [categories]="categories" (categoryChange)="product.categoryId = $event" />
+        <app-step-three [product]="product" [loading]="loading" (save)="save()" />
+    `
+})
 export class CreateProductComponent {
     product: Partial<ProductRequest> = {};
     categories: CategoryEntity[] = [];
@@ -196,21 +196,28 @@ export class CreateProductComponent {
 
 ```typescript
 // ✅ container is thin; sub-components inject state directly
-@Component({ template: `
-    <app-step-one />
-    <app-step-two />
-    <app-step-three (save)="save()" />
-`, providers: [CreateProductStateService] })
+@Component({
+    template: `
+        <app-step-one />
+        <app-step-two />
+        <app-step-three (save)="save()" />
+    `,
+    providers: [CreateProductStateService]
+})
 export class CreateProductComponent {
     private readonly state = inject(CreateProductStateService);
-    async save() { /* uses state.formValue() directly */ }
+    async save() {
+        /* uses state.formValue() directly */
+    }
 }
 
 // Each step reads/writes state independently
 export class StepOneComponent {
     private readonly state = inject(CreateProductStateService);
     protected readonly name = this.state.name;
-    updateName(value: string) { this.state.name.set(value); }
+    updateName(value: string) {
+        this.state.name.set(value);
+    }
 }
 ```
 

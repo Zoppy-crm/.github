@@ -18,13 +18,14 @@ git branch --show-current
 ```
 
 **If on a protected branch** (main, master, develop):
+
 1. Analyze staged changes or working tree to determine the branch type
 2. Generate a branch name using conventional patterns:
-   - `feat/<description>` — New features, additions
-   - `fix/<description>` — Bug fixes
-   - `refactor/<description>` — Code restructuring
-   - `docs/<description>` — Documentation changes
-   - `chore/<description>` — Maintenance, configs
+    - `feat/<description>` — New features, additions
+    - `fix/<description>` — Bug fixes
+    - `refactor/<description>` — Code restructuring
+    - `docs/<description>` — Documentation changes
+    - `chore/<description>` — Maintenance, configs
 3. Create and checkout immediately: `git checkout -b <generated-branch-name>`
 4. Verify you are on the new branch before continuing
 
@@ -75,6 +76,7 @@ gh pr view --json number,title,body 2>/dev/null
 **If PR exists:** analyze commits since base branch and update title/body with `gh pr edit`.
 
 **If PR does not exist:**
+
 1. Analyze commits: `git log <base>..HEAD --oneline`
 2. Generate title from commits (Conventional Commits style)
 3. Generate description summarizing changes
@@ -87,9 +89,10 @@ Title and description MUST be in Portuguese (pt-BR). Technical prefixes (feat, f
 ### PR Rules
 
 Never include in the PR:
-- AI attribution lines (e.g., "Generated with Claude Code")
-- Co-Authored-By signatures
-- Any automated tool signatures or footers
+
+-   AI attribution lines (e.g., "Generated with Claude Code")
+-   Co-Authored-By signatures
+-   Any automated tool signatures or footers
 
 ### PR Description Format
 
@@ -97,23 +100,30 @@ Use this template. Include the optional sections only when the diff actually add
 
 ```markdown
 ## Resumo
+
 [Bullet points resumindo as mudanças com base nos commits]
 
 ## Mudanças
+
 [Lista dos commits incluídos]
 
 ## Rotas adicionadas
+
 [Incluir APENAS se novas rotas de API foram adicionadas no diff]
-- `METHOD /path/to/route` — Breve descrição do que a rota faz
+
+-   `METHOD /path/to/route` — Breve descrição do que a rota faz
 
 ## Páginas adicionadas
+
 [Incluir APENAS se novas páginas/telas de front-end foram adicionadas no diff]
-- **Nome da página** (`/caminho`) — Breve descrição do que a página faz
+
+-   **Nome da página** (`/caminho`) — Breve descrição do que a página faz
 ```
 
 To detect new routes and pages, look at the diff (`git diff <base>..HEAD`) for:
-- **Routes:** new endpoint definitions — e.g., `router.get`, `router.post`, `app.use`, route file additions, controller decorators like `@Get()`, `@Post()`, etc.
-- **Pages:** new page/screen components — e.g., files in `pages/`, `views/`, `screens/`, or route config entries that map paths to components.
+
+-   **Routes:** new endpoint definitions — e.g., `router.get`, `router.post`, `app.use`, route file additions, controller decorators like `@Get()`, `@Post()`, etc.
+-   **Pages:** new page/screen components — e.g., files in `pages/`, `views/`, `screens/`, or route config entries that map paths to components.
 
 ### Step 6: QA Report
 

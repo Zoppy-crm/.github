@@ -18,10 +18,10 @@ Não editar a seção `### Retorno de Solução` que aparece no **body do issue*
 
 Os dois destinos recebem **conteúdos diferentes**, não a mesma coisa copiada:
 
-| Destino | Conteúdo | Público |
-| --- | --- | --- |
-| **Field "Retorno de Solução"** (project) | Resumo **alto-nível** em 2–4 linhas: o que aconteceu, como foi contornado, qual a resolução definitiva. Sem jargão técnico pesado, sem nomes de arquivo/função. | Produto, CSM, management — lendo em view/planilha |
-| **Comentário no issue** | Explicação **técnica detalhada**: sequência do incidente, causa raiz (componentes/fluxo), por que é intermitente, plano de correção, eventuais IDs/links. Inclui também **casos de teste propostos** — cenários que QA pode rodar pra validar a correção. | Dev/QA acompanhando o card |
+| Destino                                  | Conteúdo                                                                                                                                                                                                                                                  | Público                                           |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **Field "Retorno de Solução"** (project) | Resumo **alto-nível** em 2–4 linhas: o que aconteceu, como foi contornado, qual a resolução definitiva. Sem jargão técnico pesado, sem nomes de arquivo/função.                                                                                           | Produto, CSM, management — lendo em view/planilha |
+| **Comentário no issue**                  | Explicação **técnica detalhada**: sequência do incidente, causa raiz (componentes/fluxo), por que é intermitente, plano de correção, eventuais IDs/links. Inclui também **casos de teste propostos** — cenários que QA pode rodar pra validar a correção. | Dev/QA acompanhando o card                        |
 
 Se a solução for trivial (ex: typo, config), o comentário pode ser curto — mas mesmo assim os dois lugares devem ser preenchidos.
 
@@ -31,12 +31,13 @@ Sempre **português (pt-BR)**, tom direto. Evite marketing/desculpas — o retor
 
 ## IDs fixos (org `Zoppy-crm`, Project "Zoppy Engineering" #7)
 
-- Project ID: `PVT_kwDOCAubUc4BQdrV`
-- Field "Retorno de Solução" ID: `PVTF_lADOCAubUc4BQdrVzg-wo9s` (tipo TEXT)
+-   Project ID: `PVT_kwDOCAubUc4BQdrV`
+-   Field "Retorno de Solução" ID: `PVTF_lADOCAubUc4BQdrVzg-wo9s` (tipo TEXT)
 
 Outros fields TEXT do mesmo project (caso o usuário peça para preencher junto):
-- `Evidencias`: `PVTF_lADOCAubUc4BQdrVzg-z4-Y`
-- `Tickets IDs`: `PVTF_lADOCAubUc4BQdrVzg-0GPU`
+
+-   `Evidencias`: `PVTF_lADOCAubUc4BQdrVzg-z4-Y`
+-   `Tickets IDs`: `PVTF_lADOCAubUc4BQdrVzg-0GPU`
 
 ## Acionamento
 
@@ -131,11 +132,12 @@ Não é obrigatório seguir exatamente esse template — ajuste conforme o caso.
 A seção é insumo direto pra QA. Cada caso deve ser acionável, com **setup**, **ação** e **resultado esperado** — mas enxuto, não precisa ser um plano de teste formal.
 
 Regras:
-- **Cobrir o happy path da correção** (o cenário que causava o bug, agora funcionando).
-- **Cobrir pelo menos um caso de regressão adjacente** — algo que poderia ter sido quebrado pela mudança. Ex: se o fix alterou o cálculo do cupom, incluir um teste com cupom em cenário que **já funcionava antes** pra garantir que continua.
-- **Quando fizer sentido, cobrir edge case ou estado intermediário** — dados incompletos, timing específico, concorrência, etc.
-- **Sem jargão de código interno.** Use nomes de funcionalidades/telas que QA reconhece no app, não nomes de método/arquivo.
-- **3 a 5 casos é o ponto doce.** Mais que isso vira barulho; menos que isso não cobre regressão.
+
+-   **Cobrir o happy path da correção** (o cenário que causava o bug, agora funcionando).
+-   **Cobrir pelo menos um caso de regressão adjacente** — algo que poderia ter sido quebrado pela mudança. Ex: se o fix alterou o cálculo do cupom, incluir um teste com cupom em cenário que **já funcionava antes** pra garantir que continua.
+-   **Quando fizer sentido, cobrir edge case ou estado intermediário** — dados incompletos, timing específico, concorrência, etc.
+-   **Sem jargão de código interno.** Use nomes de funcionalidades/telas que QA reconhece no app, não nomes de método/arquivo.
+-   **3 a 5 casos é o ponto doce.** Mais que isso vira barulho; menos que isso não cobre regressão.
 
 Se o bug tinha reprodução **intermitente** ou dependente de estado, mencione explicitamente a condição no caso ("após X rodadas do job", "com cupom aplicado no mesmo ciclo", etc.) — senão QA vai testar uma vez, não reproduzir, e fechar como OK.
 
@@ -143,12 +145,12 @@ Se o bug tinha reprodução **intermitente** ou dependente de estado, mencione e
 
 Como são ações visíveis (impactam shared state), **sempre confirme o texto com o usuário antes de executar** — principalmente o alto-nível do campo, que aparece em views de management.
 
-- [ ] Alto-nível (campo): 2–4 linhas, sem jargão, cobre: o que aconteceu + contorno + resolução definitiva
-- [ ] Comentário: técnico, cobre causa raiz e plano
-- [ ] Comentário inclui **casos de teste propostos** (3–5 cenários acionáveis pra QA)
-- [ ] Issue `<N>` e repo conferidos
-- [ ] Issue está no Project #7 (passo 1 retornou item com `project.number == 7`)
-- [ ] Body do issue **não** foi editado
+-   [ ] Alto-nível (campo): 2–4 linhas, sem jargão, cobre: o que aconteceu + contorno + resolução definitiva
+-   [ ] Comentário: técnico, cobre causa raiz e plano
+-   [ ] Comentário inclui **casos de teste propostos** (3–5 cenários acionáveis pra QA)
+-   [ ] Issue `<N>` e repo conferidos
+-   [ ] Issue está no Project #7 (passo 1 retornou item com `project.number == 7`)
+-   [ ] Body do issue **não** foi editado
 
 ## Exemplo preenchido
 
@@ -163,23 +165,29 @@ Issue `Zoppy-crm/zoppy-api#6176` — cupom 100% aplicado mas cliente foi cobrada
 > ## Retorno técnico
 >
 > ### O que aconteceu
+>
 > O fluxo de billing desta cliente executou de forma inconsistente no dia 10/03:
+>
 > 1. Cupom de 100% foi aplicado com sucesso → gerou uma `invoice` zerada para o ciclo.
 > 2. Uma execução subsequente do job de billing, no mesmo dia, não reconheceu a invoice zerada como fechamento válido do ciclo e gerou uma segunda `invoice` com valor cheio.
 > 3. A segunda invoice seguiu o fluxo normal de cobrança e foi debitada do cartão da cliente.
 >
 > ### Causa raiz
+>
 > O pipeline atual do billing é composto por múltiplas etapas encadeadas e tem dois problemas estruturais:
-> - **Falta de idempotência / chave de ciclo**: a geração de invoice não valida de forma atômica se já existe fechamento para `companyId + ciclo`.
-> - **Sem lock distribuído por ciclo**: quando uma execução é interrompida no meio (deploy, timeout, retry do BullMQ) e outra entra em seguida, as duas avançam sobre o mesmo ciclo sem se enxergar.
+>
+> -   **Falta de idempotência / chave de ciclo**: a geração de invoice não valida de forma atômica se já existe fechamento para `companyId + ciclo`.
+> -   **Sem lock distribuído por ciclo**: quando uma execução é interrompida no meio (deploy, timeout, retry do BullMQ) e outra entra em seguida, as duas avançam sobre o mesmo ciclo sem se enxergar.
 >
 > O cenário é intermitente porque depende de cupom aplicado perto do momento de geração da invoice + execução interrompida e reentrante.
 >
 > ### Tratativa
-> - **Casos pontuais:** tratados manualmente via estorno/ajuste.
-> - **Solução definitiva:** remodelagem do módulo de billing já em andamento (state machine explícita, chave de idempotência por `companyId + período`, lock distribuído). Não entra como fix pontual deste card.
+>
+> -   **Casos pontuais:** tratados manualmente via estorno/ajuste.
+> -   **Solução definitiva:** remodelagem do módulo de billing já em andamento (state machine explícita, chave de idempotência por `companyId + período`, lock distribuído). Não entra como fix pontual deste card.
 >
 > ### Casos de teste propostos (QA)
+>
 > 1. **Ciclo de billing normal com cupom 100%** — aplicar cupom, rodar o ciclo, conferir que apenas **uma** invoice zerada é gerada e nenhuma cobrança sai no cartão.
 > 2. **Regressão: ciclo com cupom parcial (50%)** — cenário que já funcionava. Conferir que a invoice é gerada com o valor com desconto e cobra corretamente no cartão (nada quebrou).
 > 3. **Reentrância do job** — forçar duas execuções sequenciais do job de billing pra mesma company no mesmo dia. Esperado: a segunda execução detecta o fechamento e não gera invoice duplicada.
@@ -239,8 +247,8 @@ Sempre mostre os textos gerados pro usuário antes de publicar.
 
 ## Diretrizes
 
-- **Sempre confirme os textos com o usuário antes de postar** — o campo é visível em views de management e o comentário fica no histórico do card.
-- Se o usuário pedir só "atualiza o campo" ou só "comenta", respeite o pedido — mas lembre que a convenção completa inclui os dois.
-- Se o usuário não especificar a divisão, pergunte se quer alto-nível no campo + técnico no comentário (default) ou outra distribuição.
-- Após postar, ecoe ao usuário: link do issue com o comentário + confirmação de que o field foi atualizado.
-- Se o issue não estiver no Project #7, avise antes de prosseguir — não adicione o item ao project sem confirmar.
+-   **Sempre confirme os textos com o usuário antes de postar** — o campo é visível em views de management e o comentário fica no histórico do card.
+-   Se o usuário pedir só "atualiza o campo" ou só "comenta", respeite o pedido — mas lembre que a convenção completa inclui os dois.
+-   Se o usuário não especificar a divisão, pergunte se quer alto-nível no campo + técnico no comentário (default) ou outra distribuição.
+-   Após postar, ecoe ao usuário: link do issue com o comentário + confirmação de que o field foi atualizado.
+-   Se o issue não estiver no Project #7, avise antes de prosseguir — não adicione o item ao project sem confirmar.

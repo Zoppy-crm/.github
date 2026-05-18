@@ -25,11 +25,11 @@ If you have not already explored the codebase, do so to understand the current a
 
 Before slicing, identify high-level decisions that are unlikely to change throughout implementation:
 
-- Route structures / URL patterns
-- Database schema shape
-- Key data models
-- Authentication / authorization approach
-- Third-party service boundaries
+-   Route structures / URL patterns
+-   Database schema shape
+-   Key data models
+-   Authentication / authorization approach
+-   Third-party service boundaries
 
 These go in the plan header so every phase can reference them.
 
@@ -49,13 +49,13 @@ Break the PRD into **tracer bullet** phases. Each phase is a thin vertical slice
 
 Present the proposed breakdown as a numbered list. For each phase show:
 
-- **Title**: short descriptive name
-- **User stories covered**: which user stories from the PRD this addresses
+-   **Title**: short descriptive name
+-   **User stories covered**: which user stories from the PRD this addresses
 
 Ask the user:
 
-- Does the granularity feel right? (too coarse / too fine)
-- Should any phases be merged or split further?
+-   Does the granularity feel right? (too coarse / too fine)
+-   Should any phases be merged or split further?
 
 Iterate until the user approves the breakdown.
 
@@ -72,10 +72,10 @@ Create `docs/plans/` if it doesn't exist. Write the plan as a Markdown file name
 
 Durable decisions that apply across all phases:
 
-- **Rotas**: ...
-- **Schema**: ...
-- **Modelos principais**: ...
-- (add/remove sections as appropriate)
+-   **Rotas**: ...
+-   **Schema**: ...
+-   **Modelos principais**: ...
+-   (add/remove sections as appropriate)
 
 ---
 
@@ -89,9 +89,9 @@ A concise description of this vertical slice. Describe the end-to-end behavior, 
 
 ### Critérios de Aceite
 
-- [ ] Critério 1
-- [ ] Critério 2
-- [ ] Critério 3
+-   [ ] Critério 1
+-   [ ] Critério 2
+-   [ ] Critério 3
 
 ---
 
@@ -105,7 +105,7 @@ A concise description of this vertical slice. Describe the end-to-end behavior, 
 
 ### Critérios de Aceite
 
-- [ ] ...
+-   [ ] ...
 
 <!-- Repeat for each phase -->
 </plan-template>

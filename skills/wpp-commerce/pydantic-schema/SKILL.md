@@ -1,22 +1,22 @@
 ---
 name: pydantic-schema
 description: >
-  How and where to define Pydantic v2 schemas in zoppy-whatsapp-commerce.
-  Schemas live in three distinct locations and choosing the right one
-  matters: src/api/schemas/ for HTTP request/response (presentation),
-  src/domain/<feature>/schemas.py for domain values that flow through the
-  application + repository layers, src/domain/<feature>/webhook_schemas.py
-  for webhook payload contracts. Covers the v2 idioms (model_dump,
-  model_validate, model_validate_json, Field, default_factory, validators,
-  computed_field), modern type hints, and how schemas serialize for cache
-  / wire / DB. Use this skill whenever creating a new schema, deciding
-  which folder to place it in, validating input, serializing to cache,
-  adding computed properties, or migrating a v1 schema to v2 idioms.
-  Triggers on: "create schema", "novo schema", "Pydantic", "BaseModel",
-  "model_dump", "model_dump_json", "model_validate", "model_validate_json",
-  "Field", "default_factory", "validator", "field_validator",
-  "computed_field", "schema HTTP", "domain schema", "webhook schema",
-  "request schema", "response schema", "Pydantic v2", "from_attributes".
+    How and where to define Pydantic v2 schemas in zoppy-whatsapp-commerce.
+    Schemas live in three distinct locations and choosing the right one
+    matters: src/api/schemas/ for HTTP request/response (presentation),
+    src/domain/<feature>/schemas.py for domain values that flow through the
+    application + repository layers, src/domain/<feature>/webhook_schemas.py
+    for webhook payload contracts. Covers the v2 idioms (model_dump,
+    model_validate, model_validate_json, Field, default_factory, validators,
+    computed_field), modern type hints, and how schemas serialize for cache
+    / wire / DB. Use this skill whenever creating a new schema, deciding
+    which folder to place it in, validating input, serializing to cache,
+    adding computed properties, or migrating a v1 schema to v2 idioms.
+    Triggers on: "create schema", "novo schema", "Pydantic", "BaseModel",
+    "model_dump", "model_dump_json", "model_validate", "model_validate_json",
+    "Field", "default_factory", "validator", "field_validator",
+    "computed_field", "schema HTTP", "domain schema", "webhook schema",
+    "request schema", "response schema", "Pydantic v2", "from_attributes".
 ---
 
 # Pydantic Schemas — zoppy-whatsapp-commerce
@@ -27,11 +27,11 @@ type hints (`str | None`, `list[T]`).
 
 ## The three locations and how to choose
 
-| Location | Used by | What lives here |
-|---|---|---|
-| `src/api/schemas/` | HTTP layer (`api/endpoints/`) | Request/response DTOs that match the REST contract for chat, knowledge, metrics, playground. Re-shape data for clients; may hide internal fields. |
-| `src/domain/<feature>/schemas.py` | Application services + repositories + AI layer | Domain truth — the canonical shape of a feature's data as the system thinks of it. Cached, persisted, passed across layers. |
-| `src/domain/<feature>/webhook_schemas.py` | Webhook handlers (`api/webhooks/handlers/`) + repositories | The contract of incoming webhook payloads from upstream platforms (company-sync, agent_config-updated, integration-synced). |
+| Location                                  | Used by                                                    | What lives here                                                                                                                                   |
+| ----------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/api/schemas/`                        | HTTP layer (`api/endpoints/`)                              | Request/response DTOs that match the REST contract for chat, knowledge, metrics, playground. Re-shape data for clients; may hide internal fields. |
+| `src/domain/<feature>/schemas.py`         | Application services + repositories + AI layer             | Domain truth — the canonical shape of a feature's data as the system thinks of it. Cached, persisted, passed across layers.                       |
+| `src/domain/<feature>/webhook_schemas.py` | Webhook handlers (`api/webhooks/handlers/`) + repositories | The contract of incoming webhook payloads from upstream platforms (company-sync, agent_config-updated, integration-synced).                       |
 
 If the same field appears in two of these folders, that's intentional.
 The HTTP shape may differ from the domain shape; the webhook shape is
@@ -281,12 +281,12 @@ class Order(BaseModel):
 
 ## Where each shape ends up
 
-| Schema | Goes through |
-|---|---|
-| API request | Endpoint handler → Application Service input |
-| Domain schema | Application Service ↔ Repository ↔ cache (Valkey) |
-| Webhook schema | Webhook handler → Repository |
-| API response | Application Service output → Endpoint handler returns it |
+| Schema         | Goes through                                             |
+| -------------- | -------------------------------------------------------- |
+| API request    | Endpoint handler → Application Service input             |
+| Domain schema  | Application Service ↔ Repository ↔ cache (Valkey)        |
+| Webhook schema | Webhook handler → Repository                             |
+| API response   | Application Service output → Endpoint handler returns it |
 
 The repository's `_to_schema(row)` mapper (see `repository-async` skill)
 is the seam between ORM rows and Pydantic. Once you have a Pydantic
@@ -345,46 +345,46 @@ tests/unit/api/schemas/test_<feature>.py   (if you add HTTP-shape tests)
 
 Cover:
 
-- Successful construction with happy-path data
-- Validation errors for missing required fields and out-of-bounds values
-- Round-trip: `model_validate(model_dump())` returns equivalent instance
-- For computed fields / properties: derived value matches expectation
-- For schemas with validators: each rule has a positive and negative case
+-   Successful construction with happy-path data
+-   Validation errors for missing required fields and out-of-bounds values
+-   Round-trip: `model_validate(model_dump())` returns equivalent instance
+-   For computed fields / properties: derived value matches expectation
+-   For schemas with validators: each rule has a positive and negative case
 
 ## Gotchas / anti-patterns
 
-- **Never put a domain schema in `src/api/schemas/`.** The domain
-  doesn't depend on the wire format.
-- **Never put an HTTP-only field in `domain/<feature>/schemas.py`.**
-  If clients see it but services don't care, it's API-only.
-- **Don't use `Optional[str]` / `Union[A, B]` / `List[T]` / `Dict[K, V]`.**
-  Use `str | None`, `A | B`, `list[T]`, `dict[K, V]`. Ruff's `UP` rules
-  flag this.
-- **Don't default mutable values inline** (`= []`, `= {}`). Always
-  `default_factory=...`.
-- **Don't use v1 `parse_obj` / `dict()` / `json()`.** Those are gone
-  in v2.
-- **Don't bypass validators by constructing via `__init__` with raw
-  values from the wire.** Always go through `model_validate(...)`.
-- **Don't return ORM instances from a service** — see `repository-async`
-  skill. The schema mapping must happen at the repository.
-- **Don't import from `src/api/` inside `src/domain/`.** Layer rule.
+-   **Never put a domain schema in `src/api/schemas/`.** The domain
+    doesn't depend on the wire format.
+-   **Never put an HTTP-only field in `domain/<feature>/schemas.py`.**
+    If clients see it but services don't care, it's API-only.
+-   **Don't use `Optional[str]` / `Union[A, B]` / `List[T]` / `Dict[K, V]`.**
+    Use `str | None`, `A | B`, `list[T]`, `dict[K, V]`. Ruff's `UP` rules
+    flag this.
+-   **Don't default mutable values inline** (`= []`, `= {}`). Always
+    `default_factory=...`.
+-   **Don't use v1 `parse_obj` / `dict()` / `json()`.** Those are gone
+    in v2.
+-   **Don't bypass validators by constructing via `__init__` with raw
+    values from the wire.** Always go through `model_validate(...)`.
+-   **Don't return ORM instances from a service** — see `repository-async`
+    skill. The schema mapping must happen at the repository.
+-   **Don't import from `src/api/` inside `src/domain/`.** Layer rule.
 
 ## Pre-PR checklist
 
-- [ ] New schema is in the correct folder (`api/schemas/`,
-      `domain/<feature>/schemas.py`, or
-      `domain/<feature>/webhook_schemas.py`)
-- [ ] Class extends `BaseModel`
-- [ ] Type hints are modern (`str | None`, `list[T]`, etc.)
-- [ ] Mutable defaults use `Field(default_factory=...)`
-- [ ] Required fields use `Field(...)` with `description=` and
-      length/format constraints when applicable
-- [ ] Validators (`@field_validator`, `@model_validator`) for business
-      rules that don't fit constraints
-- [ ] No v1 idioms (`parse_obj`, `.dict()`, `.json()`)
-- [ ] If used in cache: `model_dump_json` / `model_validate_json` round
-      trip exercised in a test
-- [ ] Tests in `tests/unit/domain/schemas/test_<feature>.py` cover happy
-      path + each validation rule
-- [ ] `uv run pytest tests/unit/domain/schemas/ -q` is green
+-   [ ] New schema is in the correct folder (`api/schemas/`,
+        `domain/<feature>/schemas.py`, or
+        `domain/<feature>/webhook_schemas.py`)
+-   [ ] Class extends `BaseModel`
+-   [ ] Type hints are modern (`str | None`, `list[T]`, etc.)
+-   [ ] Mutable defaults use `Field(default_factory=...)`
+-   [ ] Required fields use `Field(...)` with `description=` and
+        length/format constraints when applicable
+-   [ ] Validators (`@field_validator`, `@model_validator`) for business
+        rules that don't fit constraints
+-   [ ] No v1 idioms (`parse_obj`, `.dict()`, `.json()`)
+-   [ ] If used in cache: `model_dump_json` / `model_validate_json` round
+        trip exercised in a test
+-   [ ] Tests in `tests/unit/domain/schemas/test_<feature>.py` cover happy
+        path + each validation rule
+-   [ ] `uv run pytest tests/unit/domain/schemas/ -q` is green

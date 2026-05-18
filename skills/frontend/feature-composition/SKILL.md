@@ -36,17 +36,17 @@ src/core/pages/dashboard/
 
 **Smart container** (`create-product.component.ts`):
 
-- Injects data services (HTTP, repositories)
-- Manages data loading and saving
-- Handles navigation
-- Provides the feature state service via `providers: [FeatureStateService]`
-- Does NOT contain visual/presentation logic — delegates to sub-components
+-   Injects data services (HTTP, repositories)
+-   Manages data loading and saving
+-   Handles navigation
+-   Provides the feature state service via `providers: [FeatureStateService]`
+-   Does NOT contain visual/presentation logic — delegates to sub-components
 
 **Sub-components** (inside `components/`):
 
-- Focused on a single responsibility (form, summary, upload…)
-- **May and should** inject services directly — state services, API services, or any other shared service
-- Use `input()` / `output()` only when the value comes from **outside the feature scope**
+-   Focused on a single responsibility (form, summary, upload…)
+-   **May and should** inject services directly — state services, API services, or any other shared service
+-   Use `input()` / `output()` only when the value comes from **outside the feature scope**
 
 ## Component Size Rule
 
@@ -169,16 +169,16 @@ CreateProductComponent (container — injeta serviços HTTP, faz save/navigation
 
 ## Checklist
 
-- [ ] Feature folder created under `src/core/pages/dashboard/<feature-name>/`
-- [ ] Smart container injeta serviços HTTP e provê o `FeatureStateService` via `providers: [...]`
-- [ ] Sub-components injetam o `FeatureStateService` diretamente — sem prop drilling
-- [ ] No component exceeds ~150 lines
-- [ ] Sub-components are in `components/<sub-name>/` sub-folders
-- [ ] Route registered with `loadComponent` (lazy loading)
-- [ ] Feature state extracted to `<feature-name>.state.service.ts` if state is shared between sub-components
-- [ ] Styling done exclusively with Tailwind — no inline SCSS unless strictly necessary
-- [ ] `ChangeDetectionStrategy.OnPush` on all components
-- [ ] `@Zoppy-crm/*` design system components used instead of custom HTML when available
+-   [ ] Feature folder created under `src/core/pages/dashboard/<feature-name>/`
+-   [ ] Smart container injeta serviços HTTP e provê o `FeatureStateService` via `providers: [...]`
+-   [ ] Sub-components injetam o `FeatureStateService` diretamente — sem prop drilling
+-   [ ] No component exceeds ~150 lines
+-   [ ] Sub-components are in `components/<sub-name>/` sub-folders
+-   [ ] Route registered with `loadComponent` (lazy loading)
+-   [ ] Feature state extracted to `<feature-name>.state.service.ts` if state is shared between sub-components
+-   [ ] Styling done exclusively with Tailwind — no inline SCSS unless strictly necessary
+-   [ ] `ChangeDetectionStrategy.OnPush` on all components
+-   [ ] `@Zoppy-crm/*` design system components used instead of custom HTML when available
 
 ## What NOT to do
 

@@ -1,33 +1,33 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '\\brm[[:space:]]+([^;|&]*[[:space:]])?(/|~|\\$HOME|/\\*|~/\\*)([[:space:]]|$|[;|&])'; then echo '🛑 Hook de segurança: rm recursivo em diretório crítico (/, ~, $HOME) bloqueado.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE ':\\([[:space:]]*\\)[[:space:]]*\\{[^}]*:[[:space:]]*\\|[[:space:]]*:'; then echo '🛑 Hook de segurança: fork bomb bloqueado.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '(\\bmkfs\\.|\\bdd[[:space:]]+[^|;&]*of=/dev/(sd|nvme|hd|vd|xvd)|>[[:space:]]*/dev/(sd|nvme|hd|vd|xvd))'; then echo '🛑 Hook de segurança: comando de destruição de disco bloqueado.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '(chmod[[:space:]]+-R[[:space:]]+[0-7]+[[:space:]]+/($|[[:space:]])|chown[[:space:]]+-R[[:space:]]+[^[:space:]]+[[:space:]]+/($|[[:space:]]))'; then echo '🛑 Hook de segurança: chmod/chown recursivo em / bloqueado.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '(curl|wget)[[:space:]][^|]*\\|[[:space:]]*(sudo[[:space:]]+)?(sh|bash|zsh)\\b'; then echo '🛑 Hook de segurança: pipe de curl/wget para shell bloqueado (execução remota não verificada).' >&2; exit 2; fi; true",
-            "statusMessage": "Verificando comandos perigosos..."
-          },
-          {
-            "type": "command",
-            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); PROTECTED='master|main|development|staging|mirror'; if echo \"$CMD\" | grep -qE '\\bgit[[:space:]]+push\\b'; then if echo \"$CMD\" | grep -qE \"\\bgit[[:space:]]+push\\b[^;|&]*\\b($PROTECTED)\\b\"; then echo '🛑 Hook de segurança: push direto em branch protegida (master/main/development/staging/mirror) bloqueado. Abra um PR.' >&2; exit 2; fi; BRANCH=$(git branch --show-current 2>/dev/null); if echo \"$BRANCH\" | grep -qE \"^($PROTECTED)$\"; then if ! echo \"$CMD\" | grep -qE '\\bgit[[:space:]]+push\\b[^;|&]+:[a-zA-Z0-9/_.-]+'; then echo \"🛑 Hook de segurança: você está em '$BRANCH' (branch protegida). Push bloqueado — crie uma feature/bugfix branch.\" >&2; exit 2; fi; fi; fi; true",
-            "statusMessage": "Verificando push em branch protegida..."
-          }
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '\\brm[[:space:]]+([^;|&]*[[:space:]])?(/|~|\\$HOME|/\\*|~/\\*)([[:space:]]|$|[;|&])'; then echo '🛑 Hook de segurança: rm recursivo em diretório crítico (/, ~, $HOME) bloqueado.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE ':\\([[:space:]]*\\)[[:space:]]*\\{[^}]*:[[:space:]]*\\|[[:space:]]*:'; then echo '🛑 Hook de segurança: fork bomb bloqueado.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '(\\bmkfs\\.|\\bdd[[:space:]]+[^|;&]*of=/dev/(sd|nvme|hd|vd|xvd)|>[[:space:]]*/dev/(sd|nvme|hd|vd|xvd))'; then echo '🛑 Hook de segurança: comando de destruição de disco bloqueado.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '(chmod[[:space:]]+-R[[:space:]]+[0-7]+[[:space:]]+/($|[[:space:]])|chown[[:space:]]+-R[[:space:]]+[^[:space:]]+[[:space:]]+/($|[[:space:]]))'; then echo '🛑 Hook de segurança: chmod/chown recursivo em / bloqueado.' >&2; exit 2; fi; if echo \"$CMD\" | grep -qE '(curl|wget)[[:space:]][^|]*\\|[[:space:]]*(sudo[[:space:]]+)?(sh|bash|zsh)\\b'; then echo '🛑 Hook de segurança: pipe de curl/wget para shell bloqueado (execução remota não verificada).' >&2; exit 2; fi; true",
+                        "statusMessage": "Verificando comandos perigosos..."
+                    },
+                    {
+                        "type": "command",
+                        "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); PROTECTED='master|main|development|staging|mirror'; if echo \"$CMD\" | grep -qE '\\bgit[[:space:]]+push\\b'; then if echo \"$CMD\" | grep -qE \"\\bgit[[:space:]]+push\\b[^;|&]*\\b($PROTECTED)\\b\"; then echo '🛑 Hook de segurança: push direto em branch protegida (master/main/development/staging/mirror) bloqueado. Abra um PR.' >&2; exit 2; fi; BRANCH=$(git branch --show-current 2>/dev/null); if echo \"$BRANCH\" | grep -qE \"^($PROTECTED)$\"; then if ! echo \"$CMD\" | grep -qE '\\bgit[[:space:]]+push\\b[^;|&]+:[a-zA-Z0-9/_.-]+'; then echo \"🛑 Hook de segurança: você está em '$BRANCH' (branch protegida). Push bloqueado — crie uma feature/bugfix branch.\" >&2; exit 2; fi; fi; fi; true",
+                        "statusMessage": "Verificando push em branch protegida..."
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE 'git commit' 2>/dev/null; then BRANCH=$(git branch --show-current 2>/dev/null); if echo \"$BRANCH\" | grep -qE '^(bugfix|hotfix)/'; then echo '{\"notification\":\"🐛 Commit em branch de bugfix detectado. Use /retorno-solucao para gerar o retorno de solução (campo do Project V2 + comentário técnico no issue).\"}'; fi; fi; true",
+                        "statusMessage": "Verificando branch de bugfix..."
+                    }
+                ]
+            }
         ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE 'git commit' 2>/dev/null; then BRANCH=$(git branch --show-current 2>/dev/null); if echo \"$BRANCH\" | grep -qE '^(bugfix|hotfix)/'; then echo '{\"notification\":\"🐛 Commit em branch de bugfix detectado. Use /retorno-solucao para gerar o retorno de solução (campo do Project V2 + comentário técnico no issue).\"}'; fi; fi; true",
-            "statusMessage": "Verificando branch de bugfix..."
-          }
-        ]
-      }
-    ]
-  }
+    }
 }

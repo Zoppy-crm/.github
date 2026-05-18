@@ -1,20 +1,20 @@
 ---
 name: fastapi-endpoint
 description: >
-  How to create HTTP endpoints in zoppy-whatsapp-commerce (FastAPI). Covers
-  endpoint placement under src/api/endpoints/, the thin-facade rule (no
-  business logic in handlers), Depends() dependency injection, response_model,
-  HTTPException mapping from domain errors, file uploads, async handlers,
-  registering new routers in src/api/router.py, and webhook handlers under
-  src/api/webhooks/handlers/. Use this skill whenever exposing a new use
-  case via REST API, adding an endpoint to an existing controller, deciding
-  between Depends() and direct instantiation, mapping a service exception
-  to an HTTP status, or registering a new webhook handler. Triggers on:
-  "create endpoint", "novo endpoint", "novo controller", "FastAPI", "rota",
-  "route", "APIRouter", "Depends", "response_model", "HTTPException",
-  "status_code", "register router", "registrar router", "include_router",
-  "webhook handler", "novo webhook", "Query()", "File()", "UploadFile",
-  "request body", "feature flag check", "controller layer", "thin facade".
+    How to create HTTP endpoints in zoppy-whatsapp-commerce (FastAPI). Covers
+    endpoint placement under src/api/endpoints/, the thin-facade rule (no
+    business logic in handlers), Depends() dependency injection, response_model,
+    HTTPException mapping from domain errors, file uploads, async handlers,
+    registering new routers in src/api/router.py, and webhook handlers under
+    src/api/webhooks/handlers/. Use this skill whenever exposing a new use
+    case via REST API, adding an endpoint to an existing controller, deciding
+    between Depends() and direct instantiation, mapping a service exception
+    to an HTTP status, or registering a new webhook handler. Triggers on:
+    "create endpoint", "novo endpoint", "novo controller", "FastAPI", "rota",
+    "route", "APIRouter", "Depends", "response_model", "HTTPException",
+    "status_code", "register router", "registrar router", "include_router",
+    "webhook handler", "novo webhook", "Query()", "File()", "UploadFile",
+    "request body", "feature flag check", "controller layer", "thin facade".
 ---
 
 # FastAPI Endpoints — zoppy-whatsapp-commerce
@@ -111,10 +111,10 @@ Anatomy:
 Two patterns coexist today; the team is converging on `Depends()`. Use
 the rule below for new code.
 
-| When | Use | Why |
-|---|---|---|
-| Service is stateless / lightweight (most cases) | `Depends(get_<service>)` | Composable, mockable in tests via `app.dependency_overrides`, follows FastAPI idiom |
-| One-off small endpoint where DI ceremony is overhead | `service = SomeService()` inline | Fine — but if you'd reuse it, lift to `dependencies.py` |
+| When                                                 | Use                              | Why                                                                                 |
+| ---------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------- |
+| Service is stateless / lightweight (most cases)      | `Depends(get_<service>)`         | Composable, mockable in tests via `app.dependency_overrides`, follows FastAPI idiom |
+| One-off small endpoint where DI ceremony is overhead | `service = SomeService()` inline | Fine — but if you'd reuse it, lift to `dependencies.py`                             |
 
 The factory lives in `src/api/dependencies.py`:
 
@@ -196,16 +196,16 @@ straight into the service — never read the bytes inside the controller.
 Always set `response_model=` on routes that return data. Default status
 is 200; override only when semantics demand it:
 
-| Operation | Status |
-|---|---|
-| GET (resource found) | 200 (default) |
-| POST that creates inline | 200 or 201 |
-| POST that enqueues async work | **202** (`status_code=202`) |
-| DELETE that succeeded | 204 if empty body, else 200 |
-| Validation failure | 400 |
-| Not found | 404 |
-| Forbidden / feature flag off | 403 |
-| Internal error | 500 (let FastAPI handle / structured raise) |
+| Operation                     | Status                                      |
+| ----------------------------- | ------------------------------------------- |
+| GET (resource found)          | 200 (default)                               |
+| POST that creates inline      | 200 or 201                                  |
+| POST that enqueues async work | **202** (`status_code=202`)                 |
+| DELETE that succeeded         | 204 if empty body, else 200                 |
+| Validation failure            | 400                                         |
+| Not found                     | 404                                         |
+| Forbidden / feature flag off  | 403                                         |
+| Internal error                | 500 (let FastAPI handle / structured raise) |
 
 Real `202`s in this codebase: `POST /v1/knowledge/ingest`,
 `POST /v1/knowledge/crawl`, `POST /v1/knowledge/refresh/{id}` — all
@@ -230,12 +230,12 @@ async def refresh_url(document_id: UUID, company_id: str = Query(...)):
 
 Rules:
 
-- **Never raise `HTTPException` from `application/` or `domain/`.** Those
-  layers don't know about HTTP. Endpoints translate.
-- **Don't swallow exceptions.** If you can't translate, let it bubble —
-  FastAPI returns 500 and the structured logger captures the trace.
-- For idiomatic FastAPI handling, `HTTPException(status_code=..., detail=...)`
-  is enough — no custom exception classes for the basics.
+-   **Never raise `HTTPException` from `application/` or `domain/`.** Those
+    layers don't know about HTTP. Endpoints translate.
+-   **Don't swallow exceptions.** If you can't translate, let it bubble —
+    FastAPI returns 500 and the structured logger captures the trace.
+-   For idiomatic FastAPI handling, `HTTPException(status_code=..., detail=...)`
+    is enough — no custom exception classes for the basics.
 
 ## Feature flag checks
 
@@ -360,36 +360,36 @@ spin up real Valkey or DB at this layer.
 
 ## Gotchas / anti-patterns
 
-- **No business logic in endpoints.** `for` loops over domain objects,
-  `if` chains on enums, conditional cache reads — all push down to
-  `application/<feature>/`.
-- **Never instantiate domain classes (Repositories) inside an endpoint
-  unless it's a webhook.** Endpoints call services; only webhook handlers
-  may inject `Repository` directly because their job is to persist +
-  invalidate.
-- **Always set `response_model=`.** Without it, FastAPI returns whatever
-  the service emits, OpenAPI loses the contract, and clients break
-  silently when the service shape drifts.
-- **Never return ORM models.** Always Pydantic. `_to_schema` mappers
-  belong in the Repository (see `repository-async` skill).
-- **Don't reuse `endpoints/<feature>.py` for unrelated routes.** Feature
-  drift makes routers hard to maintain. New feature → new file.
-- **Don't create new `Settings` env vars without the `WHATSAPP_COMMERCE_`
-  prefix.** See `code-conventions` skill.
+-   **No business logic in endpoints.** `for` loops over domain objects,
+    `if` chains on enums, conditional cache reads — all push down to
+    `application/<feature>/`.
+-   **Never instantiate domain classes (Repositories) inside an endpoint
+    unless it's a webhook.** Endpoints call services; only webhook handlers
+    may inject `Repository` directly because their job is to persist +
+    invalidate.
+-   **Always set `response_model=`.** Without it, FastAPI returns whatever
+    the service emits, OpenAPI loses the contract, and clients break
+    silently when the service shape drifts.
+-   **Never return ORM models.** Always Pydantic. `_to_schema` mappers
+    belong in the Repository (see `repository-async` skill).
+-   **Don't reuse `endpoints/<feature>.py` for unrelated routes.** Feature
+    drift makes routers hard to maintain. New feature → new file.
+-   **Don't create new `Settings` env vars without the `WHATSAPP_COMMERCE_`
+    prefix.** See `code-conventions` skill.
 
 ## Pre-PR checklist
 
-- [ ] Endpoint lives in `src/api/endpoints/<feature>.py` (or
-      `webhooks/handlers/<feature>/<event>.py`)
-- [ ] `response_model=` set on every route that returns data
-- [ ] Status code matches semantics (202 for enqueued async work)
-- [ ] Pydantic request/response schemas live under `src/api/schemas/`
-- [ ] Feature flag checked when applicable (`_check_feature_flag` pattern)
-- [ ] Domain errors mapped to `HTTPException(...)` — no `ValueError`
-      escaping to FastAPI
-- [ ] No business logic in the handler — only validate, delegate, shape
-- [ ] Router registered in `src/api/router.py` (or `webhooks/router.py`)
-- [ ] One structured log line at request entry
-- [ ] Tests in `tests/unit/api/endpoints/test_<feature>.py` cover happy
-      path + 4xx error paths
-- [ ] `uv run pytest tests/unit/api/ -q` is green
+-   [ ] Endpoint lives in `src/api/endpoints/<feature>.py` (or
+        `webhooks/handlers/<feature>/<event>.py`)
+-   [ ] `response_model=` set on every route that returns data
+-   [ ] Status code matches semantics (202 for enqueued async work)
+-   [ ] Pydantic request/response schemas live under `src/api/schemas/`
+-   [ ] Feature flag checked when applicable (`_check_feature_flag` pattern)
+-   [ ] Domain errors mapped to `HTTPException(...)` — no `ValueError`
+        escaping to FastAPI
+-   [ ] No business logic in the handler — only validate, delegate, shape
+-   [ ] Router registered in `src/api/router.py` (or `webhooks/router.py`)
+-   [ ] One structured log line at request entry
+-   [ ] Tests in `tests/unit/api/endpoints/test_<feature>.py` cover happy
+        path + 4xx error paths
+-   [ ] `uv run pytest tests/unit/api/ -q` is green

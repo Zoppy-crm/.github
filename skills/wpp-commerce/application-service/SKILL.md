@@ -1,22 +1,22 @@
 ---
 name: application-service
 description: >
-  How to create and modify Application Services in zoppy-whatsapp-commerce —
-  the use-case orchestration layer that lives under
-  src/application/<feature>/<feature>_service.py. Covers the file/class shape,
-  the absolute "service does not inject another service" rule and its escape
-  paths (feature helpers vs cross_cutting/helpers/ vs utils/), session
-  management with get_session(), the read-through cache pattern, ValueError
-  on input problems, structured logging, and where to put pure calculators
-  vs services. Use this skill whenever creating a new service, adding a
-  method to an existing one, deciding whether shared logic should be a
-  helper, mapping infra failures to business outcomes, or auditing a
-  service for layer violations. Triggers on: "create service", "novo
-  service", "ApplicationService", "application service", "use case", "caso
-  de uso", "service does not inject service", "service não injeta service",
-  "feature helper", "cross_cutting helper", "get_session", "cache_client",
-  "service-to-service", "application/<feature>", "service_calculator",
-  "service vs calculator".
+    How to create and modify Application Services in zoppy-whatsapp-commerce —
+    the use-case orchestration layer that lives under
+    src/application/<feature>/<feature>_service.py. Covers the file/class shape,
+    the absolute "service does not inject another service" rule and its escape
+    paths (feature helpers vs cross_cutting/helpers/ vs utils/), session
+    management with get_session(), the read-through cache pattern, ValueError
+    on input problems, structured logging, and where to put pure calculators
+    vs services. Use this skill whenever creating a new service, adding a
+    method to an existing one, deciding whether shared logic should be a
+    helper, mapping infra failures to business outcomes, or auditing a
+    service for layer violations. Triggers on: "create service", "novo
+    service", "ApplicationService", "application service", "use case", "caso
+    de uso", "service does not inject service", "service não injeta service",
+    "feature helper", "cross_cutting helper", "get_session", "cache_client",
+    "service-to-service", "application/<feature>", "service_calculator",
+    "service vs calculator".
 ---
 
 # Application Service — zoppy-whatsapp-commerce
@@ -28,18 +28,18 @@ made by composing Repositories, Infra clients, and helpers.
 
 A service is the **only** layer allowed to:
 
-- Open DB sessions via `async with get_session() as session: ...`
-- Read/write the Valkey cache directly
-- Translate raw exceptions from infra into domain-meaningful failures
-- Decide what to do with the data the Repository returns
+-   Open DB sessions via `async with get_session() as session: ...`
+-   Read/write the Valkey cache directly
+-   Translate raw exceptions from infra into domain-meaningful failures
+-   Decide what to do with the data the Repository returns
 
 It is **not** allowed to:
 
-- Inject another Application Service (hard rule, see escape paths below)
-- Hold HTTP knowledge (`HTTPException`, FastAPI types — those belong in
-  `api/`)
-- Define ORM models, Pydantic schemas, or raw SQL (those belong in
-  `domain/<feature>/`)
+-   Inject another Application Service (hard rule, see escape paths below)
+-   Hold HTTP knowledge (`HTTPException`, FastAPI types — those belong in
+    `api/`)
+-   Define ORM models, Pydantic schemas, or raw SQL (those belong in
+    `domain/<feature>/`)
 
 ## Layout
 
@@ -53,27 +53,27 @@ src/application/<feature>/
 
 Real examples in the project:
 
-- `src/application/company/company_service.py` — read-through cache around
-  a single repository
-- `src/application/agent_config/agent_config_service.py` — cache + `update_field`
-  pattern with an `on_invalidate` callback so callers can clear the agent
-  manager
-- `src/application/handoff/handoff_event_service.py` — mix of static
-  helpers (`extract_transfer_info`, `resolve_reason_label`) and async
-  methods that persist
-- `src/application/handoff/handoff_cooldown.py` — module of free functions
-  (no class) because the feature is just Valkey-backed predicates
-- `src/application/usage/usage_calculator.py` — pure calculator (static
-  methods, no I/O) — kept as a *calculator*, not named `_service`, to
-  signal the difference
+-   `src/application/company/company_service.py` — read-through cache around
+    a single repository
+-   `src/application/agent_config/agent_config_service.py` — cache + `update_field`
+    pattern with an `on_invalidate` callback so callers can clear the agent
+    manager
+-   `src/application/handoff/handoff_event_service.py` — mix of static
+    helpers (`extract_transfer_info`, `resolve_reason_label`) and async
+    methods that persist
+-   `src/application/handoff/handoff_cooldown.py` — module of free functions
+    (no class) because the feature is just Valkey-backed predicates
+-   `src/application/usage/usage_calculator.py` — pure calculator (static
+    methods, no I/O) — kept as a _calculator_, not named `_service`, to
+    signal the difference
 
 ## When to write a Service vs a Calculator
 
-| Shape | Filename | Use case |
-|---|---|---|
-| Class with I/O (DB, cache, S3, Celery enqueue) | `<feature>_service.py` | The default — anything orchestrating real side effects |
+| Shape                                                    | Filename                                                                       | Use case                                                                    |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| Class with I/O (DB, cache, S3, Celery enqueue)           | `<feature>_service.py`                                                         | The default — anything orchestrating real side effects                      |
 | Class / module with **only static methods** and zero I/O | `<feature>_calculator.py` (or descriptive name like `message_preprocessor.py`) | Pure transforms (token usage math, message preprocessing, response parsing) |
-| Free functions, no class, lightweight | `<topic>.py` (e.g. `handoff_cooldown.py`) | When OOP overhead doesn't earn its keep — usually thin wrappers over Valkey |
+| Free functions, no class, lightweight                    | `<topic>.py` (e.g. `handoff_cooldown.py`)                                      | When OOP overhead doesn't earn its keep — usually thin wrappers over Valkey |
 
 When in doubt, default to `<feature>_service.py`. Calculators are an
 optimization for code that's truly pure.
@@ -163,11 +163,11 @@ class HandoffService:
 The same rule lives in `CLAUDE.md` and the `architecture` skill. When two
 services need shared logic, use one of three escape paths:
 
-| Logic shape | Where it goes |
-|---|---|
-| Pure stateless function with **no business concept** (formatting, parsing primitives) | `src/utils/` |
-| Logic shared between methods of the **same** service or the service + its sub-components | `src/application/<feature>/helpers/<feature>.helper.py` |
-| Business-concept logic shared by **2+ features**, stateless and no I/O | `src/cross_cutting/helpers/<topic>.helper.py` *(the folder is created on first real need, not before)* |
+| Logic shape                                                                              | Where it goes                                                                                          |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Pure stateless function with **no business concept** (formatting, parsing primitives)    | `src/utils/`                                                                                           |
+| Logic shared between methods of the **same** service or the service + its sub-components | `src/application/<feature>/helpers/<feature>.helper.py`                                                |
+| Business-concept logic shared by **2+ features**, stateless and no I/O                   | `src/cross_cutting/helpers/<topic>.helper.py` _(the folder is created on first real need, not before)_ |
 
 If the shared logic needs I/O (DB, cache, etc.), the answer isn't a
 helper — it's that you have a missing Domain or Repository method.
@@ -187,14 +187,14 @@ return result
 
 Why per-method:
 
-- Sessions are short-lived. Holding one across many methods leaks
-  connections and corrupts transaction boundaries.
-- Repository instances are cheap; recreate them.
-- Multiple sessions in one method are fine when you need transaction
-  isolation between steps. Real example:
-  `src/application/handoff/handoff_event_service.py:save` opens a session
-  inside a `try/except` so a persist failure logs but doesn't crash the
-  caller.
+-   Sessions are short-lived. Holding one across many methods leaks
+    connections and corrupts transaction boundaries.
+-   Repository instances are cheap; recreate them.
+-   Multiple sessions in one method are fine when you need transaction
+    isolation between steps. Real example:
+    `src/application/handoff/handoff_event_service.py:save` opens a session
+    inside a `try/except` so a persist failure logs but doesn't crash the
+    caller.
 
 The shared dependency `get_db` (used in webhooks via `Depends(get_db)`)
 returns a session managed by FastAPI's request lifecycle. Use it
@@ -206,9 +206,9 @@ else, use `get_session()`.
 Repositories already convert ORM rows to Pydantic schemas (see
 `repository-async` skill). Services should:
 
-- Accept Pydantic models (or primitives like `company_id: str`,
-  `document_id: UUID`).
-- Return Pydantic models.
+-   Accept Pydantic models (or primitives like `company_id: str`,
+    `document_id: UUID`).
+-   Return Pydantic models.
 
 If you find yourself with a `Company` ORM instance inside a service,
 either you're using the Repository wrong or the Repository is missing
@@ -216,12 +216,12 @@ the `_to_schema(...)` mapper.
 
 ## Errors
 
-| Situation | What to do |
-|---|---|
-| Input validation problem (file too big, unsupported format) | `raise ValueError("...")` — endpoints translate to 400/404 |
-| Resource not found | Return `None` from the read method; let endpoints translate to 404 |
-| Infra failure that is recoverable in this method | `try/except`, `logger.error(...)` with structured context, return a sensible fallback (or `None`) |
-| Infra failure that should bubble | Don't catch — let it propagate. The endpoint sees 500 |
+| Situation                                                   | What to do                                                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Input validation problem (file too big, unsupported format) | `raise ValueError("...")` — endpoints translate to 400/404                                        |
+| Resource not found                                          | Return `None` from the read method; let endpoints translate to 404                                |
+| Infra failure that is recoverable in this method            | `try/except`, `logger.error(...)` with structured context, return a sensible fallback (or `None`) |
+| Infra failure that should bubble                            | Don't catch — let it propagate. The endpoint sees 500                                             |
 
 Real example from `HandoffEventService.save`:
 
@@ -261,16 +261,16 @@ go through the orchestrator, pass `company_id=` explicitly.
 
 ## Static helpers on the service class
 
-When a calculation belongs *semantically* to the feature but doesn't
+When a calculation belongs _semantically_ to the feature but doesn't
 touch I/O, two options:
 
-- **`@staticmethod` on the service class** if the helper is small and
-  used only by that service. Examples:
-  `HandoffEventService.extract_transfer_info`,
-  `HandoffEventService.resolve_reason_label`.
-- **Separate `<feature>_calculator.py` module** if the helpers add up to
-  a coherent unit. Example: `usage/usage_calculator.py` — `extract`,
-  `_resolve_pricing`, `_accumulate_tokens`, `_compute_breakdown`.
+-   **`@staticmethod` on the service class** if the helper is small and
+    used only by that service. Examples:
+    `HandoffEventService.extract_transfer_info`,
+    `HandoffEventService.resolve_reason_label`.
+-   **Separate `<feature>_calculator.py` module** if the helpers add up to
+    a coherent unit. Example: `usage/usage_calculator.py` — `extract`,
+    `_resolve_pricing`, `_accumulate_tokens`, `_compute_breakdown`.
 
 Don't mix the two. If the calculator grows past 3-4 static methods,
 move to its own module.
@@ -301,40 +301,40 @@ Patch the **consumer module path**, not the source module. See the
 
 ## Gotchas / anti-patterns
 
-- **Never inject one service into another.** First sign: a constructor
-  with another `*Service` parameter. Stop and choose a helper escape path.
-- **Never open a long-lived session as `self.session`.** Sessions are
-  per-call.
-- **Never hold ORM instances on the service.** Always pass / return
-  Pydantic.
-- **Never `raise HTTPException`** — that's the endpoint's job.
-- **Never `from src.api.*` inside `application/`.** Layer rule
-  (see `architecture` skill).
-- **Never mutate a domain schema in place after caching it** — Pydantic
-  models are passed by reference, so cached state would change too. Build
-  a new instance with `.model_copy(update=...)` if you need a tweaked
-  variant.
-- **Don't call `repo.get_by_id(some_uuid)` without `company_id` when the
-  call site has it.** Multi-tenant leak — see `multi-tenant-context`
-  skill.
-- **Don't enqueue Celery tasks via raw `delay()` without `company_id`
-  in the kwargs.** The worker re-binds the structlog context using these
-  fields.
+-   **Never inject one service into another.** First sign: a constructor
+    with another `*Service` parameter. Stop and choose a helper escape path.
+-   **Never open a long-lived session as `self.session`.** Sessions are
+    per-call.
+-   **Never hold ORM instances on the service.** Always pass / return
+    Pydantic.
+-   **Never `raise HTTPException`** — that's the endpoint's job.
+-   **Never `from src.api.*` inside `application/`.** Layer rule
+    (see `architecture` skill).
+-   **Never mutate a domain schema in place after caching it** — Pydantic
+    models are passed by reference, so cached state would change too. Build
+    a new instance with `.model_copy(update=...)` if you need a tweaked
+    variant.
+-   **Don't call `repo.get_by_id(some_uuid)` without `company_id` when the
+    call site has it.** Multi-tenant leak — see `multi-tenant-context`
+    skill.
+-   **Don't enqueue Celery tasks via raw `delay()` without `company_id`
+    in the kwargs.** The worker re-binds the structlog context using these
+    fields.
 
 ## Pre-PR checklist
 
-- [ ] Service file at `src/application/<feature>/<feature>_service.py`
-- [ ] Class name follows `<Feature>Service` (or `<Feature>Calculator` /
-      `<Feature>Preprocessor` if pure)
-- [ ] Constructor takes only Repositories, Infra clients, helpers — never
-      another `*Service`
-- [ ] All methods are `async def`
-- [ ] DB access uses `async with get_session() as session:` per method
-- [ ] If the service caches: prefix is `<topic>:<company_id>`, TTL from
-      `settings`, serializes via `model_dump_json`
-- [ ] Public methods emit one structured log line at minimum
-- [ ] `ValueError` for input validation; `None` for not-found
-- [ ] No `HTTPException`, no `from src.api.*` imports
-- [ ] Tests in `tests/unit/application/<feature>/test_<feature>_service.py`
-      cover happy path + cache hit + cache miss + error paths
-- [ ] `uv run pytest tests/unit/application/<feature>/ -q` is green
+-   [ ] Service file at `src/application/<feature>/<feature>_service.py`
+-   [ ] Class name follows `<Feature>Service` (or `<Feature>Calculator` /
+        `<Feature>Preprocessor` if pure)
+-   [ ] Constructor takes only Repositories, Infra clients, helpers — never
+        another `*Service`
+-   [ ] All methods are `async def`
+-   [ ] DB access uses `async with get_session() as session:` per method
+-   [ ] If the service caches: prefix is `<topic>:<company_id>`, TTL from
+        `settings`, serializes via `model_dump_json`
+-   [ ] Public methods emit one structured log line at minimum
+-   [ ] `ValueError` for input validation; `None` for not-found
+-   [ ] No `HTTPException`, no `from src.api.*` imports
+-   [ ] Tests in `tests/unit/application/<feature>/test_<feature>_service.py`
+        cover happy path + cache hit + cache miss + error paths
+-   [ ] `uv run pytest tests/unit/application/<feature>/ -q` is green

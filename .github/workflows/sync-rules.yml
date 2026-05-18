@@ -1,244 +1,244 @@
 name: Sync Skills to All Repos
 
 on:
-  push:
-    branches: [development]
-    paths:
-      - 'skills/**'
+    push:
+        branches: [development]
+        paths:
+            - 'skills/**'
 
-  workflow_dispatch:
-    inputs:
-      repos:
-        description: 'Repos para sincronizar (comma-separated, ou "all" para todos)'
-        type: string
-        default: 'all'
-      dry_run:
-        description: 'Apenas listar repos sem fazer push'
-        type: boolean
-        default: false
+    workflow_dispatch:
+        inputs:
+            repos:
+                description: 'Repos para sincronizar (comma-separated, ou "all" para todos)'
+                type: string
+                default: 'all'
+            dry_run:
+                description: 'Apenas listar repos sem fazer push'
+                type: boolean
+                default: false
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    sync:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Sync skills to repos based on config
-        env:
-          GH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -uo pipefail
+            - name: Sync skills to repos based on config
+              env:
+                  GH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: |
+                  set -uo pipefail
 
-          ORG="Zoppy-crm"
-          CONFIG_FILE="skills/sync-config.json"
-          BRANCHES=("development" "staging" "master" "mirror")
-          DRY_RUN="${{ inputs.dry_run || 'false' }}"
+                  ORG="Zoppy-crm"
+                  CONFIG_FILE="skills/sync-config.json"
+                  BRANCHES=("development" "staging" "master" "mirror")
+                  DRY_RUN="${{ inputs.dry_run || 'false' }}"
 
-          if [ ! -f "$CONFIG_FILE" ]; then
-            echo "❌ Config file not found: $CONFIG_FILE"
-            exit 1
-          fi
+                  if [ ! -f "$CONFIG_FILE" ]; then
+                    echo "❌ Config file not found: $CONFIG_FILE"
+                    exit 1
+                  fi
 
-          # Parse config and build repo -> folders mapping
-          declare -A REPO_FOLDERS
+                  # Parse config and build repo -> folders mapping
+                  declare -A REPO_FOLDERS
 
-          for group in $(jq -r '.groups | keys[]' "$CONFIG_FILE"); do
-            folders=$(jq -r ".groups[\"$group\"].folders | join(\",\")" "$CONFIG_FILE")
-            repos=$(jq -r ".groups[\"$group\"].repos[]" "$CONFIG_FILE")
+                  for group in $(jq -r '.groups | keys[]' "$CONFIG_FILE"); do
+                    folders=$(jq -r ".groups[\"$group\"].folders | join(\",\")" "$CONFIG_FILE")
+                    repos=$(jq -r ".groups[\"$group\"].repos[]" "$CONFIG_FILE")
 
-            for repo in $repos; do
-              if [ -n "${REPO_FOLDERS[$repo]:-}" ]; then
-                REPO_FOLDERS[$repo]="${REPO_FOLDERS[$repo]},$folders"
-              else
-                REPO_FOLDERS[$repo]="$folders"
-              fi
-            done
-          done
-
-          # Filter repos if specific ones requested
-          INPUT_REPOS="${{ inputs.repos || 'all' }}"
-          if [ "$INPUT_REPOS" != "all" ]; then
-            IFS=',' read -ra SELECTED <<< "$INPUT_REPOS"
-            declare -A SELECTED_MAP
-            for r in "${SELECTED[@]}"; do
-              SELECTED_MAP[$(echo "$r" | xargs)]=1
-            done
-            for repo in "${!REPO_FOLDERS[@]}"; do
-              if [ -z "${SELECTED_MAP[$repo]:-}" ]; then
-                unset "REPO_FOLDERS[$repo]"
-              fi
-            done
-            echo "🎯 Filtro ativo: ${SELECTED[*]}"
-          fi
-
-          echo "📦 Repos a sincronizar: ${#REPO_FOLDERS[@]}"
-          echo ""
-
-          SYNCED=0
-          SKIPPED=0
-          FAILED=0
-
-          for REPO in "${!REPO_FOLDERS[@]}"; do
-            # Deduplicate folders
-            IFS=',' read -ra RAW_FOLDERS <<< "${REPO_FOLDERS[$REPO]}"
-            declare -A SEEN_FOLDERS
-            FOLDERS=()
-            for f in "${RAW_FOLDERS[@]}"; do
-              if [ -z "${SEEN_FOLDERS[$f]:-}" ]; then
-                SEEN_FOLDERS[$f]=1
-                FOLDERS+=("$f")
-              fi
-            done
-            unset SEEN_FOLDERS
-
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "📂 $REPO ← [${FOLDERS[*]}]"
-
-            if [ "$DRY_RUN" = "true" ]; then
-              echo "  🔍 [DRY RUN] Would sync folders: ${FOLDERS[*]}"
-              continue
-            fi
-
-            TMPDIR=$(mktemp -d)
-            REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/$ORG/$REPO.git"
-
-            # Clone repo with no checkout (just get .git)
-            if ! git clone --no-checkout "$REPO_URL" "$TMPDIR/$REPO" 2>&1; then
-              echo "  ❌ Failed to clone"
-              FAILED=$((FAILED + 1))
-              rm -rf "$TMPDIR"
-              continue
-            fi
-
-            cd "$TMPDIR/$REPO"
-            git config user.name "Zoppy Rules Bot"
-            git config user.email "rules-bot@zoppy.com.br"
-
-            REPO_SYNCED=false
-
-            for BRANCH in "${BRANCHES[@]}"; do
-              # Check if branch exists remotely
-              if ! git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-                continue
-              fi
-
-              # Fetch the specific branch and checkout
-              git fetch origin "$BRANCH" 2>&1 || continue
-              git checkout -f "$BRANCH" 2>&1 || git checkout -b "$BRANCH" "origin/$BRANCH" 2>&1 || continue
-
-              # Clean existing synced skills and rebuild
-              rm -rf ".claude/skills/.synced-from-org"
-              mkdir -p ".claude/skills"
-
-              # Copy skills from each mapped folder
-              for folder in "${FOLDERS[@]}"; do
-                SOURCE="$GITHUB_WORKSPACE/skills/$folder"
-                if [ -d "$SOURCE" ]; then
-                  for skill_dir in "$SOURCE"/*/; do
-                    if [ -d "$skill_dir" ]; then
-                      skill_name=$(basename "$skill_dir")
-                      mkdir -p ".claude/skills/$skill_name"
-                      cp -r "$skill_dir"/* ".claude/skills/$skill_name/"
-                    fi
+                    for repo in $repos; do
+                      if [ -n "${REPO_FOLDERS[$repo]:-}" ]; then
+                        REPO_FOLDERS[$repo]="${REPO_FOLDERS[$repo]},$folders"
+                      else
+                        REPO_FOLDERS[$repo]="$folders"
+                      fi
+                    done
                   done
-                fi
-              done
 
-              # Merge hooks-template.json into .claude/settings.json
-              HOOKS_TEMPLATE="$GITHUB_WORKSPACE/config/hooks-template.json"
-              SETTINGS_FILE=".claude/settings.json"
-
-              if [ -f "$HOOKS_TEMPLATE" ]; then
-                mkdir -p ".claude"
-                if [ -f "$SETTINGS_FILE" ]; then
-                  # Merge only the hooks key, preserving all other settings
-                  jq --argjson hooksCfg "$(cat "$HOOKS_TEMPLATE")" \
-                    '.hooks = ($hooksCfg.hooks * (.hooks // {}))' \
-                    "$SETTINGS_FILE" > /tmp/settings-merged.json 2>/dev/null \
-                    && mv /tmp/settings-merged.json "$SETTINGS_FILE" \
-                    || cp "$HOOKS_TEMPLATE" "$SETTINGS_FILE"
-                else
-                  cp "$HOOKS_TEMPLATE" "$SETTINGS_FILE"
-                fi
-                git add -f "$SETTINGS_FILE"
-              fi
-
-              # Write marker file
-              {
-                echo "# Skills synced from Zoppy-crm/.github"
-                echo "# Groups: ${FOLDERS[*]}"
-                for folder in "${FOLDERS[@]}"; do
-                  SOURCE="$GITHUB_WORKSPACE/skills/$folder"
-                  if [ -d "$SOURCE" ]; then
-                    for skill_dir in "$SOURCE"/*/; do
-                      if [ -d "$skill_dir" ]; then
-                        echo "$(basename "$skill_dir")"
+                  # Filter repos if specific ones requested
+                  INPUT_REPOS="${{ inputs.repos || 'all' }}"
+                  if [ "$INPUT_REPOS" != "all" ]; then
+                    IFS=',' read -ra SELECTED <<< "$INPUT_REPOS"
+                    declare -A SELECTED_MAP
+                    for r in "${SELECTED[@]}"; do
+                      SELECTED_MAP[$(echo "$r" | xargs)]=1
+                    done
+                    for repo in "${!REPO_FOLDERS[@]}"; do
+                      if [ -z "${SELECTED_MAP[$repo]:-}" ]; then
+                        unset "REPO_FOLDERS[$repo]"
                       fi
                     done
+                    echo "🎯 Filtro ativo: ${SELECTED[*]}"
                   fi
-                done
-              } > ".claude/skills/.synced-from-org"
 
-              # Generate compiled copilot-instructions.md from all SKILL.md files
-              mkdir -p ".github"
-              {
-                echo "# Copilot Instructions — Zoppy"
-                echo ""
-                echo "> Auto-generated from .claude/skills/. Do not edit manually."
-                echo ""
-                for folder in "${FOLDERS[@]}"; do
-                  SOURCE="$GITHUB_WORKSPACE/skills/$folder"
-                  if [ -d "$SOURCE" ]; then
-                    for skill_dir in "$SOURCE"/*/; do
-                      if [ -d "$skill_dir" ] && [ -f "$skill_dir/SKILL.md" ]; then
-                        skill_name=$(basename "$skill_dir")
-                        echo "---"
-                        echo ""
-                        cat "$skill_dir/SKILL.md"
-                        echo ""
+                  echo "📦 Repos a sincronizar: ${#REPO_FOLDERS[@]}"
+                  echo ""
+
+                  SYNCED=0
+                  SKIPPED=0
+                  FAILED=0
+
+                  for REPO in "${!REPO_FOLDERS[@]}"; do
+                    # Deduplicate folders
+                    IFS=',' read -ra RAW_FOLDERS <<< "${REPO_FOLDERS[$REPO]}"
+                    declare -A SEEN_FOLDERS
+                    FOLDERS=()
+                    for f in "${RAW_FOLDERS[@]}"; do
+                      if [ -z "${SEEN_FOLDERS[$f]:-}" ]; then
+                        SEEN_FOLDERS[$f]=1
+                        FOLDERS+=("$f")
                       fi
                     done
-                  fi
-                done
-              } > ".github/copilot-instructions.md"
+                    unset SEEN_FOLDERS
 
-              # Check if there are changes
-              if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude .github/copilot-instructions.md)" ]; then
-                echo "  ✅ $BRANCH — já está atualizado"
-                continue
-              fi
+                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    echo "📂 $REPO ← [${FOLDERS[*]}]"
 
-              # Commit and push (force-add so gitignored paths like .claude/settings.json still commit)
-              git add -f .claude/ .github/copilot-instructions.md
-              git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
+                    if [ "$DRY_RUN" = "true" ]; then
+                      echo "  🔍 [DRY RUN] Would sync folders: ${FOLDERS[*]}"
+                      continue
+                    fi
 
-              if git push origin "$BRANCH" 2>&1; then
-                echo "  🚀 $BRANCH — synced!"
-                REPO_SYNCED=true
-              else
-                echo "  ⚠️  $BRANCH — push blocked (check repository rulesets)"
-                FAILED=$((FAILED + 1))
-              fi
-            done
+                    TMPDIR=$(mktemp -d)
+                    REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/$ORG/$REPO.git"
 
-            if [ "$REPO_SYNCED" = true ]; then
-              SYNCED=$((SYNCED + 1))
-            else
-              SKIPPED=$((SKIPPED + 1))
-            fi
+                    # Clone repo with no checkout (just get .git)
+                    if ! git clone --no-checkout "$REPO_URL" "$TMPDIR/$REPO" 2>&1; then
+                      echo "  ❌ Failed to clone"
+                      FAILED=$((FAILED + 1))
+                      rm -rf "$TMPDIR"
+                      continue
+                    fi
 
-            cd "$GITHUB_WORKSPACE"
-            rm -rf "$TMPDIR"
-          done
+                    cd "$TMPDIR/$REPO"
+                    git config user.name "Zoppy Rules Bot"
+                    git config user.email "rules-bot@zoppy.com.br"
 
-          echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 Resultado:"
-          echo "  ✅ Synced: $SYNCED repos"
-          echo "  ⏭️  Skipped (no changes): $SKIPPED repos"
-          echo "  ❌ Failed: $FAILED"
+                    REPO_SYNCED=false
+
+                    for BRANCH in "${BRANCHES[@]}"; do
+                      # Check if branch exists remotely
+                      if ! git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+                        continue
+                      fi
+
+                      # Fetch the specific branch and checkout
+                      git fetch origin "$BRANCH" 2>&1 || continue
+                      git checkout -f "$BRANCH" 2>&1 || git checkout -b "$BRANCH" "origin/$BRANCH" 2>&1 || continue
+
+                      # Clean existing synced skills and rebuild
+                      rm -rf ".claude/skills/.synced-from-org"
+                      mkdir -p ".claude/skills"
+
+                      # Copy skills from each mapped folder
+                      for folder in "${FOLDERS[@]}"; do
+                        SOURCE="$GITHUB_WORKSPACE/skills/$folder"
+                        if [ -d "$SOURCE" ]; then
+                          for skill_dir in "$SOURCE"/*/; do
+                            if [ -d "$skill_dir" ]; then
+                              skill_name=$(basename "$skill_dir")
+                              mkdir -p ".claude/skills/$skill_name"
+                              cp -r "$skill_dir"/* ".claude/skills/$skill_name/"
+                            fi
+                          done
+                        fi
+                      done
+
+                      # Merge hooks-template.json into .claude/settings.json
+                      HOOKS_TEMPLATE="$GITHUB_WORKSPACE/config/hooks-template.json"
+                      SETTINGS_FILE=".claude/settings.json"
+
+                      if [ -f "$HOOKS_TEMPLATE" ]; then
+                        mkdir -p ".claude"
+                        if [ -f "$SETTINGS_FILE" ]; then
+                          # Merge only the hooks key, preserving all other settings
+                          jq --argjson hooksCfg "$(cat "$HOOKS_TEMPLATE")" \
+                            '.hooks = ($hooksCfg.hooks * (.hooks // {}))' \
+                            "$SETTINGS_FILE" > /tmp/settings-merged.json 2>/dev/null \
+                            && mv /tmp/settings-merged.json "$SETTINGS_FILE" \
+                            || cp "$HOOKS_TEMPLATE" "$SETTINGS_FILE"
+                        else
+                          cp "$HOOKS_TEMPLATE" "$SETTINGS_FILE"
+                        fi
+                        git add -f "$SETTINGS_FILE"
+                      fi
+
+                      # Write marker file
+                      {
+                        echo "# Skills synced from Zoppy-crm/.github"
+                        echo "# Groups: ${FOLDERS[*]}"
+                        for folder in "${FOLDERS[@]}"; do
+                          SOURCE="$GITHUB_WORKSPACE/skills/$folder"
+                          if [ -d "$SOURCE" ]; then
+                            for skill_dir in "$SOURCE"/*/; do
+                              if [ -d "$skill_dir" ]; then
+                                echo "$(basename "$skill_dir")"
+                              fi
+                            done
+                          fi
+                        done
+                      } > ".claude/skills/.synced-from-org"
+
+                      # Generate compiled copilot-instructions.md from all SKILL.md files
+                      mkdir -p ".github"
+                      {
+                        echo "# Copilot Instructions — Zoppy"
+                        echo ""
+                        echo "> Auto-generated from .claude/skills/. Do not edit manually."
+                        echo ""
+                        for folder in "${FOLDERS[@]}"; do
+                          SOURCE="$GITHUB_WORKSPACE/skills/$folder"
+                          if [ -d "$SOURCE" ]; then
+                            for skill_dir in "$SOURCE"/*/; do
+                              if [ -d "$skill_dir" ] && [ -f "$skill_dir/SKILL.md" ]; then
+                                skill_name=$(basename "$skill_dir")
+                                echo "---"
+                                echo ""
+                                cat "$skill_dir/SKILL.md"
+                                echo ""
+                              fi
+                            done
+                          fi
+                        done
+                      } > ".github/copilot-instructions.md"
+
+                      # Check if there are changes
+                      if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude .github/copilot-instructions.md)" ]; then
+                        echo "  ✅ $BRANCH — já está atualizado"
+                        continue
+                      fi
+
+                      # Commit and push (force-add so gitignored paths like .claude/settings.json still commit)
+                      git add -f .claude/ .github/copilot-instructions.md
+                      git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
+
+                      if git push origin "$BRANCH" 2>&1; then
+                        echo "  🚀 $BRANCH — synced!"
+                        REPO_SYNCED=true
+                      else
+                        echo "  ⚠️  $BRANCH — push blocked (check repository rulesets)"
+                        FAILED=$((FAILED + 1))
+                      fi
+                    done
+
+                    if [ "$REPO_SYNCED" = true ]; then
+                      SYNCED=$((SYNCED + 1))
+                    else
+                      SKIPPED=$((SKIPPED + 1))
+                    fi
+
+                    cd "$GITHUB_WORKSPACE"
+                    rm -rf "$TMPDIR"
+                  done
+
+                  echo ""
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                  echo "📊 Resultado:"
+                  echo "  ✅ Synced: $SYNCED repos"
+                  echo "  ⏭️  Skipped (no changes): $SKIPPED repos"
+                  echo "  ❌ Failed: $FAILED"

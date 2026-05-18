@@ -1,12 +1,12 @@
 ---
 name: application-service
 description: >
-  Guide for creating and modifying Application Services in the zoppy-api project. Use this skill
-  whenever you need to create a new application service, add a use case to an existing service,
-  orchestrate business flows (validate → persist → enqueue), or register a service in the
-  ApplicationModule. Trigger this skill when the user mentions: "create application", "new
-  application service", "application module", "use case", "orchestrate domains", "call
-  queue from a service", or when implementing business logic that coordinates multiple domains.
+    Guide for creating and modifying Application Services in the zoppy-api project. Use this skill
+    whenever you need to create a new application service, add a use case to an existing service,
+    orchestrate business flows (validate → persist → enqueue), or register a service in the
+    ApplicationModule. Trigger this skill when the user mentions: "create application", "new
+    application service", "application module", "use case", "orchestrate domains", "call
+    queue from a service", or when implementing business logic that coordinates multiple domains.
 ---
 
 # Creating an Application Service in zoppy-api
@@ -14,6 +14,7 @@ description: >
 ## Application Layer Responsibility
 
 Application Services (`src/application/`) orchestrate complete use cases. They:
+
 1. Receive input from access (Request DTO from a controller, job data from a queue processor, event from a WebSocket)
 2. Execute business validations
 3. Call domains for persistence (and rely on domains for rich behavior — state transitions, entity creation rules, queries)
@@ -26,11 +27,11 @@ They do not directly access the database (that is the Domain's responsibility). 
 
 These two are NOT interchangeable. Pick the right one:
 
-| | `*.application.ts` | `*.service.ts` |
-|---|---|---|
-| Consumed by | **access only** — controllers, queue processors, WebSocket gateways | applications or other services |
-| Visibility | **always exported** by its module | public (exported) **or** private (only in `providers`) |
-| Purpose | public API surface of the feature; orchestrates services, domains, queue services | building block consumed by an Application; one cohesive concern (issuance, cancellation, S3 upload, port resolver, ...) |
+|             | `*.application.ts`                                                                | `*.service.ts`                                                                                                          |
+| ----------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Consumed by | **access only** — controllers, queue processors, WebSocket gateways               | applications or other services                                                                                          |
+| Visibility  | **always exported** by its module                                                 | public (exported) **or** private (only in `providers`)                                                                  |
+| Purpose     | public API surface of the feature; orchestrates services, domains, queue services | building block consumed by an Application; one cohesive concern (issuance, cancellation, S3 upload, port resolver, ...) |
 
 Rule of thumb: if access (controller, processor, socket) wants to call it, it MUST be an Application. If only another Application or another Service calls it, it stays a Service.
 
@@ -97,9 +98,10 @@ export class MyFeatureApplication {
 ```
 
 **Conventions:**
-- Always `@Injectable()` without explicit scope (uses `Scope.DEFAULT` — singleton per module)
-- `session` and `logService` are almost always injected
-- `companyId` comes from `this.session.getCompany().id` — never from the HTTP request
+
+-   Always `@Injectable()` without explicit scope (uses `Scope.DEFAULT` — singleton per module)
+-   `session` and `logService` are almost always injected
+-   `companyId` comes from `this.session.getCompany().id` — never from the HTTP request
 
 ---
 
@@ -162,8 +164,8 @@ export class MyApplication {
         private readonly myQueueService: MyQueueService,
 
         // Cross-cutting services
-        public readonly session: SessionService,   // always public
-        public readonly logService: LogService,    // always public
+        public readonly session: SessionService, // always public
+        public readonly logService: LogService, // always public
 
         // Direct repository — only when needed for raw queries
         @Inject(ProviderNames.MyEntityRepository) private readonly repository: Repository<MyEntity>
@@ -172,8 +174,9 @@ export class MyApplication {
 ```
 
 **When to use `@Inject(ProviderNames.XRepository)` directly:**
-- Only for very specific SQL queries that the Domain doesn't support
-- Always prefer adding the method to the Domain instead of accessing the repository directly in the Application
+
+-   Only for very specific SQL queries that the Domain doesn't support
+-   Always prefer adding the method to the Domain instead of accessing the repository directly in the Application
 
 ---
 
@@ -192,6 +195,7 @@ src/access/http/
 ```
 
 **Request DTO** (with validation and Swagger):
+
 ```typescript
 // src/access/http/requests/my-feature/my-feature.request.ts
 import { ApiProperty } from '@nestjs/swagger';
@@ -210,6 +214,7 @@ export class MyFeatureRequest {
 ```
 
 **Response DTO** (simple, no decorators):
+
 ```typescript
 // src/access/http/response/my-feature/my-feature.response.ts
 export class MyFeatureResponse {
@@ -226,12 +231,7 @@ export class MyFeatureResponse {
 Use standard NestJS exceptions. The Application is the right place to throw business errors:
 
 ```typescript
-import {
-    BadRequestException,
-    NotFoundException,
-    ForbiddenException,
-    UnprocessableEntityException
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException, ForbiddenException, UnprocessableEntityException } from '@nestjs/common';
 import { ZoppyBadRequestException } from 'src/cross-cutting/exceptions/zoppy-general.exceptions';
 
 // Examples
@@ -247,26 +247,29 @@ if (!authorized) throw new ForbiddenException('No permission for this operation'
 Add in `src/application/application.module.ts` in 3 places:
 
 **1. Import at the top:**
+
 ```typescript
 import { MyFeatureApplication } from './my-feature/my-feature.application';
 ```
 
 **2. In the `providers` array:**
+
 ```typescript
 providers: [
     // ...alphabetical order...
-    MyFeatureApplication,
+    MyFeatureApplication
     // ...
-]
+];
 ```
 
 **3. In the `exports` array:**
+
 ```typescript
 exports: [
     // ...alphabetical order...
-    MyFeatureApplication,
+    MyFeatureApplication
     // ...
-]
+];
 ```
 
 ---
@@ -290,11 +293,11 @@ for (const chunk of chunks) {
 
 ## Pre-finalization checklist
 
-- [ ] `@Injectable()` on the class
-- [ ] `session` and `logService` injected as `public`
-- [ ] `companyId` obtained from `this.session.getCompany().id`, not from the request
-- [ ] Business validations before persistence
-- [ ] Standard NestJS exceptions for business errors
-- [ ] Response DTO returned (not the Sequelize entity directly)
-- [ ] Registered in `providers` and `exports` of `ApplicationModule`
-- [ ] Tests written (see skill-tdd for application test patterns)
+-   [ ] `@Injectable()` on the class
+-   [ ] `session` and `logService` injected as `public`
+-   [ ] `companyId` obtained from `this.session.getCompany().id`, not from the request
+-   [ ] Business validations before persistence
+-   [ ] Standard NestJS exceptions for business errors
+-   [ ] Response DTO returned (not the Sequelize entity directly)
+-   [ ] Registered in `providers` and `exports` of `ApplicationModule`
+-   [ ] Tests written (see skill-tdd for application test patterns)

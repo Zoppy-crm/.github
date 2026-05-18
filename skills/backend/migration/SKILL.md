@@ -61,11 +61,11 @@ module.exports = {
 
 ### Conventions
 
-- **PK**: UUID with `Sequelize.UUIDV4` as default — never integer auto-increment
-- **Soft delete**: `deletedAt DATE NULL` — all tables use paranoid soft delete
-- **Timestamps**: `createdAt` and `updatedAt` — always `allowNull: false`
-- **Table names**: PascalCase plural (e.g., `Companies`, `MessageTemplates`)
-- **Column names**: camelCase (e.g., `companyId`, `createdAt`)
+-   **PK**: UUID with `Sequelize.UUIDV4` as default — never integer auto-increment
+-   **Soft delete**: `deletedAt DATE NULL` — all tables use paranoid soft delete
+-   **Timestamps**: `createdAt` and `updatedAt` — always `allowNull: false`
+-   **Table names**: PascalCase plural (e.g., `Companies`, `MessageTemplates`)
+-   **Column names**: camelCase (e.g., `companyId`, `createdAt`)
 
 ### Foreign keys
 
@@ -206,18 +206,18 @@ The user prefers a **migration-first split** when both repos change:
 
 ## Complete checklist for a new table
 
-- [ ] `npx sequelize-cli migration:generate --name create-your-entity`
-- [ ] Add `id` (UUID PK), all columns, `createdAt`, `updatedAt`, `deletedAt`
-- [ ] Add foreign key columns with `references` if needed
-- [ ] Add indexes via `queryInterface.addIndex(...)` when querying by
-      non-PK columns
-- [ ] Implement `down` (dropTable)
-- [ ] Run `npm run migrate` inside the container to verify
-- [ ] `zoppy-model`: create entity class in `src/api/`
-- [ ] `zoppy-model`: export from `src/index.ts`
-- [ ] **`zoppy-model`: register in `src/api/database.provider.ts` (import + `databaseModels` array)**
-- [ ] `zoppy-utilities`: add `<Entity>Repository` to `ProviderNames` enum
-- [ ] `zoppy-api`: register in `src/cross-cutting/providers/repository.providers.ts`
-- [ ] `zoppy-api`: create a Domain extending `RepositoryAdapter<T>` (see `skill-domain`)
-- [ ] Register the Domain in `src/domain/domain.module.ts` (providers AND exports arrays)
-- [ ] Create a seeder if initial data is needed
+-   [ ] `npx sequelize-cli migration:generate --name create-your-entity`
+-   [ ] Add `id` (UUID PK), all columns, `createdAt`, `updatedAt`, `deletedAt`
+-   [ ] Add foreign key columns with `references` if needed
+-   [ ] Add indexes via `queryInterface.addIndex(...)` when querying by
+        non-PK columns
+-   [ ] Implement `down` (dropTable)
+-   [ ] Run `npm run migrate` inside the container to verify
+-   [ ] `zoppy-model`: create entity class in `src/api/`
+-   [ ] `zoppy-model`: export from `src/index.ts`
+-   [ ] **`zoppy-model`: register in `src/api/database.provider.ts` (import + `databaseModels` array)**
+-   [ ] `zoppy-utilities`: add `<Entity>Repository` to `ProviderNames` enum
+-   [ ] `zoppy-api`: register in `src/cross-cutting/providers/repository.providers.ts`
+-   [ ] `zoppy-api`: create a Domain extending `RepositoryAdapter<T>` (see `skill-domain`)
+-   [ ] Register the Domain in `src/domain/domain.module.ts` (providers AND exports arrays)
+-   [ ] Create a seeder if initial data is needed

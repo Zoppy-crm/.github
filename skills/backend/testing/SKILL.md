@@ -1,13 +1,13 @@
 ---
 name: testing
 description: >
-  Test conventions for the zoppy-api NestJS project: in-memory DB via TestUtils, minimize mocks,
-  layer-specific particularities (controller / application / domain). Use this skill whenever writing
-  or reviewing .spec.ts files, deciding what to mock vs what to run against a real DB, structuring
-  describe/it blocks, setting up integration tests, or answering "how do I test X in this project".
-  Triggers on: "write a test", "add tests", "test this service", "test this controller", "test this
-  domain", "how to test", "spec file", ".spec.ts", "TestUtils", "test conventions", "integration
-  test", "in-memory database", "minimize mocks", "TestingModule", "jest setup for zoppy-api".
+    Test conventions for the zoppy-api NestJS project: in-memory DB via TestUtils, minimize mocks,
+    layer-specific particularities (controller / application / domain). Use this skill whenever writing
+    or reviewing .spec.ts files, deciding what to mock vs what to run against a real DB, structuring
+    describe/it blocks, setting up integration tests, or answering "how do I test X in this project".
+    Triggers on: "write a test", "add tests", "test this service", "test this controller", "test this
+    domain", "how to test", "spec file", ".spec.ts", "TestUtils", "test conventions", "integration
+    test", "in-memory database", "minimize mocks", "TestingModule", "jest setup for zoppy-api".
 ---
 
 # TESTING.MD

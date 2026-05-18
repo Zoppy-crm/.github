@@ -3,32 +3,19 @@
     "groups": {
         "backend": {
             "folders": ["shared", "backend"],
-            "repos": [
-                "zoppy-api",
-                "zoppy-workflow",
-                "zoppy-pixel-lambda",
-                "zoppy-event-bridge"
-            ]
+            "repos": ["zoppy-api", "zoppy-workflow", "zoppy-pixel-lambda", "zoppy-event-bridge"]
         },
         "wpp-commerce": {
             "folders": ["shared", "wpp-commerce"],
-            "repos": [
-                "zoppy-whatsapp-commerce"
-            ]
+            "repos": ["zoppy-whatsapp-commerce"]
         },
         "frontend": {
             "folders": ["shared", "frontend"],
-            "repos": [
-                "zoppy-FE",
-                "ui-components",
-                "zoppy-partners-fe"
-            ]
+            "repos": ["zoppy-FE", "ui-components", "zoppy-partners-fe"]
         },
         "e2e": {
             "folders": ["shared", "e2e"],
-            "repos": [
-                "zoppy-e2e-api"
-            ]
+            "repos": ["zoppy-e2e-api"]
         }
     }
 }

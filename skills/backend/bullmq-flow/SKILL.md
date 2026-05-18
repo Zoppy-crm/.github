@@ -9,11 +9,11 @@ Flows are for **job dependency chains** — when job B must only run after job A
 
 ## When to use a Flow vs a Queue
 
-| Use Flow | Use Queue |
-|---|---|
-| Job B depends on Job A's output | Jobs are independent |
-| Fan-out + fan-in (parent waits for children) | Fire-and-forget processing |
-| Need `getChildrenValues()` to aggregate | No result aggregation needed |
+| Use Flow                                     | Use Queue                    |
+| -------------------------------------------- | ---------------------------- |
+| Job B depends on Job A's output              | Jobs are independent         |
+| Fan-out + fan-in (parent waits for children) | Fire-and-forget processing   |
+| Need `getChildrenValues()` to aggregate      | No result aggregation needed |
 
 ## Adding a new FlowNameEnum entry
 
@@ -23,7 +23,7 @@ export enum FlowNameEnum {
     CUSTOMER_SELLER_CHAMPION = 'customer-seller-champion',
     UPLOAD_DATA = 'upload-data',
     OPENSEARCH_MIGRATION = 'opensearch-migration',
-    YOUR_NEW_FLOW = 'your-new-flow'  // add here
+    YOUR_NEW_FLOW = 'your-new-flow' // add here
 }
 ```
 
@@ -86,11 +86,12 @@ export class YourFlowService extends BaseFlow {
 ```
 
 ### Key points:
-- Always `scope: Scope.REQUEST` — each request gets its own session context
-- `@InjectFlowProducer(FlowNameEnum.X)` — must match the enum entry
-- Pass `session: this.session.getSessionData()` in every job's `data` — children need session too
-- `failParentOnFailure: true` — parent waits; if a child fails, parent also fails (typical behavior)
-- Set `failParentOnFailure: false` when the parent should proceed even if some children fail
+
+-   Always `scope: Scope.REQUEST` — each request gets its own session context
+-   `@InjectFlowProducer(FlowNameEnum.X)` — must match the enum entry
+-   Pass `session: this.session.getSessionData()` in every job's `data` — children need session too
+-   `failParentOnFailure: true` — parent waits; if a child fails, parent also fails (typical behavior)
+-   Set `failParentOnFailure: false` when the parent should proceed even if some children fail
 
 ## Accessing child results in the parent processor
 
@@ -114,7 +115,7 @@ const flows: any[] = [
     CustomerSellerChampionFlowService,
     UploadDataFlowService,
     OpenSearchMigrationFlowService,
-    YourFlowService  // add here
+    YourFlowService // add here
 ];
 
 @Module({
@@ -133,15 +134,15 @@ The flow producer itself is registered in `ZoppyBullModule`. Check `src/access/q
 BullMQFlowProducerModule.registerFlowProducer({
     name: FlowNameEnum.YOUR_NEW_FLOW,
     connection: redisConnection
-})
+});
 ```
 
 ## Complete flow setup checklist
 
-- [ ] Add `YOUR_NEW_FLOW` to `FlowNameEnum`
-- [ ] Create `your-flow.service.ts` extending `BaseFlow` with `scope: Scope.REQUEST`
-- [ ] Create parent and child processors (see `skill-queue-processor`)
-- [ ] Register flow producer in `ZoppyBullModule`
-- [ ] Add flow service to `QueueFlowModule`
-- [ ] Add flow service to `exports[]` in `QueueFlowModule`
-- [ ] Inject `QueueFlowModule` wherever the flow service is used
+-   [ ] Add `YOUR_NEW_FLOW` to `FlowNameEnum`
+-   [ ] Create `your-flow.service.ts` extending `BaseFlow` with `scope: Scope.REQUEST`
+-   [ ] Create parent and child processors (see `skill-queue-processor`)
+-   [ ] Register flow producer in `ZoppyBullModule`
+-   [ ] Add flow service to `QueueFlowModule`
+-   [ ] Add flow service to `exports[]` in `QueueFlowModule`
+-   [ ] Inject `QueueFlowModule` wherever the flow service is used

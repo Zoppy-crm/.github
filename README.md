@@ -4,23 +4,23 @@ Repositório de configurações compartilhadas da organização Zoppy no GitHub.
 
 ## Issue Templates
 
-| Template | Quando usar | Labels automáticas |
-|---|---|---|
-| **Refinamento Técnico** | Nova feature ou tarefa que precisa de detalhamento técnico antes do desenvolvimento | `refinement` |
-| **Bug Report** | Bug encontrado em produção ou staging | `bug`, `work: bug` |
-| **Epic de Roadmap** | Épico de produto rastreado no roadmap | `roadmap` |
-| **Preparação Individual — Tech Lead** | Preparação do Tech Lead antes da reunião de refinamento | `refinement`, `preparation` |
-| **General Card** | Demandas genéricas que não se encaixam nos outros templates | — |
+| Template                              | Quando usar                                                                         | Labels automáticas          |
+| ------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------- |
+| **Refinamento Técnico**               | Nova feature ou tarefa que precisa de detalhamento técnico antes do desenvolvimento | `refinement`                |
+| **Bug Report**                        | Bug encontrado em produção ou staging                                               | `bug`, `work: bug`          |
+| **Epic de Roadmap**                   | Épico de produto rastreado no roadmap                                               | `roadmap`                   |
+| **Preparação Individual — Tech Lead** | Preparação do Tech Lead antes da reunião de refinamento                             | `refinement`, `preparation` |
+| **General Card**                      | Demandas genéricas que não se encaixam nos outros templates                         | —                           |
 
 ## Workflows
 
-| Workflow | Trigger | O que faz |
-|---|---|---|
-| **Auto Label Bug Reports** | Issue aberta com label `bug` | Aplica labels de ambiente (`origin: master/staging/mirror`) e `client:report` baseado no formulário |
-| **Auto Label Refinement** | Issue aberta/editada com label `refinement` | Aplica label `ai-assisted` quando o card foi criado com auxílio de IA |
-| **PR Standards Check** | PR aberto/editado/atualizado | Valida naming de branch, tamanho do PR e descrição. Comenta warnings e dicas no PR |
-| **Sync Skills** | Push em `development` alterando `skills/` ou manual | Sincroniza `.claude/skills/` para repos configurados (push direto em master, development, staging, mirror) |
-| **Auto Label AI PRs** | PR aberto/atualizado | Detecta `Co-Authored-By` de IA nos commits e aplica label `ai-assisted` automaticamente |
+| Workflow                   | Trigger                                             | O que faz                                                                                                  |
+| -------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Auto Label Bug Reports** | Issue aberta com label `bug`                        | Aplica labels de ambiente (`origin: master/staging/mirror`) e `client:report` baseado no formulário        |
+| **Auto Label Refinement**  | Issue aberta/editada com label `refinement`         | Aplica label `ai-assisted` quando o card foi criado com auxílio de IA                                      |
+| **PR Standards Check**     | PR aberto/editado/atualizado                        | Valida naming de branch, tamanho do PR e descrição. Comenta warnings e dicas no PR                         |
+| **Sync Skills**            | Push em `development` alterando `skills/` ou manual | Sincroniza `.claude/skills/` para repos configurados (push direto em master, development, staging, mirror) |
+| **Auto Label AI PRs**      | PR aberto/atualizado                                | Detecta `Co-Authored-By` de IA nos commits e aplica label `ai-assisted` automaticamente                    |
 
 ## Refinamento Técnico com IA
 
@@ -51,21 +51,24 @@ Isso possibilita medir ao longo do tempo: velocidade de criação, completude do
 Todo PR aberto na org passa por um check automático (non-blocking) que valida:
 
 ### Branch naming
+
 Prefixos válidos: `milestone/`, `task/`, `bugfix/`, `hotfix/`, `chore/`, `refactor/`, `feat/`, `feature/`, `release/`, `dependabot/`
 
-- **Features**: `milestone/<nome-da-feature>` (branch protegido, PRs obrigatórios)
-- **Tasks**: `task/<nome-da-feature>/<nome-da-task>` (PR para o milestone)
-- **Bugs**: `bugfix/<descrição>` (vai para staging/mirror)
-- **Hotfixes**: `hotfix/<descrição>` (correções urgentes direto em produção)
+-   **Features**: `milestone/<nome-da-feature>` (branch protegido, PRs obrigatórios)
+-   **Tasks**: `task/<nome-da-feature>/<nome-da-task>` (PR para o milestone)
+-   **Bugs**: `bugfix/<descrição>` (vai para staging/mirror)
+-   **Hotfixes**: `hotfix/<descrição>` (correções urgentes direto em produção)
 
 ### Tamanho do PR
-- **Recomendado**: até 400 linhas alteradas (excluindo testes, migrations e lockfiles)
-- **Warning forte**: acima de 800 linhas
-- Se ficou grande demais: fatiar em tasks menores
+
+-   **Recomendado**: até 400 linhas alteradas (excluindo testes, migrations e lockfiles)
+-   **Warning forte**: acima de 800 linhas
+-   Se ficou grande demais: fatiar em tasks menores
 
 ### Descrição do PR
-- Não pode ser vazia
-- Deve incluir: o que muda, por que, e como testar
+
+-   Não pode ser vazia
+-   Deve incluir: o que muda, por que, e como testar
 
 O check comenta no PR com warnings e dicas, mas **não bloqueia o merge**.
 
@@ -100,11 +103,11 @@ skills/
 
 ### Mapeamento por grupo
 
-| Grupo | Skills recebidas | Repos |
-|---|---|---|
-| **backend** | `shared` + `backend` | zoppy-api, zoppy-workflow, zoppy-pixel-lambda, zoppy-whatsapp-commerce, zoppy-event-bridge |
-| **frontend** | `shared` + `frontend` | zoppy-FE, ui-components, zoppy-partners-fe |
-| **e2e** | `shared` + `e2e` | zoppy-e2e-api |
+| Grupo        | Skills recebidas      | Repos                                                                                      |
+| ------------ | --------------------- | ------------------------------------------------------------------------------------------ |
+| **backend**  | `shared` + `backend`  | zoppy-api, zoppy-workflow, zoppy-pixel-lambda, zoppy-whatsapp-commerce, zoppy-event-bridge |
+| **frontend** | `shared` + `frontend` | zoppy-FE, ui-components, zoppy-partners-fe                                                 |
+| **e2e**      | `shared` + `e2e`      | zoppy-e2e-api                                                                              |
 
 Para adicionar repos ou grupos, edite `skills/sync-config.json`.
 

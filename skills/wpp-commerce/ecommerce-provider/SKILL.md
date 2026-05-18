@@ -1,26 +1,26 @@
 ---
 name: ecommerce-provider
 description: >
-  How to add a new e-commerce provider integration to
-  zoppy-whatsapp-commerce (Shopify is the reference implementation;
-  Nuvemshop is the second variant). Covers the full surface a provider
-  needs: HTTP client class with async context manager, @tool factory,
-  optional admin/order-status tool, two-registry registration, the
-  catalog sub-agent (shared CatalogSearchResult schema), provider-aware
-  routing in the sub-agent registry, optional response-compactor
-  middleware, prompt branches for provider quirks (Nuvemshop has no
-  cart, link rule differs), and the AgentConfig.provider CHECK
-  constraint. Use this skill whenever onboarding a new platform
-  (Shopify, VTEX, WooCommerce, NuvemShop, Dooca, Tray, Yampi, …),
-  adding catalog search to an existing provider, splitting a provider's
-  toolset, or troubleshooting why an agent ends up with no catalog
-  tools. Triggers on: "add provider", "novo provider", "new e-commerce
-  provider", "Shopify integration", "Nuvemshop integration", "VTEX",
-  "WooCommerce", "Dooca", "Tray", "Yampi", "create_<provider>_tools",
-  "<Provider>Client", "catalog search", "search products", "iterative
-  search", "MCP catalog", "storefront API", "admin API", "provider
-  registry", "provider routing", "company.provider", "integrations.url",
-  "integrations.key", "integrations.admin", "response compactor".
+    How to add a new e-commerce provider integration to
+    zoppy-whatsapp-commerce (Shopify is the reference implementation;
+    Nuvemshop is the second variant). Covers the full surface a provider
+    needs: HTTP client class with async context manager, @tool factory,
+    optional admin/order-status tool, two-registry registration, the
+    catalog sub-agent (shared CatalogSearchResult schema), provider-aware
+    routing in the sub-agent registry, optional response-compactor
+    middleware, prompt branches for provider quirks (Nuvemshop has no
+    cart, link rule differs), and the AgentConfig.provider CHECK
+    constraint. Use this skill whenever onboarding a new platform
+    (Shopify, VTEX, WooCommerce, NuvemShop, Dooca, Tray, Yampi, …),
+    adding catalog search to an existing provider, splitting a provider's
+    toolset, or troubleshooting why an agent ends up with no catalog
+    tools. Triggers on: "add provider", "novo provider", "new e-commerce
+    provider", "Shopify integration", "Nuvemshop integration", "VTEX",
+    "WooCommerce", "Dooca", "Tray", "Yampi", "create_<provider>_tools",
+    "<Provider>Client", "catalog search", "search products", "iterative
+    search", "MCP catalog", "storefront API", "admin API", "provider
+    registry", "provider routing", "company.provider", "integrations.url",
+    "integrations.key", "integrations.admin", "response compactor".
 ---
 
 # E-commerce Provider — zoppy-whatsapp-commerce
@@ -58,13 +58,13 @@ The `Company.integrations` aggregate
 (`src/domain/company/schemas.py:IntegrationConfig`) carries the
 per-provider credentials in a flat shape:
 
-| Field | Shopify uses | Nuvemshop uses | Notes |
-|---|---|---|---|
-| `url` | shop domain (`my-shop.myshopify.com`) | — | "do they have an integration?" gate |
-| `admin` | Shopify Admin API token | — | Optional — gates order_status tool |
-| `key` | — | OAuth access token | "do they have an integration?" gate |
-| `secret` | — | store_id | Provider-specific use |
-| `name` | display name | display name | UI |
+| Field    | Shopify uses                          | Nuvemshop uses     | Notes                               |
+| -------- | ------------------------------------- | ------------------ | ----------------------------------- |
+| `url`    | shop domain (`my-shop.myshopify.com`) | —                  | "do they have an integration?" gate |
+| `admin`  | Shopify Admin API token               | —                  | Optional — gates order_status tool  |
+| `key`    | —                                     | OAuth access token | "do they have an integration?" gate |
+| `secret` | —                                     | store_id           | Provider-specific use               |
+| `name`   | display name                          | display name       | UI                                  |
 
 When you add a provider, decide which of these fields you'll consume.
 **Don't add new columns** unless absolutely required — repurpose
@@ -99,15 +99,15 @@ table below before coding.
 
 Shopify is the canonical reference because:
 
-- It has both a **Storefront** (catalog search via Shopify MCP) and an
-  **Admin** API (order_status), so it exercises the full split.
-- It has a **response compactor** middleware
-  (`ShopifyResponseCompactorMiddleware`) — the canonical pattern for
-  trimming large tool responses.
-- It uses the shared catalog sub-agent (no `_nuvemshop`-style fork) —
-  the canonical sub-agent path.
-- It supports **cart tools** (`create_cart_tools` in `src/ai/tools/cart.py`)
-  with checkout permalinks. Most providers will not have this.
+-   It has both a **Storefront** (catalog search via Shopify MCP) and an
+    **Admin** API (order_status), so it exercises the full split.
+-   It has a **response compactor** middleware
+    (`ShopifyResponseCompactorMiddleware`) — the canonical pattern for
+    trimming large tool responses.
+-   It uses the shared catalog sub-agent (no `_nuvemshop`-style fork) —
+    the canonical sub-agent path.
+-   It supports **cart tools** (`create_cart_tools` in `src/ai/tools/cart.py`)
+    with checkout permalinks. Most providers will not have this.
 
 When you add a provider, model your work on Shopify first, then
 diverge only where the upstream API forces you to.
@@ -234,10 +234,10 @@ if has_integration:
 
 When adding a provider, decide:
 
-- **Does the supervisor itself need a tool from this provider?**
-  Order status, cart, giftback — likely yes. Push them here.
-- **Or is everything sub-agent territory?** (catalog search is always
-  sub-agent.) If so, this file doesn't change.
+-   **Does the supervisor itself need a tool from this provider?**
+    Order status, cart, giftback — likely yes. Push them here.
+-   **Or is everything sub-agent territory?** (catalog search is always
+    sub-agent.) If so, this file doesn't change.
 
 ### 2. `get_subagent_factory` in `src/ai/agents/subagents/registry.py`
 
@@ -254,13 +254,13 @@ if name == "catalog_search":
 
 When adding a provider, choose:
 
-- **Reuse `create_catalog_subagent`** (Shopify path) when your tool
-  returns the same shape as Shopify and the search-relaxation strategy
-  in `agents/subagents/catalog/prompt.py` works as-is. Default choice.
-- **Fork to `create_catalog_<provider>_subagent`** only when prompt
-  rules genuinely differ (e.g. Nuvemshop forks because there's no
-  cart, the agent has to emit product page URLs directly, and the
-  search shape is different enough).
+-   **Reuse `create_catalog_subagent`** (Shopify path) when your tool
+    returns the same shape as Shopify and the search-relaxation strategy
+    in `agents/subagents/catalog/prompt.py` works as-is. Default choice.
+-   **Fork to `create_catalog_<provider>_subagent`** only when prompt
+    rules genuinely differ (e.g. Nuvemshop forks because there's no
+    cart, the agent has to emit product page URLs directly, and the
+    search shape is different enough).
 
 ### 3. `create_tools_for_company` in `src/ai/tools/registry.py`
 
@@ -355,11 +355,11 @@ Nuvemshop's tool already returns compact data, so it's exempt.
 
 When adding a provider:
 
-- If the upstream returns large payloads, write a paired compactor
-  middleware (`src/ai/middlewares/<provider>.py`) and add it to the
-  catalog sub-agent's middleware stack.
-- The compactor must produce the same `CatalogSearchResult` shape so
-  the parser stays portable.
+-   If the upstream returns large payloads, write a paired compactor
+    middleware (`src/ai/middlewares/<provider>.py`) and add it to the
+    catalog sub-agent's middleware stack.
+-   The compactor must produce the same `CatalogSearchResult` shape so
+    the parser stays portable.
 
 ## Prompt quirks per provider
 
@@ -382,9 +382,9 @@ emits the link.
 
 When adding a provider:
 
-- **Has a cart-equivalent flow?** Default `link_rule` (suppress URLs).
-- **No cart-equivalent flow?** Fork like Nuvemshop: instruct the agent
-  to include product page URLs directly.
+-   **Has a cart-equivalent flow?** Default `link_rule` (suppress URLs).
+-   **No cart-equivalent flow?** Fork like Nuvemshop: instruct the agent
+    to include product page URLs directly.
 
 The catalog sub-agent prompt (`agents/subagents/catalog/prompt.py` or
 `catalog_<provider>/prompt.py`) carries the iterative-search rules:
@@ -406,30 +406,30 @@ whereas Shopify uses MCP-style natural language).
 
 ## Decide what to write — quick reference
 
-| Question | Yes | No |
-|---|---|---|
-| Does the upstream provide catalog search? | Write `<Provider>Client.search_products` | You're not really adding a provider — you're adding a different kind of tool |
-| Does the upstream have an admin / order-status API? | Write a second client class + tool, gate by token field on `IntegrationConfig` | Skip the admin client |
-| Does the upstream have cart / checkout? | Reuse `create_cart_tools` if Shopify-shape; otherwise document why not | Branch in `_get_sales_tools` like Nuvemshop |
-| Are catalog responses > ~5 KB typical? | Write a response compactor middleware | Skip; the raw payload is fine |
-| Does iterative search (the relaxation strategy) work as-is? | Reuse `agents/subagents/catalog/` | Fork to `agents/subagents/catalog_<provider>/` |
-| Need to expose URLs in the chat (no cart)? | Branch `link_rule` in `get_sales_prompt` like Nuvemshop | Default Shopify behavior |
-| Existing IntegrationConfig fields cover the credentials? | Repurpose `url` / `key` / `admin` / `secret` | Add the field via Alembic — discuss before |
+| Question                                                    | Yes                                                                            | No                                                                           |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Does the upstream provide catalog search?                   | Write `<Provider>Client.search_products`                                       | You're not really adding a provider — you're adding a different kind of tool |
+| Does the upstream have an admin / order-status API?         | Write a second client class + tool, gate by token field on `IntegrationConfig` | Skip the admin client                                                        |
+| Does the upstream have cart / checkout?                     | Reuse `create_cart_tools` if Shopify-shape; otherwise document why not         | Branch in `_get_sales_tools` like Nuvemshop                                  |
+| Are catalog responses > ~5 KB typical?                      | Write a response compactor middleware                                          | Skip; the raw payload is fine                                                |
+| Does iterative search (the relaxation strategy) work as-is? | Reuse `agents/subagents/catalog/`                                              | Fork to `agents/subagents/catalog_<provider>/`                               |
+| Need to expose URLs in the chat (no cart)?                  | Branch `link_rule` in `get_sales_prompt` like Nuvemshop                        | Default Shopify behavior                                                     |
+| Existing IntegrationConfig fields cover the credentials?    | Repurpose `url` / `key` / `admin` / `secret`                                   | Add the field via Alembic — discuss before                                   |
 
 ## End-to-end checklist for a new provider
 
 1. **`Company.provider` accepts the new value.**
-   - Update the CHECK constraint in a new Alembic migration.
-   - Update `src/domain/company/model.py` if it has a literal /
-     enum (it currently uses a free-form string, so the migration is
-     enough).
+    - Update the CHECK constraint in a new Alembic migration.
+    - Update `src/domain/company/model.py` if it has a literal /
+      enum (it currently uses a free-form string, so the migration is
+      enough).
 2. **Decide which `IntegrationConfig` fields you'll consume.**
 3. **Write `src/ai/tools/<provider>.py`** with:
-   - `<Provider>Client` (storefront / catalog search)
-   - Optional `<Provider>AdminClient` (order status, account ops)
-   - `create_<provider>_tools(...)` factory
-   - Helper `create_<provider>_order_status_tool(...)` if you want
-     supervisor-level access
+    - `<Provider>Client` (storefront / catalog search)
+    - Optional `<Provider>AdminClient` (order status, account ops)
+    - `create_<provider>_tools(...)` factory
+    - Helper `create_<provider>_order_status_tool(...)` if you want
+      supervisor-level access
 4. **Catalog mapping**: parse the upstream payload into
    `src/ai/agents/subagents/catalog/schemas.py:CatalogSearchResult`.
 5. **Response compactor (optional)** at
@@ -439,24 +439,24 @@ whereas Shopify uses MCP-style natural language).
    Fork to `src/ai/agents/subagents/catalog_<provider>/agent.py` only
    if necessary.
 7. **Register** in three places:
-   - `src/ai/agents/registry.py:_get_sales_tools` — supervisor tool
-     dispatch
-   - `src/ai/agents/subagents/registry.py:get_subagent_factory` —
-     sub-agent dispatch (only if forking)
-   - `src/ai/tools/registry.py:create_tools_for_company` — sub-agent
-     buckets, with a `logger.warning` for half-onboarded companies
+    - `src/ai/agents/registry.py:_get_sales_tools` — supervisor tool
+      dispatch
+    - `src/ai/agents/subagents/registry.py:get_subagent_factory` —
+      sub-agent dispatch (only if forking)
+    - `src/ai/tools/registry.py:create_tools_for_company` — sub-agent
+      buckets, with a `logger.warning` for half-onboarded companies
 8. **Prompt branches**:
-   - `src/ai/agents/sales/prompt.py:get_sales_prompt` — `link_rule` +
-     `product_example_extra` if the provider has no cart
-   - `src/ai/agents/subagents/catalog<_provider>/prompt.py` — only if
-     you forked the sub-agent
+    - `src/ai/agents/sales/prompt.py:get_sales_prompt` — `link_rule` +
+      `product_example_extra` if the provider has no cart
+    - `src/ai/agents/subagents/catalog<_provider>/prompt.py` — only if
+      you forked the sub-agent
 9. **Tests**:
-   - `tests/unit/ai/tools/test_<provider>.py` — happy path, 4xx, 5xx,
-     timeout, empty result, malformed payload
-   - `tests/unit/ai/agents/subagents/catalog<_provider>/test_*.py` if
-     forked
-   - Update `tests/unit/ai/agents/sales/test_prompt_golden.py` to
-     cover the new provider's prompt variant
+    - `tests/unit/ai/tools/test_<provider>.py` — happy path, 4xx, 5xx,
+      timeout, empty result, malformed payload
+    - `tests/unit/ai/agents/subagents/catalog<_provider>/test_*.py` if
+      forked
+    - Update `tests/unit/ai/agents/sales/test_prompt_golden.py` to
+      cover the new provider's prompt variant
 10. **Webhook handler (optional)** — if the platform pushes updates to
     `/webhooks/integration/synced`, decide whether the existing
     handler covers it or you need a per-provider one. See the
@@ -464,53 +464,53 @@ whereas Shopify uses MCP-style natural language).
 
 ## Gotchas / anti-patterns
 
-- **Don't invent a new product shape.** Map upstream → existing
-  `CatalogSearchResult`. Parallel shapes break the supervisor prompt
-  and the parser.
-- **Don't add `Company.provider` values without an Alembic CHECK
-  update.** The DB will reject the row.
-- **Don't put credentials in `Company` columns.** They live on
-  `IntegrationConfig` (and the upstream OAuth flow writes them via the
-  `integration/synced` webhook).
-- **Don't read tokens out of env vars inside tools.** Tokens are
-  per-tenant — they come from `CompanyConfig.integrations.*` via the
-  registry closures. Env vars only hold global secrets (OpenAI key,
-  Langfuse key).
-- **Don't forget the `logger.warning` for half-onboarded companies.**
-  Production support relies on it.
-- **Don't add cart tools for a provider that has no checkout API.**
-  The supervisor will offer a non-existent flow. Branch like
-  Nuvemshop and route the customer to the product page URL.
-- **Don't bypass the response compactor for large payloads.** Context
-  window pain is silent until it isn't. If output is large, write a
-  compactor.
-- **Don't hardcode `provider == "shopify"` as a fallback elsewhere.**
-  The `provider or "shopify"` pattern is intentional and lives only in
-  the three registries. Other code reads from `company.provider`
-  directly.
+-   **Don't invent a new product shape.** Map upstream → existing
+    `CatalogSearchResult`. Parallel shapes break the supervisor prompt
+    and the parser.
+-   **Don't add `Company.provider` values without an Alembic CHECK
+    update.** The DB will reject the row.
+-   **Don't put credentials in `Company` columns.** They live on
+    `IntegrationConfig` (and the upstream OAuth flow writes them via the
+    `integration/synced` webhook).
+-   **Don't read tokens out of env vars inside tools.** Tokens are
+    per-tenant — they come from `CompanyConfig.integrations.*` via the
+    registry closures. Env vars only hold global secrets (OpenAI key,
+    Langfuse key).
+-   **Don't forget the `logger.warning` for half-onboarded companies.**
+    Production support relies on it.
+-   **Don't add cart tools for a provider that has no checkout API.**
+    The supervisor will offer a non-existent flow. Branch like
+    Nuvemshop and route the customer to the product page URL.
+-   **Don't bypass the response compactor for large payloads.** Context
+    window pain is silent until it isn't. If output is large, write a
+    compactor.
+-   **Don't hardcode `provider == "shopify"` as a fallback elsewhere.**
+    The `provider or "shopify"` pattern is intentional and lives only in
+    the three registries. Other code reads from `company.provider`
+    directly.
 
 ## Pre-PR checklist
 
-- [ ] New provider value documented in
-      `src/domain/company/model.py` comments and added to the CHECK
-      constraint via a new Alembic migration
-- [ ] `src/ai/tools/<provider>.py` exists with
-      `<Provider>Client` + `create_<provider>_tools`
-- [ ] Optional admin client + factory only if upstream has an admin API
-- [ ] Catalog responses parsed into `CatalogSearchResult`
-- [ ] Response compactor at `src/ai/middlewares/<provider>.py` (or
-      documented decision not to)
-- [ ] Sub-agent reuse vs fork decided and justified in the PR
-      description
-- [ ] Three registries updated:
-      `agents/registry.py`, `agents/subagents/registry.py`,
-      `tools/registry.py`, with `logger.warning` for missing
-      credentials
-- [ ] Prompt: `link_rule` + `product_example_extra` branched in
-      `agents/sales/prompt.py` if no cart-equivalent flow
-- [ ] Tests in `tests/unit/ai/tools/test_<provider>.py` covering
-      happy + 4xx/5xx/timeout/malformed/no-tenant-context
-- [ ] Prompt-golden tests updated for the new provider variant
-- [ ] `uv run pytest tests/unit/ai/ -q` is green
-- [ ] One real company in staging migrated to verify the end-to-end
-      flow before merging
+-   [ ] New provider value documented in
+        `src/domain/company/model.py` comments and added to the CHECK
+        constraint via a new Alembic migration
+-   [ ] `src/ai/tools/<provider>.py` exists with
+        `<Provider>Client` + `create_<provider>_tools`
+-   [ ] Optional admin client + factory only if upstream has an admin API
+-   [ ] Catalog responses parsed into `CatalogSearchResult`
+-   [ ] Response compactor at `src/ai/middlewares/<provider>.py` (or
+        documented decision not to)
+-   [ ] Sub-agent reuse vs fork decided and justified in the PR
+        description
+-   [ ] Three registries updated:
+        `agents/registry.py`, `agents/subagents/registry.py`,
+        `tools/registry.py`, with `logger.warning` for missing
+        credentials
+-   [ ] Prompt: `link_rule` + `product_example_extra` branched in
+        `agents/sales/prompt.py` if no cart-equivalent flow
+-   [ ] Tests in `tests/unit/ai/tools/test_<provider>.py` covering
+        happy + 4xx/5xx/timeout/malformed/no-tenant-context
+-   [ ] Prompt-golden tests updated for the new provider variant
+-   [ ] `uv run pytest tests/unit/ai/ -q` is green
+-   [ ] One real company in staging migrated to verify the end-to-end
+        flow before merging

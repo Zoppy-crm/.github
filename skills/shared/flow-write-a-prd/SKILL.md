@@ -19,7 +19,7 @@ Check with the user that these modules match their expectations. Check with the 
 
 5. Once you have a complete understanding of the problem and solution, use the template below to write the PRD. Save it as a markdown file in `docs/prds/` (create the directory if it doesn't exist). Name the file descriptively based on the feature, e.g. `docs/prds/jwt-authentication.md`.
 
-   **Quando o PRD vira um epic no GitHub:** o arquivo gerado por essa skill é o "working draft" pra review. O conteúdo final vira body do epic na organização Zoppy via skill `flow-github-issues` (modo Estruturado). O template oficial `Zoppy-crm/.github/.github/ISSUE_TEMPLATE/epic-roadmap.yml` aplica a label `roadmap` automaticamente quando criado via form — quando criar via `gh issue create --body-file`, passar `--label "roadmap"` manualmente. As 3 seções required do template oficial (`Por que estamos fazendo isso?`, `O que estamos resolvendo?`, `O que está fora do escopo?`) são cobertas pelas seções `Declaração do Problema`, `Solução` + `Decisões de Implementação`, e `Fora do Escopo` deste template — portanto compatíveis.
+    **Quando o PRD vira um epic no GitHub:** o arquivo gerado por essa skill é o "working draft" pra review. O conteúdo final vira body do epic na organização Zoppy via skill `flow-github-issues` (modo Estruturado). O template oficial `Zoppy-crm/.github/.github/ISSUE_TEMPLATE/epic-roadmap.yml` aplica a label `roadmap` automaticamente quando criado via form — quando criar via `gh issue create --body-file`, passar `--label "roadmap"` manualmente. As 3 seções required do template oficial (`Por que estamos fazendo isso?`, `O que estamos resolvendo?`, `O que está fora do escopo?`) são cobertas pelas seções `Declaração do Problema`, `Solução` + `Decisões de Implementação`, e `Fora do Escopo` deste template — portanto compatíveis.
 
 <prd-template>
 
@@ -47,13 +47,13 @@ This list of user stories should be extremely extensive and cover all aspects of
 
 A list of implementation decisions that were made. This can include:
 
-- The modules that will be built/modified
-- The interfaces of those modules that will be modified
-- Technical clarifications from the developer
-- Architectural decisions
-- Schema changes
-- API contracts
-- Specific interactions
+-   The modules that will be built/modified
+-   The interfaces of those modules that will be modified
+-   Technical clarifications from the developer
+-   Architectural decisions
+-   Schema changes
+-   API contracts
+-   Specific interactions
 
 Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
 
@@ -61,9 +61,9 @@ Do NOT include specific file paths or code snippets. They may end up being outda
 
 A list of testing decisions that were made. Include:
 
-- A description of what makes a good test (only test external behavior, not implementation details)
-- Which modules will be tested
-- Prior art for the tests (i.e. similar types of tests in the codebase)
+-   A description of what makes a good test (only test external behavior, not implementation details)
+-   Which modules will be tested
+-   Prior art for the tests (i.e. similar types of tests in the codebase)
 
 ## Fora do Escopo
 

@@ -6,13 +6,13 @@ Multiple isolated browser sessions with state persistence and concurrent browsin
 
 ## Contents
 
-- [Named Sessions](#named-sessions)
-- [Session Isolation Properties](#session-isolation-properties)
-- [Session State Persistence](#session-state-persistence)
-- [Common Patterns](#common-patterns)
-- [Default Session](#default-session)
-- [Session Cleanup](#session-cleanup)
-- [Best Practices](#best-practices)
+-   [Named Sessions](#named-sessions)
+-   [Session Isolation Properties](#session-isolation-properties)
+-   [Session State Persistence](#session-state-persistence)
+-   [Common Patterns](#common-patterns)
+-   [Default Session](#default-session)
+-   [Session Cleanup](#session-cleanup)
+-   [Best Practices](#best-practices)
 
 ## Named Sessions
 
@@ -33,12 +33,13 @@ agent-browser --session public get text body
 ## Session Isolation Properties
 
 Each session has independent:
-- Cookies
-- LocalStorage / SessionStorage
-- IndexedDB
-- Cache
-- Browsing history
-- Open tabs
+
+-   Cookies
+-   LocalStorage / SessionStorage
+-   IndexedDB
+-   Cache
+-   Browsing history
+-   Open tabs
 
 ## Session State Persistence
 

@@ -1,14 +1,14 @@
 ---
 name: queue-processor
 description: >
-  Guide for creating Queue Processors and Queue Services in the zoppy-api project with BullMQ. Use
-  this skill whenever you need to create a new queue processor, create a QueueService to enqueue
-  jobs, configure concurrency and lockDuration, use Redis locks via ProviderQueueProcessorBase,
-  register processors in QueueModule, or understand how session and context are propagated in jobs.
-  Trigger this skill when the user mentions: "create processor", "queue processor", "bullmq",
-  "queue processor", "create queue service", "enqueue job", "worker", "setSession",
-  "QueueProcessorBase", "ProviderQueueProcessorBase", or when implementing asynchronous background
-  processing.
+    Guide for creating Queue Processors and Queue Services in the zoppy-api project with BullMQ. Use
+    this skill whenever you need to create a new queue processor, create a QueueService to enqueue
+    jobs, configure concurrency and lockDuration, use Redis locks via ProviderQueueProcessorBase,
+    register processors in QueueModule, or understand how session and context are propagated in jobs.
+    Trigger this skill when the user mentions: "create processor", "queue processor", "bullmq",
+    "queue processor", "create queue service", "enqueue job", "worker", "setSession",
+    "QueueProcessorBase", "ProviderQueueProcessorBase", or when implementing asynchronous background
+    processing.
 ---
 
 # Creating a Queue Processor in zoppy-api
@@ -39,13 +39,13 @@ Add in `src/access/queues/constants/queue.constants.ts`:
 // QueueEnum — queue name in Redis
 export enum QueueEnum {
     // ...existing...
-    MY_FEATURE_QUEUE = 'my-feature-queue',
+    MY_FEATURE_QUEUE = 'my-feature-queue'
 }
 
 // QueueJobEnum — job types within the queue
 export enum QueueJobEnum {
     // ...existing...
-    MY_FEATURE_PROCESS = 'my-feature-process',
+    MY_FEATURE_PROCESS = 'my-feature-process'
 }
 ```
 
@@ -79,19 +79,20 @@ export class MyFeatureQueueService extends BaseQueue {
 ```
 
 **QueueService rules:**
-- Always `scope: Scope.REQUEST` — inherits session context from the request
-- `public jobs` lists all `QueueJobEnum` entries this queue accepts
-- `@InjectQueue` uses the correct `QueueEnum`
+
+-   Always `scope: Scope.REQUEST` — inherits session context from the request
+-   `public jobs` lists all `QueueJobEnum` entries this queue accepts
+-   `@InjectQueue` uses the correct `QueueEnum`
 
 **Available enqueueing methods (inherited from `BaseQueue`):**
 
-| Method | Usage |
-|--------|-------|
-| `execute(data, skipLogs?, priority?, jobId?)` | Enqueue immediately |
-| `executeWithDelay(data, delayMs)` | Enqueue with delay |
-| `executeWithDebounce(data, delaySeconds, debounceKey)` | Debounce by Redis key |
-| `scheduleExecution(data, date)` | Schedule for a specific date |
-| `batchExecute(data[])` | Enqueue multiple at once |
+| Method                                                 | Usage                        |
+| ------------------------------------------------------ | ---------------------------- |
+| `execute(data, skipLogs?, priority?, jobId?)`          | Enqueue immediately          |
+| `executeWithDelay(data, delayMs)`                      | Enqueue with delay           |
+| `executeWithDebounce(data, delaySeconds, debounceKey)` | Debounce by Redis key        |
+| `scheduleExecution(data, date)`                        | Schedule for a specific date |
+| `batchExecute(data[])`                                 | Enqueue multiple at once     |
 
 ---
 
@@ -117,14 +118,14 @@ interface JobData {
 }
 
 @Processor(QueueEnum.MY_FEATURE_QUEUE, {
-    concurrency: 5,                      // simultaneous jobs
-    lockDuration: 30 * 60 * 1000        // 30-minute lock (prevents duplicate reprocessing)
+    concurrency: 5, // simultaneous jobs
+    lockDuration: 30 * 60 * 1000 // 30-minute lock (prevents duplicate reprocessing)
 })
 export class MyFeatureQueueProcessor extends QueueProcessorBase {
     public constructor(
         public session: SessionService,
         public logService: LogService,
-        private readonly application: MyFeatureApplication  // ← the ONLY business dep
+        private readonly application: MyFeatureApplication // ← the ONLY business dep
     ) {
         super(session, logService);
     }
@@ -161,7 +162,7 @@ export class MySyncQueueProcessor extends ProviderQueueProcessorBase {
         public logService: LogService,
         protected readonly zoppyRedisService: ZoppyRedisService,
         protected readonly dataSyncManagementDomain: DataSyncManagementDomain,
-        private readonly application: MySyncApplication  // ← still only an Application
+        private readonly application: MySyncApplication // ← still only an Application
     ) {
         super(session, logService, zoppyRedisService, dataSyncManagementDomain);
     }
@@ -187,9 +188,9 @@ import { JobMutex } from 'src/cross-cutting/decorators/job-mutex.decorator';
 @Processor(QueueEnum.MY_QUEUE, { concurrency: 5 })
 export class MyQueueProcessor extends QueueProcessorBase {
     public constructor(
-        public sessionService: SessionService,         // named `sessionService` (decorator reads it)
+        public sessionService: SessionService, // named `sessionService` (decorator reads it)
         public logService: LogService,
-        private readonly zoppyRedisService: ZoppyRedisService,  // decorator reads it via this.zoppyRedisService
+        private readonly zoppyRedisService: ZoppyRedisService, // decorator reads it via this.zoppyRedisService
         private readonly application: MyApplication
     ) {
         super(sessionService, logService);
@@ -220,15 +221,15 @@ Always use `QueueBaseData<T>` when enqueueing:
 ```typescript
 // When enqueueing (in QueueService or Domain)
 await this.myFeatureQueueService.execute({
-    session: this.session.getSessionData(),  // complete session context
-    job: QueueJobEnum.MY_FEATURE_PROCESS,   // job type
-    queue: QueueEnum.MY_FEATURE_QUEUE,      // queue name
-    data: { entityId: entity.id }           // job data
+    session: this.session.getSessionData(), // complete session context
+    job: QueueJobEnum.MY_FEATURE_PROCESS, // job type
+    queue: QueueEnum.MY_FEATURE_QUEUE, // queue name
+    data: { entityId: entity.id } // job data
 });
 
 // In the processor, accessing the data:
-const { entityId } = job.data.data;         // job.data is QueueBaseData<JobData>
-const session = job.data.session;           // session available before setSession
+const { entityId } = job.data.data; // job.data is QueueBaseData<JobData>
+const session = job.data.session; // session available before setSession
 ```
 
 ---
@@ -287,12 +288,12 @@ The project runs as multiple isolated worker services. Each processor must be re
 
 ### Choose the right module based on domain:
 
-| Module file | `WORKER_CONTEXT` | Purpose |
-|---|---|---|
+| Module file                                          | `WORKER_CONTEXT`       | Purpose                                                                |
+| ---------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
 | `src/access/queues/integrations-pipeline.modules.ts` | `INTEGRATION_PIPELINE` | ERP/e-commerce sync, order sync, abandoned cart, provider integrations |
-| `src/access/queues/message-pipeline.module.ts` | `MESSAGE_PIPELINE` | Message sending (WhatsApp, SMS, email), campaigns, webhooks |
-| `src/access/queues/workflow-pipeline.module.ts` | `WORKFLOW_PIPELINE` | Workflow execution steps, automation triggers |
-| `src/access/queues/queue.module.ts` | fallback `WORKER` | General/cross-cutting processors (RFM, segments, company setup, etc.) |
+| `src/access/queues/message-pipeline.module.ts`       | `MESSAGE_PIPELINE`     | Message sending (WhatsApp, SMS, email), campaigns, webhooks            |
+| `src/access/queues/workflow-pipeline.module.ts`      | `WORKFLOW_PIPELINE`    | Workflow execution steps, automation triggers                          |
+| `src/access/queues/queue.module.ts`                  | fallback `WORKER`      | General/cross-cutting processors (RFM, segments, company setup, etc.)  |
 
 **Rule: register in ONE module only.** Simply adding the processor to a module's `providers[]` is enough — the worker for that context starts consuming immediately on deploy.
 
@@ -302,38 +303,40 @@ import { MyFeatureQueueProcessor } from './processors/my-feature.queue.processor
 
 const processors: Type<any>[] = [
     // ...existing processors...
-    MyFeatureQueueProcessor,
+    MyFeatureQueueProcessor
 ];
 ```
 
 **`src/access/queues/queue-service.module.ts`** — registers the QueueService (producer side, used by all contexts):
+
 ```typescript
 import { MyFeatureQueueService } from './services/my-feature.queue.service';
 
 // providers[] and exports[]
-providers: [MyFeatureQueueService, ...others]
-exports: [MyFeatureQueueService, ...others]
+providers: [MyFeatureQueueService, ...others];
+exports: [MyFeatureQueueService, ...others];
 ```
 
 **`src/access/queues/zoppy-bull.module.ts`** — registers the queue in BullMQ:
+
 ```typescript
 BullModule.registerQueue(
     // ...existing queues...
     { name: QueueEnum.MY_FEATURE_QUEUE }
-)
+);
 ```
 
 ---
 
 ## Pre-finalization checklist
 
-- [ ] `QueueEnum.MY_FEATURE_QUEUE` and `QueueJobEnum.MY_FEATURE_PROCESS` added in `queue.constants.ts`
-- [ ] QueueService with `scope: Scope.REQUEST`, `public jobs = [QueueJobEnum.MY_FEATURE_PROCESS]`
-- [ ] Processor with `@Processor(QueueEnum.MY_FEATURE_QUEUE, { concurrency, lockDuration })`
-- [ ] `await this.setSession(job)` as the first line of `process()`
-- [ ] `super(session, logService)` called in the constructor
-- [ ] `throw error` in catch so BullMQ registers and retries
-- [ ] Queue registered in `ZoppyBullModule`
-- [ ] Processor registered in **exactly one** pipeline module (`integrations-pipeline`, `message-pipeline`, `workflow-pipeline`, or `queue.module.ts`) — never duplicated
-- [ ] QueueService in `QueueServiceModule`
-- [ ] Tests written (see skill-tdd)
+-   [ ] `QueueEnum.MY_FEATURE_QUEUE` and `QueueJobEnum.MY_FEATURE_PROCESS` added in `queue.constants.ts`
+-   [ ] QueueService with `scope: Scope.REQUEST`, `public jobs = [QueueJobEnum.MY_FEATURE_PROCESS]`
+-   [ ] Processor with `@Processor(QueueEnum.MY_FEATURE_QUEUE, { concurrency, lockDuration })`
+-   [ ] `await this.setSession(job)` as the first line of `process()`
+-   [ ] `super(session, logService)` called in the constructor
+-   [ ] `throw error` in catch so BullMQ registers and retries
+-   [ ] Queue registered in `ZoppyBullModule`
+-   [ ] Processor registered in **exactly one** pipeline module (`integrations-pipeline`, `message-pipeline`, `workflow-pipeline`, or `queue.module.ts`) — never duplicated
+-   [ ] QueueService in `QueueServiceModule`
+-   [ ] Tests written (see skill-tdd)

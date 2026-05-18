@@ -1,16 +1,16 @@
 ---
 name: multi-tenant-context
 description: >
-  How multi-tenancy works in zoppy-whatsapp-commerce — every record is scoped
-  by company_id, every query filters by it, every cache key is namespaced by
-  it, and every log line carries it. Use this skill whenever you write a
-  query, add a cache layer, design a webhook, instantiate an agent, write
-  tests for a tenant-aware service, or audit code for tenant leaks. Triggers
-  on: "company_id", "multi-tenant", "multitenant", "tenant", "isolation",
-  "scoping", "scope by company", "cache key", "Valkey cache", "cache TTL",
-  "invalidate cache", "webhook invalidation", "request_context", "bind
-  context", "Company cache", "AgentConfig cache", "thread_id",
-  "AgentManager", "snapshot_config", "tenant leak", "isolamento por tenant".
+    How multi-tenancy works in zoppy-whatsapp-commerce — every record is scoped
+    by company_id, every query filters by it, every cache key is namespaced by
+    it, and every log line carries it. Use this skill whenever you write a
+    query, add a cache layer, design a webhook, instantiate an agent, write
+    tests for a tenant-aware service, or audit code for tenant leaks. Triggers
+    on: "company_id", "multi-tenant", "multitenant", "tenant", "isolation",
+    "scoping", "scope by company", "cache key", "Valkey cache", "cache TTL",
+    "invalidate cache", "webhook invalidation", "request_context", "bind
+    context", "Company cache", "AgentConfig cache", "thread_id",
+    "AgentManager", "snapshot_config", "tenant leak", "isolamento por tenant".
 ---
 
 # Multi-Tenant Context — zoppy-whatsapp-commerce
@@ -29,13 +29,13 @@ invariant.
    raw SQL.
 2. **Cache — every Valkey key is prefixed by `<topic>:<company_id>`.**
    Examples:
-   - `company:<company_id>` — cached `CompanyConfig`
-   - `agent_config:<agent_config_id>` — cached `AgentConfigData`
-     (note: keyed by `agent_config_id`, but agent_config rows themselves
-     belong to a single company)
-   - `handoff_cooldown:<company_id>:<customer_phone>` — handoff cooldown
-   - `cart:<thread_id>` — cart, where `thread_id = "<company_id>:<customer_phone>"`
-   - LangGraph checkpoint keys derived from `thread_id`, same shape
+    - `company:<company_id>` — cached `CompanyConfig`
+    - `agent_config:<agent_config_id>` — cached `AgentConfigData`
+      (note: keyed by `agent_config_id`, but agent_config rows themselves
+      belong to a single company)
+    - `handoff_cooldown:<company_id>:<customer_phone>` — handoff cooldown
+    - `cart:<thread_id>` — cart, where `thread_id = "<company_id>:<customer_phone>"`
+    - LangGraph checkpoint keys derived from `thread_id`, same shape
 3. **Logs — `company_id` is bound to the structlog context for the whole
    request lifecycle** (plus `customer_phone` and `thread_id` when relevant).
    Once `bind_context(...)` runs, every `logger.info(...)` carries those
@@ -46,16 +46,16 @@ invariant.
 
 ## Where each piece lives
 
-| Concern | File |
-|---|---|
-| Cache client | `src/infra/cache.py` |
-| Valkey client | `src/infra/valkey.py` |
-| Async DB session | `src/infra/database.py` (`get_session`, `get_db`) |
-| Request-scoped context (logger contextvars) | `src/utils/request_context.py` |
-| Logger that picks up the context | `src/utils/logger.py` |
-| Per-thread agent + frozen config | `src/ai/agent_manager.py` |
-| Webhook handlers (where invalidation happens) | `src/api/webhooks/handlers/<feature>/` |
-| Cooldown after handoff | `src/application/handoff/handoff_cooldown.py` |
+| Concern                                       | File                                              |
+| --------------------------------------------- | ------------------------------------------------- |
+| Cache client                                  | `src/infra/cache.py`                              |
+| Valkey client                                 | `src/infra/valkey.py`                             |
+| Async DB session                              | `src/infra/database.py` (`get_session`, `get_db`) |
+| Request-scoped context (logger contextvars)   | `src/utils/request_context.py`                    |
+| Logger that picks up the context              | `src/utils/logger.py`                             |
+| Per-thread agent + frozen config              | `src/ai/agent_manager.py`                         |
+| Webhook handlers (where invalidation happens) | `src/api/webhooks/handlers/<feature>/`            |
+| Cooldown after handoff                        | `src/application/handoff/handoff_cooldown.py`     |
 
 ## Repository scoping — the absolute rule
 
@@ -123,15 +123,15 @@ class CompanyService:
 
 Conventions:
 
-- Prefix every key by `<topic>:` then the tenant id. Never derive cache
-  keys without the tenant in them.
-- TTL comes from `settings` (`settings.company_cache_ttl`,
-  `settings.agent_config_cache_ttl`, `CACHE_TTL`). Don't hard-code seconds
-  in the service.
-- Cache on read-after-miss, not on write. Writes invalidate; the next read
-  re-populates.
-- Serialize through the Pydantic model: `config.model_dump_json()` on set,
-  `Model.model_validate_json(cached)` on get. Don't pickle.
+-   Prefix every key by `<topic>:` then the tenant id. Never derive cache
+    keys without the tenant in them.
+-   TTL comes from `settings` (`settings.company_cache_ttl`,
+    `settings.agent_config_cache_ttl`, `CACHE_TTL`). Don't hard-code seconds
+    in the service.
+-   Cache on read-after-miss, not on write. Writes invalidate; the next read
+    re-populates.
+-   Serialize through the Pydantic model: `config.model_dump_json()` on set,
+    `Model.model_validate_json(cached)` on get. Don't pickle.
 
 ## Webhook invalidation contract
 
@@ -162,17 +162,17 @@ async def handle_company_synced(
 
 Rules:
 
-- The cache key string must match what the service writes. If you change
-  the prefix in one place, change it in both — there's no shared
-  constant yet (consider promoting to one if a third caller appears).
-- For `AgentConfig` updates that affect live conversations, also clear the
-  `AgentManager` cache via `agent_manager.invalidate(company_id)` so the
-  agent gets recompiled on the next message — see
-  `src/api/webhooks/handlers/agent_config/updated.py`.
-- Webhook handlers are a `controller` layer in disguise — they may import
-  from `application/`, `domain/`, `infra/`, `utils/`. They must not contain
-  business logic that other features will need; if they do, lift it into an
-  application service.
+-   The cache key string must match what the service writes. If you change
+    the prefix in one place, change it in both — there's no shared
+    constant yet (consider promoting to one if a third caller appears).
+-   For `AgentConfig` updates that affect live conversations, also clear the
+    `AgentManager` cache via `agent_manager.invalidate(company_id)` so the
+    agent gets recompiled on the next message — see
+    `src/api/webhooks/handlers/agent_config/updated.py`.
+-   Webhook handlers are a `controller` layer in disguise — they may import
+    from `application/`, `domain/`, `infra/`, `utils/`. They must not contain
+    business logic that other features will need; if they do, lift it into an
+    application service.
 
 ## Request lifecycle — binding the tenant context
 
@@ -206,15 +206,15 @@ fields not yet bound, use `get_contextualized_logger(...)` from
 `src/ai/agent_manager.py` keeps a per-tenant cache of compiled LangGraph
 agents and a per-thread snapshot of the agent config:
 
-- **Agent cache key:** `<company_id>:<agent_config_id>`. TTL defaults to
-  30 min. Compiled agents are reused across messages of the same tenant.
-- **Thread id:** `<company_id>:<customer_phone>` — used by the LangGraph
-  Valkey checkpointer. Conversations are isolated per tenant by virtue
-  of this key.
-- **`AgentManager.snapshot_config(thread_id, current_config)`** freezes
-  `AgentConfigData` on the first message of a thread so a config edit
-  mid-conversation doesn't leak into a running session. The snapshot
-  expires alongside the agent cache TTL.
+-   **Agent cache key:** `<company_id>:<agent_config_id>`. TTL defaults to
+    30 min. Compiled agents are reused across messages of the same tenant.
+-   **Thread id:** `<company_id>:<customer_phone>` — used by the LangGraph
+    Valkey checkpointer. Conversations are isolated per tenant by virtue
+    of this key.
+-   **`AgentManager.snapshot_config(thread_id, current_config)`** freezes
+    `AgentConfigData` on the first message of a thread so a config edit
+    mid-conversation doesn't leak into a running session. The snapshot
+    expires alongside the agent cache TTL.
 
 When a webhook updates an `AgentConfig`, call
 `agent_manager.invalidate(company_id)` so future threads get the fresh
@@ -222,49 +222,49 @@ compiled agent. Existing threads keep their snapshot — by design.
 
 ## Test posture
 
-- Unit tests of services should patch `cache_client` on the **consumer
-  module path** (`src.application.company.company_service.cache_client`,
-  not `src.infra.cache.cache_client`) — see the `testing` skill for the
-  pattern.
-- Integration tests of repositories run against SQLite in-memory and
-  exercise the `company_id` filter explicitly. There must be at least one
-  test per repository that proves a query for company A doesn't see rows
-  from company B.
-- For multi-tenant cache, write a paired test: `set` for company A,
-  `get` for company B, expect None. Cheap and catches prefix drift early.
+-   Unit tests of services should patch `cache_client` on the **consumer
+    module path** (`src.application.company.company_service.cache_client`,
+    not `src.infra.cache.cache_client`) — see the `testing` skill for the
+    pattern.
+-   Integration tests of repositories run against SQLite in-memory and
+    exercise the `company_id` filter explicitly. There must be at least one
+    test per repository that proves a query for company A doesn't see rows
+    from company B.
+-   For multi-tenant cache, write a paired test: `set` for company A,
+    `get` for company B, expect None. Cheap and catches prefix drift early.
 
 ## Gotchas / anti-patterns
 
-- **Never query by the entity's own UUID alone** when the call site knows
-  the tenant. Pass `company_id=` and use it as an extra `WHERE` clause.
-- **Never share a Valkey key without the tenant in it** unless it is truly
-  global (model pricing, feature flag definitions, etc.).
-- **Never cache a Pydantic model with shared mutable references** — always
-  serialize via `model_dump_json` so the cached state is independent.
-- **Never log raw `customer_phone` outside the bound context.** Phones are
-  PII; the structured logger is configured to handle them, but ad-hoc
-  `logger.info(f"phone is {phone}")` strings escape redaction.
-- **Never write a webhook handler that updates a cached entity without
-  invalidating the cache.** The next chat request will run with stale
-  config and the bug is hard to spot in production.
-- **Never trust `request_context` in fan-out.** Once you spawn a Celery
-  task or a background `asyncio.create_task`, the contextvars don't
-  propagate. Re-bind at the top of the new task.
-- **Never omit `company_id` from a fresh log call.** If `bind_context`
-  hasn't run (a CLI script, a Celery task, a fixture), pass it explicitly
-  as a kwarg: `logger.info("event", company_id=company_id, ...)`.
+-   **Never query by the entity's own UUID alone** when the call site knows
+    the tenant. Pass `company_id=` and use it as an extra `WHERE` clause.
+-   **Never share a Valkey key without the tenant in it** unless it is truly
+    global (model pricing, feature flag definitions, etc.).
+-   **Never cache a Pydantic model with shared mutable references** — always
+    serialize via `model_dump_json` so the cached state is independent.
+-   **Never log raw `customer_phone` outside the bound context.** Phones are
+    PII; the structured logger is configured to handle them, but ad-hoc
+    `logger.info(f"phone is {phone}")` strings escape redaction.
+-   **Never write a webhook handler that updates a cached entity without
+    invalidating the cache.** The next chat request will run with stale
+    config and the bug is hard to spot in production.
+-   **Never trust `request_context` in fan-out.** Once you spawn a Celery
+    task or a background `asyncio.create_task`, the contextvars don't
+    propagate. Re-bind at the top of the new task.
+-   **Never omit `company_id` from a fresh log call.** If `bind_context`
+    hasn't run (a CLI script, a Celery task, a fixture), pass it explicitly
+    as a kwarg: `logger.info("event", company_id=company_id, ...)`.
 
 ## Pre-PR checklist
 
-- [ ] Every new repository method takes `company_id` (or an entity that
-      already carries it) and filters on it
-- [ ] Every new cache key includes `<topic>:<company_id>` (or
-      `<thread_id>`, which already encodes it)
-- [ ] If a write affects a cached entity, the corresponding webhook /
-      mutation invalidates the cache
-- [ ] If an `AgentConfig` is touched, `agent_manager.invalidate(company_id)`
-      is called
-- [ ] Background tasks and Celery jobs `bind_context(...)` at the top
-- [ ] Test for the negative path: another tenant cannot read the new row
-- [ ] Logs carry `company_id` (either bound via `request_context` or
-      passed explicitly)
+-   [ ] Every new repository method takes `company_id` (or an entity that
+        already carries it) and filters on it
+-   [ ] Every new cache key includes `<topic>:<company_id>` (or
+        `<thread_id>`, which already encodes it)
+-   [ ] If a write affects a cached entity, the corresponding webhook /
+        mutation invalidates the cache
+-   [ ] If an `AgentConfig` is touched, `agent_manager.invalidate(company_id)`
+        is called
+-   [ ] Background tasks and Celery jobs `bind_context(...)` at the top
+-   [ ] Test for the negative path: another tenant cannot read the new row
+-   [ ] Logs carry `company_id` (either bound via `request_context` or
+        passed explicitly)

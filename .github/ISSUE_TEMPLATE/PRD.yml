@@ -1,183 +1,183 @@
-name: "📋 Brief de Demanda"
-description: "Template obrigatório para todas as demandas de produto encaminhadas à tecnologia. Preencha antes de agendar o Pré-Refinamento com o Tech Lead."
-title: "[Brief] "
-labels: ["brief-de-demanda"]
+name: '📋 Brief de Demanda'
+description: 'Template obrigatório para todas as demandas de produto encaminhadas à tecnologia. Preencha antes de agendar o Pré-Refinamento com o Tech Lead.'
+title: '[Brief] '
+labels: ['brief-de-demanda']
 assignees: []
 
 body:
-  # ── METADADOS ──────────────────────────────────────────────────────────────
-  - type: markdown
-    attributes:
-      value: |
-        > **Critério de entrada:** preencha todas as seções obrigatórias antes de agendar o Pré-Refinamento com o Tech Lead.
+    # ── METADADOS ──────────────────────────────────────────────────────────────
+    - type: markdown
+      attributes:
+          value: |
+              > **Critério de entrada:** preencha todas as seções obrigatórias antes de agendar o Pré-Refinamento com o Tech Lead.
 
-  - type: dropdown
-    id: squad
-    attributes:
-      label: Squad
-      options:
-        - Ativação
-        - Retenção
-        - Expansão
-        - Plataforma
-    validations:
-      required: true
+    - type: dropdown
+      id: squad
+      attributes:
+          label: Squad
+          options:
+              - Ativação
+              - Retenção
+              - Expansão
+              - Plataforma
+      validations:
+          required: true
 
-  - type: dropdown
-    id: prioridade
-    attributes:
-      label: Prioridade
-      options:
-        - Alta
-        - Média
-        - Baixa
-    validations:
-      required: true
+    - type: dropdown
+      id: prioridade
+      attributes:
+          label: Prioridade
+          options:
+              - Alta
+              - Média
+              - Baixa
+      validations:
+          required: true
 
-  - type: input
-    id: sprint_alvo
-    attributes:
-      label: Sprint alvo
-      placeholder: "Ex: Sprint 23 — 12/05 a 26/05"
-    validations:
-      required: false
+    - type: input
+      id: sprint_alvo
+      attributes:
+          label: Sprint alvo
+          placeholder: 'Ex: Sprint 23 — 12/05 a 26/05'
+      validations:
+          required: false
 
-  # ── CHECKLIST PRÉ-ENVIO ────────────────────────────────────────────────────
-  - type: checkboxes
-    id: checklist_pre_envio
-    attributes:
-      label: "✅ Checklist pré-envio ao Tech Lead"
-      description: "Confirme que cada item foi verificado antes de encaminhar."
-      options:
-        - label: O objetivo está orientado ao problema, não à solução
-        - label: As regras de negócio estão descritas em linguagem clara
-        - label: O escopo (entra / não entra) está definido
-        - label: Os critérios de aceite estão rascunhados
-        - label: As referências visuais (Figma, protótipos) estão linkadas ou explicitamente marcadas como ausentes
-        - label: As dúvidas e decisões em aberto estão listadas ou marcadas como "Nenhuma"
-        - label: A demanda está madura — sem bloqueadores de produto que impeçam o início
+    # ── CHECKLIST PRÉ-ENVIO ────────────────────────────────────────────────────
+    - type: checkboxes
+      id: checklist_pre_envio
+      attributes:
+          label: '✅ Checklist pré-envio ao Tech Lead'
+          description: 'Confirme que cada item foi verificado antes de encaminhar.'
+          options:
+              - label: O objetivo está orientado ao problema, não à solução
+              - label: As regras de negócio estão descritas em linguagem clara
+              - label: O escopo (entra / não entra) está definido
+              - label: Os critérios de aceite estão rascunhados
+              - label: As referências visuais (Figma, protótipos) estão linkadas ou explicitamente marcadas como ausentes
+              - label: As dúvidas e decisões em aberto estão listadas ou marcadas como "Nenhuma"
+              - label: A demanda está madura — sem bloqueadores de produto que impeçam o início
 
-  # ── SEÇÃO 1 — CONTEXTO ────────────────────────────────────────────────────
-  - type: textarea
-    id: contexto
-    attributes:
-      label: "1. Contexto"
-      description: "Por que essa demanda existe? Qual problema de negócio ou de usuário ela resolve? Escreva em 2–3 frases. Foque no problema, não na solução."
-      placeholder: |
-        Ex: Clientes que concluem o onboarding sem configurar ao menos um workflow automatizado têm churn 40% maior em 60 dias.
-        A ausência de um fluxo guiado de configuração faz com que muitos lojistas não percebam o valor do produto antes de cancelar.
-    validations:
-      required: true
+    # ── SEÇÃO 1 — CONTEXTO ────────────────────────────────────────────────────
+    - type: textarea
+      id: contexto
+      attributes:
+          label: '1. Contexto'
+          description: 'Por que essa demanda existe? Qual problema de negócio ou de usuário ela resolve? Escreva em 2–3 frases. Foque no problema, não na solução.'
+          placeholder: |
+              Ex: Clientes que concluem o onboarding sem configurar ao menos um workflow automatizado têm churn 40% maior em 60 dias.
+              A ausência de um fluxo guiado de configuração faz com que muitos lojistas não percebam o valor do produto antes de cancelar.
+      validations:
+          required: true
 
-  # ── SEÇÃO 2 — OBJETIVO ────────────────────────────────────────────────────
-  - type: textarea
-    id: objetivo
-    attributes:
-      label: "2. Objetivo"
-      description: "O que precisa estar funcionando quando isso for para produção? Use linguagem de comportamento observável, não de solução técnica."
-      placeholder: |
-        Ex: O lojista consegue configurar seu primeiro workflow automatizado durante o onboarding, sem precisar sair da tela guiada e sem contato com o CS.
-    validations:
-      required: true
+    # ── SEÇÃO 2 — OBJETIVO ────────────────────────────────────────────────────
+    - type: textarea
+      id: objetivo
+      attributes:
+          label: '2. Objetivo'
+          description: 'O que precisa estar funcionando quando isso for para produção? Use linguagem de comportamento observável, não de solução técnica.'
+          placeholder: |
+              Ex: O lojista consegue configurar seu primeiro workflow automatizado durante o onboarding, sem precisar sair da tela guiada e sem contato com o CS.
+      validations:
+          required: true
 
-  # ── SEÇÃO 3 — ESCOPO ──────────────────────────────────────────────────────
-  - type: textarea
-    id: escopo_entra
-    attributes:
-      label: "3a. Escopo — ✅ Entra"
-      description: "Liste o que está dentro desta demanda. Um item por linha."
-      placeholder: |
-        - Tela de seleção de tipo de workflow no onboarding
-        - Configuração básica de gatilho (evento + delay)
-        - Preview da mensagem antes de ativar
-    validations:
-      required: true
+    # ── SEÇÃO 3 — ESCOPO ──────────────────────────────────────────────────────
+    - type: textarea
+      id: escopo_entra
+      attributes:
+          label: '3a. Escopo — ✅ Entra'
+          description: 'Liste o que está dentro desta demanda. Um item por linha.'
+          placeholder: |
+              - Tela de seleção de tipo de workflow no onboarding
+              - Configuração básica de gatilho (evento + delay)
+              - Preview da mensagem antes de ativar
+      validations:
+          required: true
 
-  - type: textarea
-    id: escopo_nao_entra
-    attributes:
-      label: "3b. Escopo — ❌ Não entra"
-      description: "Liste explicitamente o que está fora desta demanda. Regras vagas geram implementações incorretas."
-      placeholder: |
-        - Edição de workflows já ativos
-        - Criação de templates de mensagem customizados
-        - Relatório de performance do workflow
-    validations:
-      required: true
+    - type: textarea
+      id: escopo_nao_entra
+      attributes:
+          label: '3b. Escopo — ❌ Não entra'
+          description: 'Liste explicitamente o que está fora desta demanda. Regras vagas geram implementações incorretas.'
+          placeholder: |
+              - Edição de workflows já ativos
+              - Criação de templates de mensagem customizados
+              - Relatório de performance do workflow
+      validations:
+          required: true
 
-  # ── SEÇÃO 4 — REGRAS DE NEGÓCIO ───────────────────────────────────────────
-  - type: textarea
-    id: regras_de_negocio
-    attributes:
-      label: "4. Regras de Negócio"
-      description: "Um bullet por regra. Seja específico — regras vagas geram interpretações erradas na implementação."
-      placeholder: |
-        - Apenas lojistas sem nenhum workflow ativo devem ver o fluxo guiado
-        - O fluxo guiado deve ser exibido apenas uma vez por conta (não reaparecer após ignorado)
-        - A ativação do workflow exige que o número de WhatsApp esteja conectado; caso contrário, exibir alerta bloqueante
-        - O lojista pode pular a etapa — o skip deve ser registrado para análise futura
-    validations:
-      required: true
+    # ── SEÇÃO 4 — REGRAS DE NEGÓCIO ───────────────────────────────────────────
+    - type: textarea
+      id: regras_de_negocio
+      attributes:
+          label: '4. Regras de Negócio'
+          description: 'Um bullet por regra. Seja específico — regras vagas geram interpretações erradas na implementação.'
+          placeholder: |
+              - Apenas lojistas sem nenhum workflow ativo devem ver o fluxo guiado
+              - O fluxo guiado deve ser exibido apenas uma vez por conta (não reaparecer após ignorado)
+              - A ativação do workflow exige que o número de WhatsApp esteja conectado; caso contrário, exibir alerta bloqueante
+              - O lojista pode pular a etapa — o skip deve ser registrado para análise futura
+      validations:
+          required: true
 
-  # ── SEÇÃO 5 — REFERÊNCIAS VISUAIS ─────────────────────────────────────────
-  - type: textarea
-    id: referencias_visuais
-    attributes:
-      label: "5. Referências Visuais"
-      description: "Se não houver referência visual, escreva explicitamente: 'Sem referência visual — a ser definido pelo Tech Lead'."
-      placeholder: |
-        - Figma: [link]
-        - Protótipo: [link]
-        - Fluxo de produto: [link]
-        - Discovery doc: [link]
-    validations:
-      required: false
+    # ── SEÇÃO 5 — REFERÊNCIAS VISUAIS ─────────────────────────────────────────
+    - type: textarea
+      id: referencias_visuais
+      attributes:
+          label: '5. Referências Visuais'
+          description: "Se não houver referência visual, escreva explicitamente: 'Sem referência visual — a ser definido pelo Tech Lead'."
+          placeholder: |
+              - Figma: [link]
+              - Protótipo: [link]
+              - Fluxo de produto: [link]
+              - Discovery doc: [link]
+      validations:
+          required: false
 
-  # ── SEÇÃO 6 — CRITÉRIOS DE ACEITE ─────────────────────────────────────────
-  - type: textarea
-    id: criterios_de_aceite
-    attributes:
-      label: "6. Critérios de Aceite (rascunho)"
-      description: "Escreva em linguagem de usuário ou comportamento observável. O Tech Lead refinará com critérios técnicos na sequência."
-      placeholder: |
-        - [ ] O lojista sem workflow ativo vê o fluxo guiado ao acessar a seção de Automações pela primeira vez
-        - [ ] Ao ativar o workflow, ele aparece na lista de automações com status "Ativo"
-        - [ ] Se o WhatsApp não estiver conectado, o botão de ativar está desabilitado com mensagem explicativa
-        - [ ] O skip é registrado e o fluxo guiado não reaparece na sessão seguinte
-    validations:
-      required: true
+    # ── SEÇÃO 6 — CRITÉRIOS DE ACEITE ─────────────────────────────────────────
+    - type: textarea
+      id: criterios_de_aceite
+      attributes:
+          label: '6. Critérios de Aceite (rascunho)'
+          description: 'Escreva em linguagem de usuário ou comportamento observável. O Tech Lead refinará com critérios técnicos na sequência.'
+          placeholder: |
+              - [ ] O lojista sem workflow ativo vê o fluxo guiado ao acessar a seção de Automações pela primeira vez
+              - [ ] Ao ativar o workflow, ele aparece na lista de automações com status "Ativo"
+              - [ ] Se o WhatsApp não estiver conectado, o botão de ativar está desabilitado com mensagem explicativa
+              - [ ] O skip é registrado e o fluxo guiado não reaparece na sessão seguinte
+      validations:
+          required: true
 
-  # ── SEÇÃO 7 — DÚVIDAS E DECISÕES EM ABERTO ────────────────────────────────
-  - type: textarea
-    id: duvidas_em_aberto
-    attributes:
-      label: "7. Dúvidas e Decisões em Aberto"
-      description: "Pautar explicitamente evita que o Pré-Refinamento vire conversa sem foco. Sem dúvidas? Escreva 'Nenhuma'."
-      placeholder: |
-        - Nenhuma
-        ---
-        Ou, por exemplo:
-        - Ainda não definimos se o fluxo guiado deve aparecer para contas que já têm workflow pausado — aguardando decisão do PM
-        - Não foi validado com o Tech Lead se o registro do "skip" deve ir para o banco ou apenas para analytics
-    validations:
-      required: false
+    # ── SEÇÃO 7 — DÚVIDAS E DECISÕES EM ABERTO ────────────────────────────────
+    - type: textarea
+      id: duvidas_em_aberto
+      attributes:
+          label: '7. Dúvidas e Decisões em Aberto'
+          description: "Pautar explicitamente evita que o Pré-Refinamento vire conversa sem foco. Sem dúvidas? Escreva 'Nenhuma'."
+          placeholder: |
+              - Nenhuma
+              ---
+              Ou, por exemplo:
+              - Ainda não definimos se o fluxo guiado deve aparecer para contas que já têm workflow pausado — aguardando decisão do PM
+              - Não foi validado com o Tech Lead se o registro do "skip" deve ir para o banco ou apenas para analytics
+      validations:
+          required: false
 
-  # ── SEÇÃO 8 — PRIORIDADE E JUSTIFICATIVA ──────────────────────────────────
-  - type: textarea
-    id: justificativa_prioridade
-    attributes:
-      label: "8. Justificativa da Prioridade"
-      description: "Uma linha explicando a urgência. Isso ajuda o Tech Lead a calibrar o tempo de preparação do artefato técnico."
-      placeholder: |
-        Ex: Alta — KR do Q2 de ativação (workflow até D20) está 12pp abaixo da meta; essa entrega é o principal bloqueio identificado no discovery.
-    validations:
-      required: true
+    # ── SEÇÃO 8 — PRIORIDADE E JUSTIFICATIVA ──────────────────────────────────
+    - type: textarea
+      id: justificativa_prioridade
+      attributes:
+          label: '8. Justificativa da Prioridade'
+          description: 'Uma linha explicando a urgência. Isso ajuda o Tech Lead a calibrar o tempo de preparação do artefato técnico.'
+          placeholder: |
+              Ex: Alta — KR do Q2 de ativação (workflow até D20) está 12pp abaixo da meta; essa entrega é o principal bloqueio identificado no discovery.
+      validations:
+          required: true
 
-  # ── RODAPÉ ────────────────────────────────────────────────────────────────
-  - type: markdown
-    attributes:
-      value: |
-        ---
-        > ⏱ **Após o Pré-Refinamento:** o Tech Lead tem até **48h úteis** para preparar o Artefato Técnico e compartilhar com o time.
-        > O time tem até **24h úteis** para ler o conteúdo.
-        > **O Refinamento Técnico deve ser agendado em no máximo 72h úteis após o Pré-Refinamento.**
+    # ── RODAPÉ ────────────────────────────────────────────────────────────────
+    - type: markdown
+      attributes:
+          value: |
+              ---
+              > ⏱ **Após o Pré-Refinamento:** o Tech Lead tem até **48h úteis** para preparar o Artefato Técnico e compartilhar com o time.
+              > O time tem até **24h úteis** para ler o conteúdo.
+              > **O Refinamento Técnico deve ser agendado em no máximo 72h úteis após o Pré-Refinamento.**

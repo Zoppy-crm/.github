@@ -1,8 +1,7 @@
 ---
-name: "playwright"
-description: "Use when the task requires automating a real browser from the terminal (navigation, form filling, snapshots, screenshots, data extraction, UI-flow debugging) via `playwright-cli` or the bundled wrapper script."
+name: 'playwright'
+description: 'Use when the task requires automating a real browser from the terminal (navigation, form filling, snapshots, screenshots, data extraction, UI-flow debugging) via `playwright-cli` or the bundled wrapper script.'
 ---
-
 
 # Playwright CLI Skill
 
@@ -81,10 +80,10 @@ Minimal loop:
 
 Snapshot again after:
 
-- navigation
-- clicking elements that change the UI substantially
-- opening/closing modals or menus
-- tab switches
+-   navigation
+-   clicking elements that change the UI substantially
+-   opening/closing modals or menus
+-   tab switches
 
 Refs can go stale. When a command fails due to a missing ref, snapshot again.
 
@@ -133,15 +132,15 @@ Prefer the wrapper unless the repository already standardizes on a global instal
 
 Open only what you need:
 
-- CLI command reference: `references/cli.md`
-- Practical workflows and troubleshooting: `references/workflows.md`
+-   CLI command reference: `references/cli.md`
+-   Practical workflows and troubleshooting: `references/workflows.md`
 
 ## Guardrails
 
-- Always snapshot before referencing element ids like `e12`.
-- Re-snapshot when refs seem stale.
-- Prefer explicit commands over `eval` and `run-code` unless needed.
-- When you do not have a fresh snapshot, use placeholder refs like `eX` and say why; do not bypass refs with `run-code`.
-- Use `--headed` when a visual check will help.
-- When capturing artifacts in this repo, use `output/playwright/` and avoid introducing new top-level artifact folders.
-- Default to CLI commands and workflows, not Playwright test specs.
+-   Always snapshot before referencing element ids like `e12`.
+-   Re-snapshot when refs seem stale.
+-   Prefer explicit commands over `eval` and `run-code` unless needed.
+-   When you do not have a fresh snapshot, use placeholder refs like `eX` and say why; do not bypass refs with `run-code`.
+-   Use `--headed` when a visual check will help.
+-   When capturing artifacts in this repo, use `output/playwright/` and avoid introducing new top-level artifact folders.
+-   Default to CLI commands and workflows, not Playwright test specs.

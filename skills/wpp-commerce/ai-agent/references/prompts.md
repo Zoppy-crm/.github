@@ -25,12 +25,12 @@ legible to the model.
 
 The four `_build_*` helpers are all in the same file:
 
-| Block | Helper | Roughly responsible for |
-|---|---|---|
-| `<system_rules>` | `_build_system_rules(caps, link_rule)` (l.214) | Decision tree, formatting rules, tool orchestration constraints, link policy, image rules |
-| `<style_preferences>` | `_build_style_preferences(agent_config, product_example_extra)` (l.378) | Customer-tunable behavior — see `style_renderer` |
-| `<store_context>` | `_build_store_context(company, agent_config)` (l.323) | Store facts: brand_name, brand_tone, brand_description, target_audience, integration metadata, tone of voice |
-| `<tools>` | inline | `_build_tool_orchestration(caps)` (l.63) + `_build_handoff_reasons(reasons)` (l.17) |
+| Block                 | Helper                                                                  | Roughly responsible for                                                                                      |
+| --------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `<system_rules>`      | `_build_system_rules(caps, link_rule)` (l.214)                          | Decision tree, formatting rules, tool orchestration constraints, link policy, image rules                    |
+| `<style_preferences>` | `_build_style_preferences(agent_config, product_example_extra)` (l.378) | Customer-tunable behavior — see `style_renderer`                                                             |
+| `<store_context>`     | `_build_store_context(company, agent_config)` (l.323)                   | Store facts: brand_name, brand_tone, brand_description, target_audience, integration metadata, tone of voice |
+| `<tools>`             | inline                                                                  | `_build_tool_orchestration(caps)` (l.63) + `_build_handoff_reasons(reasons)` (l.17)                          |
 
 ## ToolCapabilities
 
@@ -54,18 +54,18 @@ agent really has** — nothing wishful.
 
 Built by `_build_system_rules(caps, link_rule)`. Contents:
 
-- The persona ("you are a sales assistant for an e-commerce store…")
-- Decision tree: how to choose between answering directly, calling
-  `catalog_agent`, calling `knowledge_agent`, or calling
-  `transfer_to_human`
-- Tool orchestration constraints (e.g. how many catalog searches before
-  giving up; how to relax queries iteratively)
-- Formatting constraints: link policy (`link_rule` differs between
-  Shopify and Nuvemshop because Nuvemshop has no cart tools, so the
-  agent must include the product page URL directly)
-- Image rules: how to react to vision content blocks
-- Output shape: how messages get split, when to use `[IMAGEM: <url>]`
-  markers (parsed by `ai/parsers/agent_response.py`)
+-   The persona ("you are a sales assistant for an e-commerce store…")
+-   Decision tree: how to choose between answering directly, calling
+    `catalog_agent`, calling `knowledge_agent`, or calling
+    `transfer_to_human`
+-   Tool orchestration constraints (e.g. how many catalog searches before
+    giving up; how to relax queries iteratively)
+-   Formatting constraints: link policy (`link_rule` differs between
+    Shopify and Nuvemshop because Nuvemshop has no cart tools, so the
+    agent must include the product page URL directly)
+-   Image rules: how to react to vision content blocks
+-   Output shape: how messages get split, when to use `[IMAGEM: <url>]`
+    markers (parsed by `ai/parsers/agent_response.py`)
 
 Most edits to "what the agent must always do" go here.
 
@@ -127,13 +127,13 @@ Adding a new AgentStyle field:
 
 `src/ai/agents/sales/presets.py`:
 
-| Preset | sales_posture | primary_objective | upsell | length | emoji | follow-up |
-|---|---|---|---|---|---|---|
-| `objetivo` | objective | conversion | none | minimal | none | never |
-| `consultivo` *(defaults)* | consultive | conversion | soft | concise | sparing | when_interest_shown |
-| `amigavel` | supportive | mixed | soft | concise | frequent | when_interest_shown |
-| `agressivo` | aggressive | conversion | proactive | concise | sparing | always_offer_cart |
-| `custom` | (empty placeholder) | | | | | |
+| Preset                    | sales_posture       | primary_objective | upsell    | length  | emoji    | follow-up           |
+| ------------------------- | ------------------- | ----------------- | --------- | ------- | -------- | ------------------- |
+| `objetivo`                | objective           | conversion        | none      | minimal | none     | never               |
+| `consultivo` _(defaults)_ | consultive          | conversion        | soft      | concise | sparing  | when_interest_shown |
+| `amigavel`                | supportive          | mixed             | soft      | concise | frequent | when_interest_shown |
+| `agressivo`               | aggressive          | conversion        | proactive | concise | sparing  | always_offer_cart   |
+| `custom`                  | (empty placeholder) |                   |           |         |          |                     |
 
 Customers select via `agent_config.preset` (and `preset_selected_at`
 records when). Once selected, the preset values are copied onto
@@ -144,15 +144,15 @@ fields after that.
 
 Built by `_build_store_context(company, agent_config)`. Contents:
 
-- `Brand name: ...`
-- `Brand description: ...`
-- `Target audience: ...`
-- `Provider: shopify | nuvemshop | ...`
-- Integration metadata (URL, admin token presence — never the secret
-  itself)
-- `Tone of voice: <tone>` injected just before `</store_context>` from
-  `agent_config.brand_tone` (see the helper's last replacement step in
-  `get_sales_prompt`)
+-   `Brand name: ...`
+-   `Brand description: ...`
+-   `Target audience: ...`
+-   `Provider: shopify | nuvemshop | ...`
+-   Integration metadata (URL, admin token presence — never the secret
+    itself)
+-   `Tone of voice: <tone>` injected just before `</store_context>` from
+    `agent_config.brand_tone` (see the helper's last replacement step in
+    `get_sales_prompt`)
 
 Store context is **per-company facts** — things that don't change
 turn-to-turn. Anything that changes per-message belongs in
@@ -175,7 +175,7 @@ tools_block = f"<tools>\n{tool_orchestration}{handoff_reasons_section}\n</tools>
 
 ### `_build_tool_orchestration(caps)` (l.63)
 
-Tells the agent which tools it has and *how* to use them — search
+Tells the agent which tools it has and _how_ to use them — search
 strategy, when to escalate to a sub-agent, what counts as enough info
 to give an answer, the iterative search-relaxation strategy for
 catalog queries (start exact → drop non-critical terms → expand
@@ -186,10 +186,10 @@ category, capped at 5 attempts).
 Lists every available handoff reason code the agent can pass to
 `transfer_to_human`:
 
-- **System reasons** — built into `SYSTEM_HANDOFF_REASONS` in
-  `src/domain/handoff/schemas.py` (always present)
-- **Custom reasons** — provided by the customer via
-  `agent_config.handoff_reasons` (list of `HandoffReason` rows)
+-   **System reasons** — built into `SYSTEM_HANDOFF_REASONS` in
+    `src/domain/handoff/schemas.py` (always present)
+-   **Custom reasons** — provided by the customer via
+    `agent_config.handoff_reasons` (list of `HandoffReason` rows)
 
 Custom reasons that include a `description` also generate an
 **Auto-transfer rule** appended to the prompt:
@@ -242,14 +242,14 @@ Process:
 
 ## File pointers
 
-- Assembly: `src/ai/agents/sales/prompt.py`
-- Style rendering: `src/ai/agents/sales/style_renderer.py`
-- Presets: `src/ai/agents/sales/presets.py`
-- AgentStyle schema: `src/domain/agent_config/agent_style.py`
-- Handoff reasons (system): `src/domain/handoff/schemas.py`
-  (`SYSTEM_HANDOFF_REASONS`)
-- Tests:
-  `tests/unit/ai/agents/sales/test_prompt.py`,
-  `test_prompt_golden.py`,
-  `test_style_renderer.py`,
-  `test_presets.py`
+-   Assembly: `src/ai/agents/sales/prompt.py`
+-   Style rendering: `src/ai/agents/sales/style_renderer.py`
+-   Presets: `src/ai/agents/sales/presets.py`
+-   AgentStyle schema: `src/domain/agent_config/agent_style.py`
+-   Handoff reasons (system): `src/domain/handoff/schemas.py`
+    (`SYSTEM_HANDOFF_REASONS`)
+-   Tests:
+    `tests/unit/ai/agents/sales/test_prompt.py`,
+    `test_prompt_golden.py`,
+    `test_style_renderer.py`,
+    `test_presets.py`

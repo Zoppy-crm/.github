@@ -105,17 +105,11 @@ O card deve ser criado com o seguinte formato no body (GitHub-flavored markdown)
 
 **Telas:**
 
--
+-   **Rotinas:**
 
-**Rotinas:**
+-   **Locais de impacto:**
 
--
-
-**Locais de impacto:**
-
--
-
-**Resultado Esperado:**
+-   **Resultado Esperado:**
 
 -
 
@@ -125,9 +119,7 @@ O card deve ser criado com o seguinte formato no body (GitHub-flavored markdown)
 
 **Frontend:**
 
--
-
-**API:**
+-   **API:**
 
 -
 
@@ -271,6 +263,7 @@ Normalização das duas variantes no `segment-rule.resolver.ts` com precedência
 Extraído para o método privado `normalizeSegmentSubRules`.
 
 ### Testes
+
 5 cenários cobrindo: PascalCase preenchido tem prioridade, camelCase usado quando PascalCase ausente/vazio, fallback `[]` quando ambos ausentes/vazios. Suíte total: 13/13 passando.
 ```
 

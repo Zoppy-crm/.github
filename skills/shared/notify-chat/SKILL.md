@@ -111,7 +111,7 @@ Repo `Zoppy-crm/zoppy-api`, branch `hotfix/6288-workflow-task-service` → base 
 
 ## Diretrizes
 
-- Não quebre o formato da primeira linha — o time filtra mensagens pelo prefixo `[TIPO - AMBIENTE]`
-- Não inclua summary do PR ou descrição técnica — o canal do chat é só alerta; o detalhe fica no PR/issue
-- Se o usuário pedir pra repostar com outro texto ou adicionar info, mantenha a primeira linha intacta e concatene abaixo dos links
-- Ao postar, confirme ao usuário com o status HTTP (200 = sucesso) e ecoe o texto que foi enviado
+-   Não quebre o formato da primeira linha — o time filtra mensagens pelo prefixo `[TIPO - AMBIENTE]`
+-   Não inclua summary do PR ou descrição técnica — o canal do chat é só alerta; o detalhe fica no PR/issue
+-   Se o usuário pedir pra repostar com outro texto ou adicionar info, mantenha a primeira linha intacta e concatene abaixo dos links
+-   Ao postar, confirme ao usuário com o status HTTP (200 = sucesso) e ecoe o texto que foi enviado

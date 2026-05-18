@@ -14,8 +14,12 @@ Padrões obrigatórios para testes E2E no zoppy-FE. Foco em **independência**, 
 ```typescript
 // ERRADO — testes acoplados em serial
 test.describe.serial('Fluxo', () => {
-    test('navegar para a página', async () => { /* navega */ });
-    test('verificar conteúdo', async () => { /* assume que já navegou */ });
+    test('navegar para a página', async () => {
+        /* navega */
+    });
+    test('verificar conteúdo', async () => {
+        /* assume que já navegou */
+    });
 });
 
 // CORRETO — cada teste navega por conta própria
@@ -74,7 +78,7 @@ Elementos com `[routerLink]` em `<div>` **não geram atributo `href`**, portanto
 
 ```html
 <!-- template Angular -->
-<div [routerLink]="item.route" [attr.data-testid]="'menu-item-' + item.id">
+<div [routerLink]="item.route" [attr.data-testid]="'menu-item-' + item.id"></div>
 ```
 
 ```typescript
@@ -195,9 +199,9 @@ test.describe.serial('CRUD completo', () => {
 
 ## Regra #10 — Testes devem ser rápidos
 
-- Cada teste deve completar em **< 30s** (exceto fluxos CRUD completos)
-- Se um teste demora mais, provavelmente está esperando algo desnecessário
-- Use `timeout` curto para falhar rápido e identificar o problema
+-   Cada teste deve completar em **< 30s** (exceto fluxos CRUD completos)
+-   Se um teste demora mais, provavelmente está esperando algo desnecessário
+-   Use `timeout` curto para falhar rápido e identificar o problema
 
 ## Padrão de autenticação do projeto
 
@@ -233,13 +237,13 @@ import type { Locator, Response } from '@playwright/test';
 
 ## Checklist ao criar testes E2E
 
-- [ ] Cada teste navega para a página por conta própria (`page.goto(...)`)
-- [ ] Nenhum `waitForLoadState('networkidle')`
-- [ ] Seletores usam `data-testid` — nunca `getByText` para interação
-- [ ] Elementos Angular com `[routerLink]` em `<div>` têm `[attr.data-testid]` no template
-- [ ] `getByRole('link')` evitado quando `<a>` contém ícones — usar `getByTestId`
-- [ ] Timeouts explícitos e curtos em `waitFor()`
-- [ ] Page errors capturados quando testando que features não dão erro
-- [ ] Testes podem rodar em qualquer ordem
-- [ ] Testes podem rodar em paralelo sem interferir um no outro
-- [ ] Todas as variáveis com tipo explícito (`const x: Locator = ...`)
+-   [ ] Cada teste navega para a página por conta própria (`page.goto(...)`)
+-   [ ] Nenhum `waitForLoadState('networkidle')`
+-   [ ] Seletores usam `data-testid` — nunca `getByText` para interação
+-   [ ] Elementos Angular com `[routerLink]` em `<div>` têm `[attr.data-testid]` no template
+-   [ ] `getByRole('link')` evitado quando `<a>` contém ícones — usar `getByTestId`
+-   [ ] Timeouts explícitos e curtos em `waitFor()`
+-   [ ] Page errors capturados quando testando que features não dão erro
+-   [ ] Testes podem rodar em qualquer ordem
+-   [ ] Testes podem rodar em paralelo sem interferir um no outro
+-   [ ] Todas as variáveis com tipo explícito (`const x: Locator = ...`)

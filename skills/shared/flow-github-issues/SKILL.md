@@ -11,15 +11,15 @@ Cria issues no GitHub da organização `Zoppy-crm` com hierarquia adequada (epic
 
 Os templates da org vivem em `Zoppy-crm/.github/.github/ISSUE_TEMPLATE/`. Sempre alinhar o body da issue com o template correspondente:
 
-| Tipo de issue | Template oficial | Labels auto-aplicadas pelo form |
-|---|---|---|
-| Epic de roadmap | `epic-roadmap.yml` | `roadmap` |
-| Refinamento técnico | `technical-refinement.yml` | `refinement`, `work: feature` |
-| Bug report | `bug-report.yml` | (variam) |
-| Demanda técnica | `technical-demand.yml` | (variam) |
-| POC | `poc.yml` | (variam) |
-| Card geral | `general-card.yml` | (variam) |
-| Tech lead preparation | `tech-lead-preparation.yml` | (variam) |
+| Tipo de issue         | Template oficial            | Labels auto-aplicadas pelo form |
+| --------------------- | --------------------------- | ------------------------------- |
+| Epic de roadmap       | `epic-roadmap.yml`          | `roadmap`                       |
+| Refinamento técnico   | `technical-refinement.yml`  | `refinement`, `work: feature`   |
+| Bug report            | `bug-report.yml`            | (variam)                        |
+| Demanda técnica       | `technical-demand.yml`      | (variam)                        |
+| POC                   | `poc.yml`                   | (variam)                        |
+| Card geral            | `general-card.yml`          | (variam)                        |
+| Tech lead preparation | `tech-lead-preparation.yml` | (variam)                        |
 
 **Importante:** quando criar issue via `gh issue create` (bypass do form), as labels auto-aplicadas pelo template **NÃO são adicionadas automaticamente** — passar manualmente via `--label`.
 
@@ -46,29 +46,30 @@ O workflow `auto-label-refinement.yml` (em `Zoppy-crm/.github/.github/workflows/
 
 Analise o que o usuário quer criar:
 
-| Intenção detectada | Modo |
-|--------------------|------|
-| PRD + plano com fases existem em `docs/` | **Estruturado** — epic pai + sub-issues por fase |
-| Quer documentar qualquer outra coisa (feature, tarefa, bug, chore) | **Ad-hoc** — uma ou mais issues avulsas |
-| Quer apenas o epic vazio, sem sub-issues ainda | **Epic Simples** |
+| Intenção detectada                                                 | Modo                                             |
+| ------------------------------------------------------------------ | ------------------------------------------------ |
+| PRD + plano com fases existem em `docs/`                           | **Estruturado** — epic pai + sub-issues por fase |
+| Quer documentar qualquer outra coisa (feature, tarefa, bug, chore) | **Ad-hoc** — uma ou mais issues avulsas          |
+| Quer apenas o epic vazio, sem sub-issues ainda                     | **Epic Simples**                                 |
 
 ### 1.2 Coletar informações obrigatórias
 
 **Antes de executar qualquer `gh` command**, confirme as informações abaixo. Detecte pelo contexto sempre que possível — só pergunte o que não ficou claro:
 
-| Informação | Como obter | Default |
-|------------|------------|---------|
-| **Repositório** | Detectar pela branch atual, nome do plano/PRD, menção explícita. Se ambíguo: perguntar | — |
-| **Epic label** | Detectar pelo nome da feature, PRD ou menção no prompt. **Format real é `epic: <nome>` com espaço após `:`** (ex: `epic: envio-email`, `epic: chat-whatsapp`). Validar via `gh label list --repo <repo> \| grep "epic:"` antes de usar; se não existir, perguntar se pode criar | — |
-| **Tipo de trabalho** | Detectar pela natureza da tarefa | `work: feature` |
+| Informação           | Como obter                                                                                                                                                                                                                                                                      | Default         |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| **Repositório**      | Detectar pela branch atual, nome do plano/PRD, menção explícita. Se ambíguo: perguntar                                                                                                                                                                                          | —               |
+| **Epic label**       | Detectar pelo nome da feature, PRD ou menção no prompt. **Format real é `epic: <nome>` com espaço após `:`** (ex: `epic: envio-email`, `epic: chat-whatsapp`). Validar via `gh label list --repo <repo> \| grep "epic:"` antes de usar; se não existir, perguntar se pode criar | —               |
+| **Tipo de trabalho** | Detectar pela natureza da tarefa                                                                                                                                                                                                                                                | `work: feature` |
 
 **Repositórios disponíveis na organização `Zoppy-crm`:**
-- `zoppy-FE` — Frontend Angular
-- `zoppy-api` — Backend NestJS principal
-- `zoppy-workflow` — Motor de workflows
-- `zoppy-model` — Modelos de dados
-- `zoppy-admin-FE` — Painel administrativo
-- `ui-components` — Design system
+
+-   `zoppy-FE` — Frontend Angular
+-   `zoppy-api` — Backend NestJS principal
+-   `zoppy-workflow` — Motor de workflows
+-   `zoppy-model` — Modelos de dados
+-   `zoppy-admin-FE` — Painel administrativo
+-   `ui-components` — Design system
 
 Se o usuário mencionar outro repositório, use o nome informado.
 
@@ -86,16 +87,17 @@ Se o usuário mencionar outro repositório, use o nome informado.
 
 **O que cada issue vai conter:**
 
-- **Epic (issue pai):**
-  - Conteúdo completo do PRD embutido diretamente no body (não link — colar o markdown)
-  - Visão geral do plano de implementação
-  - Checklist das fases
-  - Critérios de aceite gerais
+-   **Epic (issue pai):**
 
-- **Sub-issue por fase:**
-  - Título: `[Fase N] <título da fase>`
-  - Conteúdo completo do plano da fase embutido diretamente no body (não link — colar o markdown)
-  - Critérios de aceite da fase
+    -   Conteúdo completo do PRD embutido diretamente no body (não link — colar o markdown)
+    -   Visão geral do plano de implementação
+    -   Checklist das fases
+    -   Critérios de aceite gerais
+
+-   **Sub-issue por fase:**
+    -   Título: `[Fase N] <título da fase>`
+    -   Conteúdo completo do plano da fase embutido diretamente no body (não link — colar o markdown)
+    -   Critérios de aceite da fase
 
 > **Regra:** Nunca inserir links para arquivos `.md` do repositório. Sempre colar o conteúdo do arquivo diretamente no body da issue em markdown.
 
@@ -103,8 +105,8 @@ Se o usuário mencionar outro repositório, use o nome informado.
 
 Use o que o usuário forneceu diretamente. Explore o código quando necessário para preencher o detalhamento técnico. Se o conteúdo estiver incompleto, pergunte apenas:
 
-- O que precisa ser feito? (se não claro)
-- Quais os critérios de aceite?
+-   O que precisa ser feito? (se não claro)
+-   Quais os critérios de aceite?
 
 Não faça perguntas desnecessárias — se o usuário deu contexto suficiente, infira e confirme no rascunho.
 
@@ -152,8 +154,9 @@ Para issues avulsas (Ad-hoc), mostrar apenas o título, repo e labels antes de c
 ```
 
 Ajustar `work: feature` conforme o tipo:
-- Bug: `--label "work: fix"`
-- Chore/infra: `--label "work: chore"`
+
+-   Bug: `--label "work: fix"`
+-   Chore/infra: `--label "work: chore"`
 
 **Epic (parent):** as 4 acima + a label `roadmap` (que o template oficial `epic-roadmap.yml` aplicaria automaticamente, mas precisa ser passada manual quando criando via API).
 
@@ -338,14 +341,14 @@ Se o handoff não tiver as informações necessárias, perguntar ao usuário: "Q
 
 Antes de preencher, pergunte ao usuário:
 
-| Campo | Tipo | Opções | Pergunta |
-|-------|------|--------|----------|
-| **Priority** | Single Select | `P0`, `P1`, `P2` | Qual a prioridade? |
-| **Size** | Single Select | `XS`, `S`, `M`, `L`, `XL` | Qual o tamanho? |
-| **Estimate** | Number | Horas estimadas | Quantas horas foram estimadas? |
-| **Horas Gastas** | Number | Horas reais | Quantas horas foram gastas? |
-| **Start date** | Date | `YYYY-MM-DD` | Qual a data de início? |
-| **Target date** | Date | `YYYY-MM-DD` | Qual a data de entrega? |
+| Campo            | Tipo          | Opções                    | Pergunta                       |
+| ---------------- | ------------- | ------------------------- | ------------------------------ |
+| **Priority**     | Single Select | `P0`, `P1`, `P2`          | Qual a prioridade?             |
+| **Size**         | Single Select | `XS`, `S`, `M`, `L`, `XL` | Qual o tamanho?                |
+| **Estimate**     | Number        | Horas estimadas           | Quantas horas foram estimadas? |
+| **Horas Gastas** | Number        | Horas reais               | Quantas horas foram gastas?    |
+| **Start date**   | Date          | `YYYY-MM-DD`              | Qual a data de início?         |
+| **Target date**  | Date          | `YYYY-MM-DD`              | Qual a data de entrega?        |
 
 Inferir pelo contexto quando possível (ex: se a issue é uma fase pequena, sugira `S` e `P1`; se foi concluída hoje, start date e target date = hoje). Confirme antes de aplicar.
 
@@ -366,6 +369,7 @@ for item in data.get('items', []):
 ### 7.3 Preencher os campos obrigatórios
 
 **Priority** (Single Select):
+
 ```bash
 # Opções: P0=79628723, P1=0a877460, P2=da944a9c
 gh project item-edit \
@@ -376,6 +380,7 @@ gh project item-edit \
 ```
 
 **Size** (Single Select):
+
 ```bash
 # Opções: XS=6c6483d2, S=f784b110, M=7515a9f1, L=817d0097, XL=db339eb2
 gh project item-edit \
@@ -386,6 +391,7 @@ gh project item-edit \
 ```
 
 **Estimate** (Number):
+
 ```bash
 gh project item-edit \
   --project-id PVT_kwDOCAubUc4BQdrV \
@@ -395,6 +401,7 @@ gh project item-edit \
 ```
 
 **Horas Gastas** (Number — usar GraphQL):
+
 ```bash
 gh api graphql -f query='
 mutation {
@@ -408,6 +415,7 @@ mutation {
 ```
 
 **Start date** (Date — usar GraphQL):
+
 ```bash
 gh api graphql -f query='
 mutation {
@@ -421,6 +429,7 @@ mutation {
 ```
 
 **Target date** (Date — usar GraphQL):
+
 ```bash
 gh api graphql -f query='
 mutation {
@@ -450,56 +459,56 @@ gh project item-edit \
 
 ### 7.5 Referência rápida de IDs
 
-| Campo | Field ID | Tipo | Como atualizar |
-|-------|----------|------|----------------|
-| Status | `PVTSSF_lADOCAubUc4BQdrVzg-k0-w` | SingleSelect | `gh project item-edit` |
-| Priority | `PVTSSF_lADOCAubUc4BQdrVzg-k1Ns` | SingleSelect | `gh project item-edit` |
-| Size | `PVTSSF_lADOCAubUc4BQdrVzg-k1Nw` | SingleSelect | `gh project item-edit` |
-| Estimate | `PVTF_lADOCAubUc4BQdrVzg-k1N0` | Number | GraphQL `updateProjectV2ItemFieldValue` |
-| Horas Gastas | `PVTF_lADOCAubUc4BQdrVzg-opYQ` | Number | GraphQL `updateProjectV2ItemFieldValue` |
-| Start date | `PVTF_lADOCAubUc4BQdrVzg-k1N4` | Date | GraphQL `updateProjectV2ItemFieldValue` |
-| Target date | `PVTF_lADOCAubUc4BQdrVzg-k1N8` | Date | GraphQL `updateProjectV2ItemFieldValue` |
+| Campo        | Field ID                         | Tipo         | Como atualizar                          |
+| ------------ | -------------------------------- | ------------ | --------------------------------------- |
+| Status       | `PVTSSF_lADOCAubUc4BQdrVzg-k0-w` | SingleSelect | `gh project item-edit`                  |
+| Priority     | `PVTSSF_lADOCAubUc4BQdrVzg-k1Ns` | SingleSelect | `gh project item-edit`                  |
+| Size         | `PVTSSF_lADOCAubUc4BQdrVzg-k1Nw` | SingleSelect | `gh project item-edit`                  |
+| Estimate     | `PVTF_lADOCAubUc4BQdrVzg-k1N0`   | Number       | GraphQL `updateProjectV2ItemFieldValue` |
+| Horas Gastas | `PVTF_lADOCAubUc4BQdrVzg-opYQ`   | Number       | GraphQL `updateProjectV2ItemFieldValue` |
+| Start date   | `PVTF_lADOCAubUc4BQdrVzg-k1N4`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
+| Target date  | `PVTF_lADOCAubUc4BQdrVzg-k1N8`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
 
 > **Regra crítica:** Campos do tipo `NUMBER` e `DATE` **não funcionam com `gh project item-edit`**. Sempre usar a mutation GraphQL `updateProjectV2ItemFieldValue` com `value: { number: X }` ou `value: { date: "YYYY-MM-DD" }` respectivamente.
 
-| Status | Option ID |
-|--------|-----------|
-| Done | `98236657` |
+| Status      | Option ID  |
+| ----------- | ---------- |
+| Done        | `98236657` |
 | In progress | `47fc9ee4` |
-| To Do | `61e4505c` |
-| Backlog | `f75ad846` |
+| To Do       | `61e4505c` |
+| Backlog     | `f75ad846` |
 
-| Priority | Option ID |
-|----------|-----------|
-| P0 | `79628723` |
-| P1 | `0a877460` |
-| P2 | `da944a9c` |
+| Priority | Option ID  |
+| -------- | ---------- |
+| P0       | `79628723` |
+| P1       | `0a877460` |
+| P2       | `da944a9c` |
 
-| Size | Option ID |
-|------|-----------|
-| XS | `6c6483d2` |
-| S | `f784b110` |
-| M | `7515a9f1` |
-| L | `817d0097` |
-| XL | `db339eb2` |
+| Size | Option ID  |
+| ---- | ---------- |
+| XS   | `6c6483d2` |
+| S    | `f784b110` |
+| M    | `7515a9f1` |
+| L    | `817d0097` |
+| XL   | `db339eb2` |
 
 ---
 
 ## Regras
 
-- **Nunca criar issues sem confirmação** do rascunho pelo usuário
-- **Sempre `--assignee @me`** — nunca deixar sem atribuição (a não ser que o usuário peça explicitamente sem assignee)
-- **Sempre verificar assignee em epics existentes** — ao vincular sub-issues a um epic pré-existente, checar se o epic tem assignee e setar se não tiver
-- **Sempre 4 labels** obrigatórias em refinements: `refinement`, `origin: master`, `work: feature` (ou fix/chore), `epic: <nome>` (com espaço após `:`)
-- **Para epics, adicionar `roadmap`** como 5ª label (auto-aplicada pelo template oficial mas não quando criado via API)
-- **Para issues criadas com auxílio de IA, aplicar `ai-assisted` manualmente** — o workflow `auto-label-refinement.yml` não propaga pra outros repos
-- **Sempre incluir seção `### Criado com auxílio de IA?` no body** — alinha com o template oficial `technical-refinement.yml`
-- **Sempre capturar a URL** de cada issue criada para vincular sub-issues e adicionar ao board
-- **Sempre setar campos do board ao adicionar** — Priority, Size e Estimate devem ser preenchidos imediatamente ao adicionar issue ao Project Board. Issues sem esses campos ficam invisíveis quando há filtros ativos
-- **Sempre verificar campos antes de mover status** — ao mover para In Progress/Done, garantir que Priority, Size, Estimate e assignee estão preenchidos
-- **Usar GraphQL para vincular sub-issues** — `addSubIssue` mutation com `node_id`, não REST API
-- **Usar GraphQL para campos Number e Date no board** — `gh project item-edit` não funciona pra esses tipos; só single-select.
-- **Preferir `--body-file` sobre `--body` HEREDOC** — quando o body é longo (> 50 linhas), evita escape hell.
-- **Capturar Item ID via `--format json | jq -r '.id'` no `item-add`** — mais rápido que listar todos os items do board.
-- **Não fazer perguntas desnecessárias** — inferir pelo contexto e confirmar no rascunho
-- **Repositório pode mudar por sub-issue** — para milestones cross-repo, pergunte ao dev em qual repo cada sub-issue deve ficar
+-   **Nunca criar issues sem confirmação** do rascunho pelo usuário
+-   **Sempre `--assignee @me`** — nunca deixar sem atribuição (a não ser que o usuário peça explicitamente sem assignee)
+-   **Sempre verificar assignee em epics existentes** — ao vincular sub-issues a um epic pré-existente, checar se o epic tem assignee e setar se não tiver
+-   **Sempre 4 labels** obrigatórias em refinements: `refinement`, `origin: master`, `work: feature` (ou fix/chore), `epic: <nome>` (com espaço após `:`)
+-   **Para epics, adicionar `roadmap`** como 5ª label (auto-aplicada pelo template oficial mas não quando criado via API)
+-   **Para issues criadas com auxílio de IA, aplicar `ai-assisted` manualmente** — o workflow `auto-label-refinement.yml` não propaga pra outros repos
+-   **Sempre incluir seção `### Criado com auxílio de IA?` no body** — alinha com o template oficial `technical-refinement.yml`
+-   **Sempre capturar a URL** de cada issue criada para vincular sub-issues e adicionar ao board
+-   **Sempre setar campos do board ao adicionar** — Priority, Size e Estimate devem ser preenchidos imediatamente ao adicionar issue ao Project Board. Issues sem esses campos ficam invisíveis quando há filtros ativos
+-   **Sempre verificar campos antes de mover status** — ao mover para In Progress/Done, garantir que Priority, Size, Estimate e assignee estão preenchidos
+-   **Usar GraphQL para vincular sub-issues** — `addSubIssue` mutation com `node_id`, não REST API
+-   **Usar GraphQL para campos Number e Date no board** — `gh project item-edit` não funciona pra esses tipos; só single-select.
+-   **Preferir `--body-file` sobre `--body` HEREDOC** — quando o body é longo (> 50 linhas), evita escape hell.
+-   **Capturar Item ID via `--format json | jq -r '.id'` no `item-add`** — mais rápido que listar todos os items do board.
+-   **Não fazer perguntas desnecessárias** — inferir pelo contexto e confirmar no rascunho
+-   **Repositório pode mudar por sub-issue** — para milestones cross-repo, pergunte ao dev em qual repo cada sub-issue deve ficar

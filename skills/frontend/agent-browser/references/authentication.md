@@ -6,18 +6,18 @@ Login flows, session persistence, OAuth, 2FA, and authenticated browsing.
 
 ## Contents
 
-- [Import Auth from Your Browser](#import-auth-from-your-browser)
-- [Persistent Profiles](#persistent-profiles)
-- [Session Persistence](#session-persistence)
-- [Basic Login Flow](#basic-login-flow)
-- [Saving Authentication State](#saving-authentication-state)
-- [Restoring Authentication](#restoring-authentication)
-- [OAuth / SSO Flows](#oauth--sso-flows)
-- [Two-Factor Authentication](#two-factor-authentication)
-- [HTTP Basic Auth](#http-basic-auth)
-- [Cookie-Based Auth](#cookie-based-auth)
-- [Token Refresh Handling](#token-refresh-handling)
-- [Security Best Practices](#security-best-practices)
+-   [Import Auth from Your Browser](#import-auth-from-your-browser)
+-   [Persistent Profiles](#persistent-profiles)
+-   [Session Persistence](#session-persistence)
+-   [Basic Login Flow](#basic-login-flow)
+-   [Saving Authentication State](#saving-authentication-state)
+-   [Restoring Authentication](#restoring-authentication)
+-   [OAuth / SSO Flows](#oauth--sso-flows)
+-   [Two-Factor Authentication](#two-factor-authentication)
+-   [HTTP Basic Auth](#http-basic-auth)
+-   [Cookie-Based Auth](#cookie-based-auth)
+-   [Token Refresh Handling](#token-refresh-handling)
+-   [Security Best Practices](#security-best-practices)
 
 ## Import Auth from Your Browser
 
@@ -278,26 +278,29 @@ fi
 ## Security Best Practices
 
 1. **Never commit state files** - They contain session tokens
-   ```bash
-   echo "*.auth-state.json" >> .gitignore
-   ```
+
+    ```bash
+    echo "*.auth-state.json" >> .gitignore
+    ```
 
 2. **Use environment variables for credentials**
-   ```bash
-   agent-browser fill @e1 "$APP_USERNAME"
-   agent-browser fill @e2 "$APP_PASSWORD"
-   ```
+
+    ```bash
+    agent-browser fill @e1 "$APP_USERNAME"
+    agent-browser fill @e2 "$APP_PASSWORD"
+    ```
 
 3. **Clean up after automation**
-   ```bash
-   agent-browser cookies clear
-   rm -f ./auth-state.json
-   ```
+
+    ```bash
+    agent-browser cookies clear
+    rm -f ./auth-state.json
+    ```
 
 4. **Use short-lived sessions for CI/CD**
-   ```bash
-   # Don't persist state in CI
-   agent-browser open https://app.example.com/login
-   # ... login and perform actions ...
-   agent-browser close  # Session ends, nothing persisted
-   ```
+    ```bash
+    # Don't persist state in CI
+    agent-browser open https://app.example.com/login
+    # ... login and perform actions ...
+    agent-browser close  # Session ends, nothing persisted
+    ```

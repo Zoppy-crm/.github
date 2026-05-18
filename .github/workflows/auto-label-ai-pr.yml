@@ -1,93 +1,93 @@
 name: Auto Label AI-Assisted PRs
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+    pull_request:
+        types: [opened, synchronize]
 
 permissions:
-  pull-requests: write
-  contents: read
+    pull-requests: write
+    contents: read
 
 jobs:
-  detect-ai:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
+    detect-ai:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/github-script@v7
+              with:
+                  script: |
+                      const pr = context.payload.pull_request;
 
-            // Fetch all commits in the PR
-            const commits = await github.paginate(github.rest.pulls.listCommits, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              per_page: 100,
-            });
+                      // Fetch all commits in the PR
+                      const commits = await github.paginate(github.rest.pulls.listCommits, {
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: pr.number,
+                        per_page: 100,
+                      });
 
-            // AI co-author patterns
-            const aiPatterns = [
-              /Co-Authored-By:.*Claude/i,
-              /Co-Authored-By:.*anthropic/i,
-              /Co-Authored-By:.*Cursor/i,
-              /Co-Authored-By:.*github-copilot/i,
-              /Co-Authored-By:.*copilot/i,
-              /Generated-By:.*Claude/i,
-            ];
+                      // AI co-author patterns
+                      const aiPatterns = [
+                        /Co-Authored-By:.*Claude/i,
+                        /Co-Authored-By:.*anthropic/i,
+                        /Co-Authored-By:.*Cursor/i,
+                        /Co-Authored-By:.*github-copilot/i,
+                        /Co-Authored-By:.*copilot/i,
+                        /Generated-By:.*Claude/i,
+                      ];
 
-            let aiCommits = 0;
-            let totalCommits = commits.length;
-            const aiAuthors = new Set();
+                      let aiCommits = 0;
+                      let totalCommits = commits.length;
+                      const aiAuthors = new Set();
 
-            for (const commit of commits) {
-              const message = commit.commit.message || '';
-              for (const pattern of aiPatterns) {
-                if (pattern.test(message)) {
-                  aiCommits++;
-                  const match = message.match(/Co-Authored-By:\s*(.+)/i);
-                  if (match) aiAuthors.add(match[1].trim());
-                  break;
-                }
-              }
-            }
+                      for (const commit of commits) {
+                        const message = commit.commit.message || '';
+                        for (const pattern of aiPatterns) {
+                          if (pattern.test(message)) {
+                            aiCommits++;
+                            const match = message.match(/Co-Authored-By:\s*(.+)/i);
+                            if (match) aiAuthors.add(match[1].trim());
+                            break;
+                          }
+                        }
+                      }
 
-            const hasAi = aiCommits > 0;
-            const currentLabels = pr.labels.map(l => l.name);
-            const hasLabel = currentLabels.includes('ai-assisted');
+                      const hasAi = aiCommits > 0;
+                      const currentLabels = pr.labels.map(l => l.name);
+                      const hasLabel = currentLabels.includes('ai-assisted');
 
-            if (hasAi && !hasLabel) {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                labels: ['ai-assisted'],
-              });
+                      if (hasAi && !hasLabel) {
+                        await github.rest.issues.addLabels({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: pr.number,
+                          labels: ['ai-assisted'],
+                        });
 
-              const pct = Math.round((aiCommits / totalCommits) * 100);
-              const authors = [...aiAuthors].join(', ');
+                        const pct = Math.round((aiCommits / totalCommits) * 100);
+                        const authors = [...aiAuthors].join(', ');
 
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                body: [
-                  '<!-- ai-assisted-detection -->',
-                  `🤖 **AI-assisted PR detected**`,
-                  '',
-                  `**${aiCommits}/${totalCommits}** commits (${pct}%) com co-autoria de IA.`,
-                  `Ferramentas: ${authors || 'não identificada'}`,
-                  '',
-                  '_Label `ai-assisted` aplicada automaticamente._',
-                ].join('\n'),
-              });
+                        await github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: pr.number,
+                          body: [
+                            '<!-- ai-assisted-detection -->',
+                            `🤖 **AI-assisted PR detected**`,
+                            '',
+                            `**${aiCommits}/${totalCommits}** commits (${pct}%) com co-autoria de IA.`,
+                            `Ferramentas: ${authors || 'não identificada'}`,
+                            '',
+                            '_Label `ai-assisted` aplicada automaticamente._',
+                          ].join('\n'),
+                        });
 
-              core.info(`AI detected: ${aiCommits}/${totalCommits} commits. Label applied.`);
-            } else if (!hasAi && hasLabel) {
-              // Edge case: label was applied but new push has no AI commits
-              // Keep the label — once AI-assisted, always AI-assisted for that PR
-              core.info('No AI commits in latest push, but label already exists. Keeping.');
-            } else if (hasAi && hasLabel) {
-              core.info(`AI already labeled. ${aiCommits}/${totalCommits} commits.`);
-            } else {
-              core.info('No AI co-authorship detected.');
-            }
+                        core.info(`AI detected: ${aiCommits}/${totalCommits} commits. Label applied.`);
+                      } else if (!hasAi && hasLabel) {
+                        // Edge case: label was applied but new push has no AI commits
+                        // Keep the label — once AI-assisted, always AI-assisted for that PR
+                        core.info('No AI commits in latest push, but label already exists. Keeping.');
+                      } else if (hasAi && hasLabel) {
+                        core.info(`AI already labeled. ${aiCommits}/${totalCommits} commits.`);
+                      } else {
+                        core.info('No AI co-authorship detected.');
+                      }

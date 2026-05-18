@@ -1,49 +1,49 @@
 name: Auto Label Bug Reports
 
 on:
-  issues:
-    types: [opened]
+    issues:
+        types: [opened]
 
 jobs:
-  auto-label:
-    if: contains(github.event.issue.labels.*.name, 'bug')
-    runs-on: self-hosted
-    permissions:
-      issues: write
+    auto-label:
+        if: contains(github.event.issue.labels.*.name, 'bug')
+        runs-on: self-hosted
+        permissions:
+            issues: write
 
-    steps:
-      - name: Parse issue form and apply labels
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const body = context.payload.issue.body || '';
-            const labels = [];
+        steps:
+            - name: Parse issue form and apply labels
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const body = context.payload.issue.body || '';
+                      const labels = [];
 
-            if (body.includes('[X] Sim, foi reportado por um cliente')) {
-              labels.push('client:report');
-            }
+                      if (body.includes('[X] Sim, foi reportado por um cliente')) {
+                        labels.push('client:report');
+                      }
 
-            const envMatch = body.match(/### Ambiente\s*\n\s*\n\s*(.+)/);
-            if (envMatch) {
-              const env = envMatch[1].trim();
-              const envLabelMap = {
-                'Produção': 'origin: master',
-                'Staging': 'origin: staging',
-                'Mirror': 'origin: mirror',
-              };
-              if (envLabelMap[env]) {
-                labels.push(envLabelMap[env]);
-              }
-            }
+                      const envMatch = body.match(/### Ambiente\s*\n\s*\n\s*(.+)/);
+                      if (envMatch) {
+                        const env = envMatch[1].trim();
+                        const envLabelMap = {
+                          'Produção': 'origin: master',
+                          'Staging': 'origin: staging',
+                          'Mirror': 'origin: mirror',
+                        };
+                        if (envLabelMap[env]) {
+                          labels.push(envLabelMap[env]);
+                        }
+                      }
 
-            if (labels.length > 0) {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                labels,
-              });
-              core.info(`Labels applied: ${labels.join(', ')}`);
-            } else {
-              core.info('No dynamic labels to apply.');
-            }
+                      if (labels.length > 0) {
+                        await github.rest.issues.addLabels({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: context.issue.number,
+                          labels,
+                        });
+                        core.info(`Labels applied: ${labels.join(', ')}`);
+                      } else {
+                        core.info('No dynamic labels to apply.');
+                      }

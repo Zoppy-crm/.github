@@ -203,9 +203,10 @@ agent-browser frame main              # Return to main frame
 ```
 
 The `frame` command accepts:
-- **Element refs** — `frame @e3` resolves the ref to an iframe element
-- **CSS selectors** — `frame "#payment-iframe"` finds the iframe by selector
-- **Frame name/URL** — matches against the browser's frame tree
+
+-   **Element refs** — `frame @e3` resolves the ref to an iframe element
+-   **CSS selectors** — `frame "#payment-iframe"` finds the iframe by selector
+-   **Frame name/URL** — matches against the browser's frame tree
 
 ## Dialogs
 

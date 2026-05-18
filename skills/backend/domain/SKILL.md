@@ -1,13 +1,13 @@
 ---
 name: domain
 description: >
-  Guide for creating and modifying Domain classes in the zoppy-api project. Use this skill
-  whenever you need to create a new Domain, add custom queries to an existing Domain, register
-  lifecycle hooks (post-create/update/delete), integrate a Domain with BullMQ queues, or decide
-  between RepositoryAdapter and OpenSearchAdapter. Also covers how to register the Domain in
-  DomainModule. Trigger this skill when the user mentions: "create domain", "new domain",
-  "add query to domain", "domain hook", "registerHook", "RepositoryAdapter",
-  "domain module", or when implementing a new entity in the domain layer.
+    Guide for creating and modifying Domain classes in the zoppy-api project. Use this skill
+    whenever you need to create a new Domain, add custom queries to an existing Domain, register
+    lifecycle hooks (post-create/update/delete), integrate a Domain with BullMQ queues, or decide
+    between RepositoryAdapter and OpenSearchAdapter. Also covers how to register the Domain in
+    DomainModule. Trigger this skill when the user mentions: "create domain", "new domain",
+    "add query to domain", "domain hook", "registerHook", "RepositoryAdapter",
+    "domain module", or when implementing a new entity in the domain layer.
 ---
 
 # Creating a Domain in zoppy-api
@@ -19,10 +19,11 @@ coupled business rules. A Domain is not a simple repository: it exposes rich que
 automatically react to persistence events (hooks).
 
 Every Domain extends `RepositoryAdapter<T>` — a base class that already handles:
-- Automatic filtering by `companyId` from the current session
-- Soft deletes (`deletedAt`)
-- Transaction control
-- Hook emission after persistence
+
+-   Automatic filtering by `companyId` from the current session
+-   Soft deletes (`deletedAt`)
+-   Transaction control
+-   Hook emission after persistence
 
 ## Rich domain, not anemic
 
@@ -30,16 +31,16 @@ Push business rules down into the Domain instead of letting them pile up in the 
 
 Concretely, these belong to the Domain (not the Application):
 
-- **State transitions** — `markAsIssued`, `markAsCancelled`, `markAsFailed`, `markAsArchived`. The Domain validates the previous state if needed, mutates, and `updateOne`s.
-- **"Create with defaults" / "next of"** — `createForInvoice(invoice, provider)`, `findNextAttemptNumberFor(invoiceId)`. The rule for choosing the attempt number / centavos conversion / default provider stays in the Domain.
-- **Entity-scoped queries** — `findActiveByInvoiceId`, `findPendingForRetry`, `findByExternalReference`. Anything answerable from a single entity (and its parents/children).
-- **Field-update bundles** — `updateS3Keys(id, pdfKey, xmlKey)`. The Domain knows which fields go together.
+-   **State transitions** — `markAsIssued`, `markAsCancelled`, `markAsFailed`, `markAsArchived`. The Domain validates the previous state if needed, mutates, and `updateOne`s.
+-   **"Create with defaults" / "next of"** — `createForInvoice(invoice, provider)`, `findNextAttemptNumberFor(invoiceId)`. The rule for choosing the attempt number / centavos conversion / default provider stays in the Domain.
+-   **Entity-scoped queries** — `findActiveByInvoiceId`, `findPendingForRetry`, `findByExternalReference`. Anything answerable from a single entity (and its parents/children).
+-   **Field-update bundles** — `updateS3Keys(id, pdfKey, xmlKey)`. The Domain knows which fields go together.
 
 These stay in an Application or Service (not the Domain):
 
-- Orchestration across **multiple unrelated** domains (e.g., loading an Invoice + Company + creating a TaxInvoice + recording an event).
-- Calls to **queue services** (enqueue follow-up jobs).
-- Calls to **ports / external SDKs** (the Application talks to the gateway lib, not the Domain).
+-   Orchestration across **multiple unrelated** domains (e.g., loading an Invoice + Company + creating a TaxInvoice + recording an event).
+-   Calls to **queue services** (enqueue follow-up jobs).
+-   Calls to **ports / external SDKs** (the Application talks to the gateway lib, not the Domain).
 
 Good Domain methods return the updated entity when they mutate, so callers don't double-fetch.
 
@@ -69,10 +70,11 @@ export class MyEntityDomain extends RepositoryAdapter<MyEntity> {
 ```
 
 **Constructor rules:**
-- `session` and `repository` are always required
-- `logService` is optional, but required if you register hooks (enables logging hook errors)
-- Always pass `logService` as the third argument to `super()` if the Domain has hooks
-- The `ProviderNames` name follows the convention `XRepository` where X is the entity name
+
+-   `session` and `repository` are always required
+-   `logService` is optional, but required if you register hooks (enables logging hook errors)
+-   Always pass `logService` as the third argument to `super()` if the Domain has hooks
+-   The `ProviderNames` name follows the convention `XRepository` where X is the entity name
 
 ---
 
@@ -108,35 +110,35 @@ export class WcCouponDomain extends RepositoryAdapter<Coupon> {
 
     // Raw SQL when necessary — use this.session.getCompany().id explicitly
     public async findBetweenDates(start: Date, end: Date): Promise<Coupon[]> {
-        return await this.rawQuery(
-            `SELECT * FROM WcCoupons WHERE expiryDate BETWEEN ? AND ? AND companyId = ?`,
-            { replacements: [start, end, this.session.getCompany().id], type: QueryTypes.SELECT }
-        );
+        return await this.rawQuery(`SELECT * FROM WcCoupons WHERE expiryDate BETWEEN ? AND ? AND companyId = ?`, {
+            replacements: [start, end, this.session.getCompany().id],
+            type: QueryTypes.SELECT
+        });
     }
 }
 ```
 
 **Available methods in RepositoryAdapter:**
 
-| Method | Description |
-|--------|-------------|
-| `findById(id, withTrashed?)` | Find by PK |
-| `findByIdOrFail(id)` | Find by PK or throw error |
-| `findOne(options, withTrashed?)` | Single find with conditions |
-| `find(options, withTrashed?)` | List with conditions |
-| `findMany(ids[])` | Find by multiple IDs |
-| `findPaginated(options, withTrashed, filter)` | Full pagination |
-| `findAndCountAll(options)` | Total + data |
-| `saveOne(record)` | Create one record |
-| `saveMany(records[])` | Create many records |
-| `updateOne(record)` | Update one |
-| `updateAll(fields, options)` | Update by condition |
-| `deleteOne(record)` | Soft delete one |
-| `deleteMany(records[])` | Soft delete many |
-| `hardDeleteOne(record)` | Hard delete |
-| `rawQuery(sql, opts)` | Raw SQL |
-| `upsertOne(record)` | Upsert |
-| `findOrSave(record, findOptions)` | Find or create |
+| Method                                        | Description                 |
+| --------------------------------------------- | --------------------------- |
+| `findById(id, withTrashed?)`                  | Find by PK                  |
+| `findByIdOrFail(id)`                          | Find by PK or throw error   |
+| `findOne(options, withTrashed?)`              | Single find with conditions |
+| `find(options, withTrashed?)`                 | List with conditions        |
+| `findMany(ids[])`                             | Find by multiple IDs        |
+| `findPaginated(options, withTrashed, filter)` | Full pagination             |
+| `findAndCountAll(options)`                    | Total + data                |
+| `saveOne(record)`                             | Create one record           |
+| `saveMany(records[])`                         | Create many records         |
+| `updateOne(record)`                           | Update one                  |
+| `updateAll(fields, options)`                  | Update by condition         |
+| `deleteOne(record)`                           | Soft delete one             |
+| `deleteMany(records[])`                       | Soft delete many            |
+| `hardDeleteOne(record)`                       | Hard delete                 |
+| `rawQuery(sql, opts)`                         | Raw SQL                     |
+| `upsertOne(record)`                           | Upsert                      |
+| `findOrSave(record, findOptions)`             | Find or create              |
 
 The `withTrashed: boolean` parameter controls whether records with `deletedAt != null` are included.
 
@@ -164,12 +166,8 @@ export class MyEntityDomain extends RepositoryAdapter<MyEntity> {
         super(repository, session, logService);
 
         // Register hooks in the constructor, after super()
-        this.registerHook(RepositoryHookType.CREATION, (record: MyEntity) =>
-            this.enqueueSync(record)
-        );
-        this.registerHook(RepositoryHookType.UPDATE, (record: MyEntity) =>
-            this.enqueueSync(record)
-        );
+        this.registerHook(RepositoryHookType.CREATION, (record: MyEntity) => this.enqueueSync(record));
+        this.registerHook(RepositoryHookType.UPDATE, (record: MyEntity) => this.enqueueSync(record));
     }
 
     private async enqueueSync(record: MyEntity): Promise<void> {
@@ -179,9 +177,9 @@ export class MyEntityDomain extends RepositoryAdapter<MyEntity> {
                 job: QueueJobEnum.MY_SYNC_JOB,
                 queue: QueueEnum.MY_SYNC_QUEUE
             },
-            false,           // skipLogs
-            null,            // priority
-            `my-sync-${record.id}`  // jobId for deduplication
+            false, // skipLogs
+            null, // priority
+            `my-sync-${record.id}` // jobId for deduplication
         );
     }
 }
@@ -189,12 +187,12 @@ export class MyEntityDomain extends RepositoryAdapter<MyEntity> {
 
 **Available hook types:**
 
-| Type | When it fires |
-|------|---------------|
-| `RepositoryHookType.CREATION` | After `saveOne`, `saveMany`, `findOrSave` |
-| `RepositoryHookType.UPDATE` | After `updateOne`, `updateMany`, `updateAll` |
-| `RepositoryHookType.DELETION` | After `deleteOne`, `deleteMany` |
-| `RepositoryHookType.UPSERT` | After `upsertOne` |
+| Type                          | When it fires                                |
+| ----------------------------- | -------------------------------------------- |
+| `RepositoryHookType.CREATION` | After `saveOne`, `saveMany`, `findOrSave`    |
+| `RepositoryHookType.UPDATE`   | After `updateOne`, `updateMany`, `updateAll` |
+| `RepositoryHookType.DELETION` | After `deleteOne`, `deleteMany`              |
+| `RepositoryHookType.UPSERT`   | After `upsertOne`                            |
 
 **Note on transactions:** When a hook is registered and the operation occurs within a transaction,
 the hook **only fires after commit** (not in the middle of the transaction). This prevents
@@ -229,9 +227,10 @@ method when you need the return value of the operation to make a decision.
 ## When to use OpenSearchAdapter
 
 Use `OpenSearchAdapter<T>` instead of `RepositoryAdapter<T>` when the Domain requires:
-- Full-text search (e.g., search by name, description)
-- Complex aggregations (e.g., count by field)
-- Dynamic filters with relevance scoring
+
+-   Full-text search (e.g., search by name, description)
+-   Complex aggregations (e.g., count by field)
+-   Dynamic filters with relevance scoring
 
 Examples in the project: `ClientDomain`, `WcOrderDomain`, `WcProductDomain`.
 
@@ -264,11 +263,13 @@ is an explicit requirement.
 Add the Domain to `src/domain/domain.module.ts` in two places:
 
 **1. Import at the top of the file:**
+
 ```typescript
 import { MyEntityDomain } from './my-entity.domain';
 ```
 
 **2. In the `providers` and `exports` arrays of `@Module`:**
+
 ```typescript
 @Module({
     imports: [RepositoryModule, ServiceModule, QueueServiceModule, ...],
@@ -292,11 +293,11 @@ Keep alphabetical order in the `providers` and `exports` arrays.
 
 ## Pre-finalization checklist
 
-- [ ] Class extends `RepositoryAdapter<T>` (or `OpenSearchAdapter<T>` if needed)
-- [ ] `@Inject(ProviderNames.XRepository)` in the constructor
-- [ ] `super(repository, session, logService)` called
-- [ ] If hooks exist: `logService` passed to `super()` and injected
-- [ ] Hooks registered in the constructor after `super()`
-- [ ] Custom queries do not include manual `companyId` in `where` (it's automatic)
-- [ ] Domain added to `providers` and `exports` in `DomainModule`
-- [ ] Tests written (see skill-tdd for domain test patterns)
+-   [ ] Class extends `RepositoryAdapter<T>` (or `OpenSearchAdapter<T>` if needed)
+-   [ ] `@Inject(ProviderNames.XRepository)` in the constructor
+-   [ ] `super(repository, session, logService)` called
+-   [ ] If hooks exist: `logService` passed to `super()` and injected
+-   [ ] Hooks registered in the constructor after `super()`
+-   [ ] Custom queries do not include manual `companyId` in `where` (it's automatic)
+-   [ ] Domain added to `providers` and `exports` in `DomainModule`
+-   [ ] Tests written (see skill-tdd for domain test patterns)

@@ -1,21 +1,21 @@
 ---
 name: repository-async
 description: >
-  How to create and modify async Repositories in zoppy-whatsapp-commerce
-  (SQLAlchemy 2.0 + asyncpg). Covers placement under
-  src/domain/<feature>/repository.py, the constructor that takes an
-  AsyncSession, query patterns with select() / update() / selectinload(),
-  the absolute company_id scoping rule, ORM→Pydantic mapping via _to_schema,
-  upsert patterns, soft delete, flush vs commit semantics, and what does
-  NOT belong in a Repository (business decisions, cache reads, HTTP). Use
-  this skill whenever creating a new Repository, adding a query method to
-  an existing one, deciding flush vs commit, mapping a row to a domain
-  schema, designing an upsert, or auditing a query for tenant scoping.
-  Triggers on: "create repository", "novo repository", "Repository",
-  "AsyncSession", "session.execute", "select()", "selectinload",
-  "scalar_one_or_none", "scope by company_id", "scoping", "tenant scope",
-  "upsert", "soft delete", "_to_schema", "flush", "commit", "data access",
-  "SQLAlchemy", "asyncpg", "pgvector", "domain repository".
+    How to create and modify async Repositories in zoppy-whatsapp-commerce
+    (SQLAlchemy 2.0 + asyncpg). Covers placement under
+    src/domain/<feature>/repository.py, the constructor that takes an
+    AsyncSession, query patterns with select() / update() / selectinload(),
+    the absolute company_id scoping rule, ORM→Pydantic mapping via _to_schema,
+    upsert patterns, soft delete, flush vs commit semantics, and what does
+    NOT belong in a Repository (business decisions, cache reads, HTTP). Use
+    this skill whenever creating a new Repository, adding a query method to
+    an existing one, deciding flush vs commit, mapping a row to a domain
+    schema, designing an upsert, or auditing a query for tenant scoping.
+    Triggers on: "create repository", "novo repository", "Repository",
+    "AsyncSession", "session.execute", "select()", "selectinload",
+    "scalar_one_or_none", "scope by company_id", "scoping", "tenant scope",
+    "upsert", "soft delete", "_to_schema", "flush", "commit", "data access",
+    "SQLAlchemy", "asyncpg", "pgvector", "domain repository".
 ---
 
 # Repository (async) — zoppy-whatsapp-commerce
@@ -23,19 +23,19 @@ description: >
 Repositories live at `src/domain/<feature>/repository.py` and are the
 **only** place where the codebase touches SQL. They:
 
-- Wrap an `AsyncSession` (passed in by the caller)
-- Run typed queries against the ORM models in
-  `src/domain/<feature>/model.py`
-- Convert ORM rows to Pydantic domain schemas before returning
-- Enforce `company_id` scoping on every read/write tied to a tenant
+-   Wrap an `AsyncSession` (passed in by the caller)
+-   Run typed queries against the ORM models in
+    `src/domain/<feature>/model.py`
+-   Convert ORM rows to Pydantic domain schemas before returning
+-   Enforce `company_id` scoping on every read/write tied to a tenant
 
 They do **not**:
 
-- Decide what to do with the data (that's the Application Service)
-- Read or write the cache (cache lives in services / webhook handlers)
-- Speak HTTP, FastAPI, or Pydantic-Settings
-- Commit transactions on writes that compose with sibling writes
-  (the Application Service / webhook handler decides commit boundary)
+-   Decide what to do with the data (that's the Application Service)
+-   Read or write the cache (cache lives in services / webhook handlers)
+-   Speak HTTP, FastAPI, or Pydantic-Settings
+-   Commit transactions on writes that compose with sibling writes
+    (the Application Service / webhook handler decides commit boundary)
 
 ## Layout
 
@@ -50,15 +50,15 @@ src/domain/<feature>/
 
 Real repositories you can crib from:
 
-- `src/domain/knowledge/repository.py` (84 l) — small, full CRUD, good
-  starting point
-- `src/domain/company/repository.py` (161 l) — read-with-eager-load,
-  upsert, soft delete, `_to_schema` mapper for a complex aggregate
-- `src/domain/conversation_metric/repository.py` (257 l) — heavier
-  feature with reporting queries and aggregations
-- `src/domain/handoff/repository.py` (128 l) — joins across
-  `HandoffEvent` and `ConversationMetric` (legitimate cross-feature
-  read; see `architecture` skill on the rule)
+-   `src/domain/knowledge/repository.py` (84 l) — small, full CRUD, good
+    starting point
+-   `src/domain/company/repository.py` (161 l) — read-with-eager-load,
+    upsert, soft delete, `_to_schema` mapper for a complex aggregate
+-   `src/domain/conversation_metric/repository.py` (257 l) — heavier
+    feature with reporting queries and aggregations
+-   `src/domain/handoff/repository.py` (128 l) — joins across
+    `HandoffEvent` and `ConversationMetric` (legitimate cross-feature
+    read; see `architecture` skill on the rule)
 
 ## Canonical shape
 
@@ -194,13 +194,13 @@ result rows.
 
 Two patterns coexist; pick based on transaction scope:
 
-| Pattern | When | Example |
-|---|---|---|
-| `await self.session.flush()` then `refresh(...)` | The caller owns the transaction (typical Application Service flow) | `KnowledgeDocumentRepository.create` |
+| Pattern                                           | When                                                                          | Example                                    |
+| ------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| `await self.session.flush()` then `refresh(...)`  | The caller owns the transaction (typical Application Service flow)            | `KnowledgeDocumentRepository.create`       |
 | `await self.session.commit()` then `refresh(...)` | The repository is the unit of work — no other write is composed with this one | `CompanyRepository.create_from_onboarding` |
 
 When in doubt, **flush, not commit.** Letting the Service control commit
-makes it possible to compose writes (e.g. create the Company *and* the
+makes it possible to compose writes (e.g. create the Company _and_ the
 default AgentConfig in one transaction). The pattern across the codebase
 is mixed; new code should prefer `flush` and document any deviation.
 
@@ -322,9 +322,9 @@ def _to_schema(self, row: Company) -> CompanyConfig:
 
 Why a method instead of `Schema.model_validate(row, from_attributes=True)`:
 
-- We routinely shape nested aggregates (Company → first IntegrationConfig)
-  that don't match the ORM relationship 1:1.
-- Future-proof against ORM column renames — the mapper is the seam.
+-   We routinely shape nested aggregates (Company → first IntegrationConfig)
+    that don't match the ORM relationship 1:1.
+-   Future-proof against ORM column renames — the mapper is the seam.
 
 For simple cases without reshape, `model_validate` with
 `from_attributes=True` is fine — but keep the call inside the repository
@@ -377,42 +377,42 @@ a row, company B queries by id, expects `None`. See the
 
 ## Gotchas / anti-patterns
 
-- **Never call `cache_client` from a Repository.** Cache is the
-  Application Service's responsibility.
-- **Never raise `HTTPException` from a Repository.** Layer rule.
-- **Never mix `session.query(...)` (v1) with `select(...)` (v2)** in the
-  same file. The codebase uses 2.0-style throughout.
-- **Never forget to `await` an `execute()`.** Async ORM, async result.
-- **Never trigger lazy loads after the session closes.** Use
-  `selectinload` / `joinedload` upfront.
-- **Never query by entity UUID alone when the call site has the tenant.**
-  Multi-tenant leak.
-- **Never commit inside a method that's part of a larger transaction.**
-  If the caller needs to compose writes, your `commit` will tear the
-  transaction in half.
-- **Never put cross-feature joins in a Repository unless the relationship
-  is real business** (e.g. `handoff/repository.py` joining
-  `HandoffEvent` with `ConversationMetric` is fine because every
-  handoff annotates a metric). Auditable on next layer review.
-- **Never let `_to_schema` access the DB.** The mapper is in-memory; if
-  you need extra rows, load them in the same query (`selectinload`).
+-   **Never call `cache_client` from a Repository.** Cache is the
+    Application Service's responsibility.
+-   **Never raise `HTTPException` from a Repository.** Layer rule.
+-   **Never mix `session.query(...)` (v1) with `select(...)` (v2)** in the
+    same file. The codebase uses 2.0-style throughout.
+-   **Never forget to `await` an `execute()`.** Async ORM, async result.
+-   **Never trigger lazy loads after the session closes.** Use
+    `selectinload` / `joinedload` upfront.
+-   **Never query by entity UUID alone when the call site has the tenant.**
+    Multi-tenant leak.
+-   **Never commit inside a method that's part of a larger transaction.**
+    If the caller needs to compose writes, your `commit` will tear the
+    transaction in half.
+-   **Never put cross-feature joins in a Repository unless the relationship
+    is real business** (e.g. `handoff/repository.py` joining
+    `HandoffEvent` with `ConversationMetric` is fine because every
+    handoff annotates a metric). Auditable on next layer review.
+-   **Never let `_to_schema` access the DB.** The mapper is in-memory; if
+    you need extra rows, load them in the same query (`selectinload`).
 
 ## Pre-PR checklist
 
-- [ ] Repository at `src/domain/<feature>/repository.py`
-- [ ] Class name follows `<Feature>Repository`
-- [ ] Constructor takes `session: AsyncSession` only
-- [ ] Every public method is `async def`
-- [ ] Every tenant-scoped method filters by `company_id`
-- [ ] Reads use `select(...)`; writes use `update()` / direct attr
-      mutation; never `session.query(...)` v1 style
-- [ ] Public methods return Pydantic via `_to_schema(...)` — no ORM
-      leaks
-- [ ] Eager-loading set up with `selectinload(...)` for relationships
-- [ ] State-changing methods emit a structured log line
-- [ ] Integration test in `tests/integration/domain/repositories/test_<feature>.py`
-      covers happy path + negative tenant scoping
-- [ ] If a new model column was added, an Alembic migration exists
-      (see `alembic-migration` skill)
-- [ ] `uv run pytest tests/integration/domain/repositories/test_<feature>.py -q`
-      is green
+-   [ ] Repository at `src/domain/<feature>/repository.py`
+-   [ ] Class name follows `<Feature>Repository`
+-   [ ] Constructor takes `session: AsyncSession` only
+-   [ ] Every public method is `async def`
+-   [ ] Every tenant-scoped method filters by `company_id`
+-   [ ] Reads use `select(...)`; writes use `update()` / direct attr
+        mutation; never `session.query(...)` v1 style
+-   [ ] Public methods return Pydantic via `_to_schema(...)` — no ORM
+        leaks
+-   [ ] Eager-loading set up with `selectinload(...)` for relationships
+-   [ ] State-changing methods emit a structured log line
+-   [ ] Integration test in `tests/integration/domain/repositories/test_<feature>.py`
+        covers happy path + negative tenant scoping
+-   [ ] If a new model column was added, an Alembic migration exists
+        (see `alembic-migration` skill)
+-   [ ] `uv run pytest tests/integration/domain/repositories/test_<feature>.py -q`
+        is green

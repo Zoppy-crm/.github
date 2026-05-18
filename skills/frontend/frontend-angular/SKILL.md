@@ -9,12 +9,12 @@ Convenções e padrões para desenvolvimento frontend nos projetos Angular da Zo
 
 ## Stack
 
-- **Angular**: 19+ (standalone components, signals, new control flow)
-- **TypeScript**: 5.5+
-- **Styling**: Tailwind CSS com preset `@Zoppy-crm/tailwind`
-- **Design System**: `ui-components` (monorepo com 45+ packages `@Zoppy-crm/*`)
-- **Testes**: Jasmine + Karma (unit), Playwright (e2e)
-- **Build**: Angular CLI + ng-packagr (para libraries)
+-   **Angular**: 19+ (standalone components, signals, new control flow)
+-   **TypeScript**: 5.5+
+-   **Styling**: Tailwind CSS com preset `@Zoppy-crm/tailwind`
+-   **Design System**: `ui-components` (monorepo com 45+ packages `@Zoppy-crm/*`)
+-   **Testes**: Jasmine + Karma (unit), Playwright (e2e)
+-   **Build**: Angular CLI + ng-packagr (para libraries)
 
 ---
 
@@ -106,9 +106,9 @@ Usar o novo control flow (`@if`, `@for`, `@switch`) ao invés de diretivas estru
 
 Todos os componentes podem injetar services — state services, API services, ou qualquer serviço compartilhado. Não há restrição de injeção por nível hierárquico.
 
-- **Container (page)**: coordena navegação e ciclo de vida da feature; provê o feature state service via `providers: [FeatureStateService]`
-- **Sub-components**: injetam o state service e/ou outros services (incluindo `ApiService`) diretamente — sem prop drilling
-- Use `input()` / `output()` quando o dado vem de **fora do escopo da feature** (ex: componentes reutilizáveis do design system)
+-   **Container (page)**: coordena navegação e ciclo de vida da feature; provê o feature state service via `providers: [FeatureStateService]`
+-   **Sub-components**: injetam o state service e/ou outros services (incluindo `ApiService`) diretamente — sem prop drilling
+-   Use `input()` / `output()` quando o dado vem de **fora do escopo da feature** (ex: componentes reutilizáveis do design system)
 
 ```
 pages/
@@ -189,23 +189,17 @@ export interface SchemaTable {
     standalone: true,
     imports: [CurrencyPipe, PercentPipe, RoundPipe, DateMaskPipe],
     template: `
-        @switch (card().type) {
-            @case ('currency') {
-                <ui-text>{{ value() | zoppyCurrency }}</ui-text>
-            }
-            @case ('percentage') {
-                <ui-text>{{ value() | zoppyPercent }}</ui-text>
-            }
-            @case ('number') {
-                <ui-text>{{ value() | zoppyRound }}</ui-text>
-            }
-            @case ('date') {
-                <ui-text>{{ value() | zoppyDateMask: 'DD/MM/YYYY' }}</ui-text>
-            }
-            @default {
-                <ui-text>{{ value() }}</ui-text>
-            }
-        }
+        @switch (card().type) { @case ('currency') {
+        <ui-text>{{ value() | zoppyCurrency }}</ui-text>
+        } @case ('percentage') {
+        <ui-text>{{ value() | zoppyPercent }}</ui-text>
+        } @case ('number') {
+        <ui-text>{{ value() | zoppyRound }}</ui-text>
+        } @case ('date') {
+        <ui-text>{{ value() | zoppyDateMask : 'DD/MM/YYYY' }}</ui-text>
+        } @default {
+        <ui-text>{{ value() }}</ui-text>
+        } }
     `
 })
 export class CardValueComponent {
@@ -216,16 +210,16 @@ export class CardValueComponent {
 
 ### Quando usar
 
-- Dashboards e relatórios
-- Telas de listagem com colunas configuráveis
-- Cards de métricas
-- Qualquer UI onde a estrutura pode mudar sem deploy de frontend
+-   Dashboards e relatórios
+-   Telas de listagem com colunas configuráveis
+-   Cards de métricas
+-   Qualquer UI onde a estrutura pode mudar sem deploy de frontend
 
 ### Quando NÃO usar
 
-- Formulários complexos com validação client-side
-- Fluxos com interação pesada (drag & drop, workflow editor)
-- Telas com lógica de UI que o backend não conhece
+-   Formulários complexos com validação client-side
+-   Fluxos com interação pesada (drag & drop, workflow editor)
+-   Telas com lógica de UI que o backend não conhece
 
 ---
 
@@ -466,14 +460,14 @@ Atributos disponíveis:
 
 ### Quando criar componente local
 
-- Componente é **específico** de uma feature e não faz sentido compartilhar
-- O design system não cobre o caso de uso e criar um novo componente compartilhado não é viável no momento
+-   Componente é **específico** de uma feature e não faz sentido compartilhar
+-   O design system não cobre o caso de uso e criar um novo componente compartilhado não é viável no momento
 
 ### Quando criar componente no ui-components
 
-- Componente será usado em **2+ projetos** (zoppy-FE, partners-fe, etc.)
-- Componente é genérico o suficiente para ser reutilizado
-- Ao criar, adicionar **Storybook story** para documentação
+-   Componente será usado em **2+ projetos** (zoppy-FE, partners-fe, etc.)
+-   Componente é genérico o suficiente para ser reutilizado
+-   Ao criar, adicionar **Storybook story** para documentação
 
 ---
 
@@ -498,11 +492,11 @@ export const routes: Routes = [
 
 Usar os guards existentes conforme necessidade:
 
-- `DashboardGuard` — verifica sessão (company/user)
-- `FeatureGuard` — valida feature flag via `data.feature`
-- `RoleGuard` — controle de acesso via `data.roles`
-- `PremiumGuard` / `StandardGuard` — restrição por plano
-- `PreventRedirectGuard` — previne navegação com alterações não salvas
+-   `DashboardGuard` — verifica sessão (company/user)
+-   `FeatureGuard` — valida feature flag via `data.feature`
+-   `RoleGuard` — controle de acesso via `data.roles`
+-   `PremiumGuard` / `StandardGuard` — restrição por plano
+-   `PreventRedirectGuard` — previne navegação com alterações não salvas
 
 ---
 
@@ -555,18 +549,18 @@ describe('FeatureComponent', () => {
 
 ### O que testar
 
-- **Componentes**: renderização condicional, inputs/outputs, interações do usuário
-- **Services**: chamadas HTTP (com `HttpClientTestingModule`), transformação de dados, estado
-- **Pipes**: transformação de valores, edge cases (null, undefined, empty)
-- **Guards**: redirecionamento correto, verificação de permissões
+-   **Componentes**: renderização condicional, inputs/outputs, interações do usuário
+-   **Services**: chamadas HTTP (com `HttpClientTestingModule`), transformação de dados, estado
+-   **Pipes**: transformação de valores, edge cases (null, undefined, empty)
+-   **Guards**: redirecionamento correto, verificação de permissões
 
 ### Convenções
 
-- Um `describe` por componente/service
-- Um `it` por comportamento
-- Usar `data-testid` para seletores em testes (não depender de classes CSS ou estrutura DOM)
-- Mock de services com `jasmine.createSpyObj`
-- Signals em mocks: usar `signal()` para simular o estado
+-   Um `describe` por componente/service
+-   Um `it` por comportamento
+-   Usar `data-testid` para seletores em testes (não depender de classes CSS ou estrutura DOM)
+-   Mock de services com `jasmine.createSpyObj`
+-   Signals em mocks: usar `signal()` para simular o estado
 
 ---
 
@@ -591,20 +585,20 @@ src/core/pages/dashboard/
 
 ### Nomeação
 
-- **Componentes**: `kebab-case` para selector, `PascalCase` para classe
-- **Services**: `feature-name.service.ts` → `FeatureNameService`
-- **Pipes**: `pipe-name.pipe.ts` → `PipeNamePipe`
-- **Guards**: `guard-name.guard.ts` → função `guardNameGuard`
-- **Models**: classes em `shared/models/entities/`, requests em `shared/models/requests/`, responses em `shared/models/responses/`
+-   **Componentes**: `kebab-case` para selector, `PascalCase` para classe
+-   **Services**: `feature-name.service.ts` → `FeatureNameService`
+-   **Pipes**: `pipe-name.pipe.ts` → `PipeNamePipe`
+-   **Guards**: `guard-name.guard.ts` → função `guardNameGuard`
+-   **Models**: classes em `shared/models/entities/`, requests em `shared/models/requests/`, responses em `shared/models/responses/`
 
 ### Não fazer
 
-- Não usar `any` — tipar tudo
-- Não omitir o tipo explícito em declarações de signals, inputs e outputs — sempre declarar `const x: WritableSignal<T> = signal(value)`
-- Não usar `console.log` em código commitado
-- Não fazer subscribe sem cleanup (usar `takeUntilDestroyed()` ou `toSignal()`)
-- Não criar componentes com 500+ linhas — extrair sub-componentes
-- Não fazer lógica de negócio no template — mover para `computed()` ou métodos
-- Não importar módulos inteiros quando só precisa de um componente standalone
-- Não hardcodar strings de UI — usar constantes ou i18n
-- Não adicionar padding no container raiz de componentes de modal — o `ModalService` já adiciona padding via `modal-content`
+-   Não usar `any` — tipar tudo
+-   Não omitir o tipo explícito em declarações de signals, inputs e outputs — sempre declarar `const x: WritableSignal<T> = signal(value)`
+-   Não usar `console.log` em código commitado
+-   Não fazer subscribe sem cleanup (usar `takeUntilDestroyed()` ou `toSignal()`)
+-   Não criar componentes com 500+ linhas — extrair sub-componentes
+-   Não fazer lógica de negócio no template — mover para `computed()` ou métodos
+-   Não importar módulos inteiros quando só precisa de um componente standalone
+-   Não hardcodar strings de UI — usar constantes ou i18n
+-   Não adicionar padding no container raiz de componentes de modal — o `ModalService` já adiciona padding via `modal-content`
