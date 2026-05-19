@@ -1,23 +1,40 @@
 ---
 name: flow-bug-card
-description: Cria um card de bug no GitHub Issues seguindo o template usado pela organização Zoppy (cabeçalho com cliente/atendente/plano + relato + descrição/comportamento atual/comportamento esperado). Use sempre que o usuário quiser abrir um card de bug, registrar um defeito reportado por cliente, criar uma issue de bug, documentar um problema encontrado em produção. Acione também em frases como "abre um bug", "cria card de bug", "registra esse bug", "abre uma issue de bug", "documenta esse defeito", "cria o card desse bug".
+description: Cria um card de bug no GitHub Issues seguindo o template form-based oficial da organização Zoppy (`bug-report.yml`). Use sempre que o usuário quiser abrir um card de bug, registrar um defeito reportado por cliente, criar uma issue de bug, documentar um problema encontrado em produção. Acione também em frases como "abre um bug", "cria card de bug", "registra esse bug", "abre uma issue de bug", "documenta esse defeito", "cria o card desse bug".
 ---
 
 # Bug Card
 
-Cria um card de bug no GitHub Issues seguindo o template da organização Zoppy. Diferente de `flow-refinement` (feature/refinement), este fluxo usa um template enxuto focado em sintoma, comportamento atual e esperado — o detalhamento técnico fica pro **retorno de solução** quando o bug for resolvido (ver `flow-bug-solution-reply` / `return-solution`).
+Cria um card de bug no GitHub Issues seguindo o template **form-based** oficial da organização Zoppy (`Zoppy-crm/.github/.github/ISSUE_TEMPLATE/bug-report.yml`). Diferente de `flow-refinement` (feature/refinement), este fluxo usa um template enxuto focado em sintoma, comportamento atual e esperado — o detalhamento técnico fica pro **retorno de solução** quando o bug for resolvido (ver `flow-bug-solution-reply` / `return-solution`).
+
+## Template oficial — fonte da verdade
+
+O template real vive em `Zoppy-crm/.github/.github/ISSUE_TEMPLATE/bug-report.yml` e é um **GitHub Issue Form**. Quando submetido via UI, o GitHub renderiza cada field como `### <Label>` no body do issue, com `_No response_` em campos vazios e `- [ ] / - [x]` em checkboxes. Pra criar via API (`gh issue create`) preservando consistência, **o body precisa imitar esse render exatamente** — usando os mesmos headers e os mesmos placeholders de vazio.
+
+Pra ler o template antes de gerar o body:
+
+```bash
+curl -s "https://raw.githubusercontent.com/Zoppy-crm/.github/development/.github/ISSUE_TEMPLATE/bug-report.yml"
+```
+
+**Importante:** o template auto-aplica a label `work: bug`, mas quando criado via API ela não é aplicada automaticamente — passar manual via `--label`.
 
 ## Instruções
 
-O usuário vai descrever o bug. Antes de criar a issue, colete o mínimo necessário (pergunte se não estiver claro):
+O usuário vai descrever o bug. Antes de criar a issue, colete o mínimo necessário (pergunte só o que não estiver claro pelo contexto):
 
-1. **Repo** — `zoppy-api`, `zoppy-FE` ou outro (ex: `zoppy-app`, `zoppy-command`)
-2. **Empresa / cliente reportante** — nome do cliente afetado, ou "N/A" se for interno/QA
-3. **Atendente / CSM** — nome de quem repassou, ou "N/A"
-4. **Plano** — `Intermediário`, `Avançado`, etc., ou "N/A"
-5. **Sintoma** — o que o usuário tentou fazer e o que aconteceu de errado. Pode ser alto nível — não exija reprodução detalhada nem causa raiz; isso vai pro retorno de solução depois
-6. **Links** — gravação, ID do registro, screenshot, etc., ou "N/A"
-7. **Epic label** — se houver epic relacionado (ex: `epic: whatsapp`, `epic: chat-whatsapp`). Confirme que existe com `gh label list --repo Zoppy-crm/<repo> --search "<termo>"` antes de aplicar
+1. **Repo** — `zoppy-api`, `zoppy-FE`, `zoppy-app`, `zoppy-command`, etc.
+2. **ID do Ticket** (opcional) — ID de ticket de suporte, se houver
+3. **Atendente** (opcional) — quem repassou o chamado, ou vazio se interno
+4. **Empresa** (opcional) — cliente afetado, ou vazio se interno/QA
+5. **Descrição** (obrigatório) — descrição clara do bug
+6. **Comportamento Atual** (obrigatório) — o que está acontecendo
+7. **Comportamento Esperado** (obrigatório) — o que deveria acontecer
+8. **Relatado por cliente?** — sim/não (vira a label `client:report` se sim)
+9. **Ambiente** (obrigatório) — `Produção`, `Staging` ou `Mirror`
+10. **Evidências** (opcional) — links de screenshot/log/vídeo/ID de registro
+11. **Blocked** (opcional) — o que está bloqueado por causa do bug
+12. **Epic label** (opcional) — se houver epic relacionado (ex: `epic: whatsapp`). Confirme que existe via `gh label list --repo Zoppy-crm/<repo> --search "<termo>"` antes de aplicar
 
 ## Título
 
@@ -32,37 +49,59 @@ Exemplos:
 -   `[AIAMI] [MODELOS DE MENSAGENS / WHATSAPP] [Ordem dos cards alterada ao duplicar modelo]`
 -   `[VINOTECA VINHO PROSA] [MODELOS DE MENSAGENS / WHATSAPP] [Não é possível criar template com Carousel associado]`
 
-Se a empresa for "N/A", use `[INTERNO]` ou descrição da origem.
+Se a empresa não foi reportante (bug interno/QA), use `[INTERNO]`.
 
-## Template do body
+## Template do body (form-based render)
 
 ```markdown
-• Atendente: <nome ou N/A>
-• Empresa: <empresa ou N/A>
-• Plano: <plano ou N/A>
+### ID do Ticket
 
----
+<id ou `_No response_`>
 
-**Relato do cliente:**
+### Atendente
 
-> <citação do cliente, ou "N/A">
+<nome ou `_No response_`>
 
-**Interpretação do CSM:**
-<reformulação do CSM, ou "N/A">
+### Empresa
 
----
+<empresa ou `_No response_`>
 
-**Descrição:**
-<descrição curta e objetiva do bug>
+### Descrição
 
-**Comportamento Atual:**
+<descrição clara do bug>
+
+### Comportamento Atual
+
 <o que está acontecendo>
 
-**Comportamento Esperado:**
+### Comportamento Esperado
+
 <o que deveria acontecer>
+
+### Relatado por cliente?
+
+-   [<x ou espaço>] Sim, foi reportado por um cliente
+
+### Ambiente
+
+<Produção | Staging | Mirror>
+
+### Evidências
+
+<links/IDs ou `_No response_`>
+
+### Blocked
+
+<o que está bloqueado ou `_No response_`>
 ```
 
-Se a informação não existir, escreva "N/A". **Não invente** relato/interpretação se o usuário não forneceu — deixe "N/A".
+**Regras de preenchimento:**
+
+-   Campos vazios → literalmente `_No response_` — isso bate com o render do GitHub.
+-   Checkbox marcada → `- [x] Sim, foi reportado por um cliente`. Não marcada → `- [ ] Sim, foi reportado por um cliente`.
+-   Dropdown "Ambiente" → escreva apenas o valor (sem `_No response_` mesmo se o usuário não falar — assuma `Produção` se não informado, já que é o default mais comum).
+-   **Não invente** descrição/comportamento. Se o usuário deu pouca info, pergunte antes de criar.
+-   **Não adicione seções fora do template** (ex: "Relato do cliente", "Interpretação do CSM"). O template oficial não tem esses campos.
 
 ## Labels
 
@@ -70,8 +109,8 @@ Sempre incluir:
 
 -   `work: bug`
 -   `origin: master`
--   `client:report` — se foi reportado por cliente real (empresa preenchida). Se for bug interno/QA, omitir
--   `epic: <nome>` — se houver epic relacionado e a label existir no repo
+-   `client:report` — só se "Relatado por cliente?" estiver marcado. Bug interno/QA → omitir.
+-   `epic: <nome>` — só se houver epic relacionado e a label existir no repo (formato `epic: <nome>` com espaço após `:`).
 
 ## Criação
 
@@ -81,7 +120,45 @@ gh issue create --repo Zoppy-crm/<repo> \
   --assignee @me \
   --label "work: bug" --label "origin: master" --label "client:report" --label "epic: <nome>" \
   --body "$(cat <<'EOF'
-<body preenchido>
+### ID do Ticket
+
+_No response_
+
+### Atendente
+
+<nome ou _No response_>
+
+### Empresa
+
+<empresa ou _No response_>
+
+### Descrição
+
+<descrição>
+
+### Comportamento Atual
+
+<atual>
+
+### Comportamento Esperado
+
+<esperado>
+
+### Relatado por cliente?
+
+- [ ] Sim, foi reportado por um cliente
+
+### Ambiente
+
+Produção
+
+### Evidências
+
+_No response_
+
+### Blocked
+
+_No response_
 EOF
 )"
 ```
@@ -92,22 +169,26 @@ Após criar, **adicionar ao project board** Zoppy Engineering (#7):
 gh project item-add 7 --owner Zoppy-crm --url <URL retornada pelo gh issue create>
 ```
 
+E preencher os campos obrigatórios do board (Priority, Size, Estimate, Status, Team, Start date) — ver `flow-github-issues` seção 7. Sem isso o card fica invisível por filtros do board.
+
 ## Diretrizes
 
--   **Mantenha o card enxuto**. Detalhamento técnico, causa raiz e arquivos afetados **não vão aqui** — vão no `return-solution` / `flow-bug-solution-reply` quando o bug for resolvido
--   **Não preencha** seções de detalhamento técnico, critérios de aceite, estratégia de testes ou roteiro de QA — esse template é diferente do refinement
--   **Não invente sintoma**. Se o usuário deu pouca informação, peça mais ou registre "N/A" nos campos do relato
--   **Confirme labels antes de aplicar** — `gh label list --repo Zoppy-crm/<repo> --search "<termo>"` para validar epic labels
--   Sempre incluir `--assignee @me`
--   Sempre adicionar ao project 7 após criar
+-   **Body precisa bater com o render do form**. Headers `### <Label>`, `_No response_` nos vazios, checkboxes com `- [ ] / - [x]`. Nada de bullets `•` ou cabeçalhos `**bold:**`.
+-   **Mantenha o card enxuto**. Detalhamento técnico, causa raiz e arquivos afetados **não vão aqui** — vão no `return-solution` / `flow-bug-solution-reply` quando o bug for resolvido.
+-   **Não invente sintoma**. Se o usuário deu pouca informação, peça mais. Não preencha "Descrição" / "Comportamento Atual" / "Comportamento Esperado" com `_No response_` — eles são obrigatórios pelo template.
+-   **Confirme labels antes de aplicar** — `gh label list --repo Zoppy-crm/<repo> --search "<termo>"` para validar epic labels.
+-   **Antes de criar, cheque duplicata** — `gh issue list --repo Zoppy-crm/<repo> --search "<keywords>" --state all`. Bugs internos óbvios costumam já estar abertos.
+-   Sempre incluir `--assignee @me`.
+-   Sempre adicionar ao project 7 após criar e preencher campos obrigatórios.
 
 ## Diferença vs `flow-refinement`
 
-| Critério                     | `flow-refinement`                                            | `flow-bug-card`                                   |
-| ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------- |
-| Quando                       | Nova feature, refinamento técnico, milestone                 | Bug reportado / defeito                           |
-| Labels                       | `refinement`, `work: feature`                                | `work: bug`, `client:report`                      |
-| Template                     | Resumo / Objetivo / Critérios / Detalhamento técnico extenso | Cabeçalho + Relato + Descrição / Atual / Esperado |
-| Detalhamento técnico no card | Sim, exaustivo                                               | Não — vai no retorno de solução depois            |
+| Critério                     | `flow-refinement`                                    | `flow-bug-card`                                                    |
+| ---------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ |
+| Quando                       | Nova feature, refinamento técnico, milestone         | Bug reportado / defeito                                            |
+| Template oficial             | `technical-refinement.yml`                           | `bug-report.yml`                                                   |
+| Labels                       | `refinement`, `work: feature`                        | `work: bug` (+ `client:report` se aplicável)                       |
+| Render do body               | Headers do template + seções de detalhamento técnico | Headers do form: Descrição / Atual / Esperado / Ambiente / Blocked |
+| Detalhamento técnico no card | Sim, exaustivo                                       | Não — vai no retorno de solução depois                             |
 
 Se o usuário pediu "criar bug" mas descreveu uma feature, redirecione para `flow-refinement`. Se pediu "criar refinamento" mas é claramente um defeito, sugira este fluxo.
