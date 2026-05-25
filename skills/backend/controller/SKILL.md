@@ -29,7 +29,7 @@ They contain no business logic. All business rules live in the Application.
 
 ```typescript
 // src/access/http/controllers/my-feature/my-feature.controller.ts
-import { AppConstants } from '@Zoppy-crm/utilities';
+import { RoleEnum } from '@Zoppy-crm/utilities';
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MyFeatureApplication } from 'src/application/my-feature/my-feature.application';
@@ -50,7 +50,7 @@ export class MyFeatureController {
     @HttpCode(HttpStatus.OK)
     @ApiBearerAuth('access-token')
     @UseGuards(BlockFreeTierGuard())
-    @UseGuards(RoleGuard([AppConstants.ROLES.MASTER, AppConstants.ROLES.ADMIN]))
+    @UseGuards(RoleGuard([RoleEnum.MASTER, RoleEnum.ADMIN]))
     @UsingTransaction()
     @ExceptionInterceptor()
     public async create(@Body() request: MyFeatureRequest): Promise<MyFeatureResponse> {
@@ -62,7 +62,7 @@ export class MyFeatureController {
     @HttpCode(HttpStatus.OK)
     @ApiBearerAuth('access-token')
     @UseGuards(BlockFreeTierGuard())
-    @UseGuards(RoleGuard([AppConstants.ROLES.MASTER, AppConstants.ROLES.ADMIN]))
+    @UseGuards(RoleGuard([RoleEnum.MASTER, RoleEnum.ADMIN]))
     @ExceptionInterceptor()
     public async findById(@Param('id') id: string): Promise<MyFeatureResponse> {
         return await this.application.findById(id);
@@ -81,10 +81,10 @@ guards are evaluated bottom-up (the last `@UseGuards` is evaluated first).
 
 ```typescript
 @UseGuards(BlockFreeTierGuard())   // Blocks free-tier companies
-@UseGuards(RoleGuard([AppConstants.ROLES.MASTER, AppConstants.ROLES.ADMIN]))  // Checks user role
+@UseGuards(RoleGuard([RoleEnum.MASTER, RoleEnum.ADMIN]))  // Checks user role
 ```
 
-**Available roles in `AppConstants.ROLES`:**
+**Available roles in `RoleEnum`:**
 
 -   `MASTER` — full access
 -   `ADMIN` — company administrator
@@ -98,7 +98,7 @@ import { Features } from '@Zoppy-crm/utilities';
 
 @UseGuards(FeatureGuard(Features.MyFeature))
 @UseGuards(BlockFreeTierGuard())
-@UseGuards(RoleGuard([AppConstants.ROLES.MASTER]))
+@UseGuards(RoleGuard([RoleEnum.MASTER]))
 ```
 
 **Public endpoints** (no JWT authentication):
@@ -216,7 +216,7 @@ import { UploadedFile, UseInterceptors } from '@nestjs/common';
 @Post('upload')
 @UseInterceptors(FileInterceptor('file'))
 @UseGuards(BlockFreeTierGuard())
-@UseGuards(RoleGuard([AppConstants.ROLES.MASTER]))
+@UseGuards(RoleGuard([RoleEnum.MASTER]))
 @ExceptionInterceptor()
 public async upload(@UploadedFile() file: Express.Multer.File): Promise<void> {
     await this.application.upload(file);
