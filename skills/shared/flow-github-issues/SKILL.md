@@ -449,12 +449,12 @@ mutation {
 Após preencher todos os campos obrigatórios:
 
 ```bash
-# Status Done = 98236657
+# Status Done = 2c2f548e
 gh project item-edit \
   --project-id PVT_kwDOCAubUc4BQdrV \
   --id $ITEM_ID \
   --field-id PVTSSF_lADOCAubUc4BQdrVzg-k0-w \
-  --single-select-option-id 98236657
+  --single-select-option-id 2c2f548e
 ```
 
 ### 7.5 Referência rápida de IDs
@@ -471,12 +471,31 @@ gh project item-edit \
 
 > **Regra crítica:** Campos do tipo `NUMBER` e `DATE` **não funcionam com `gh project item-edit`**. Sempre usar a mutation GraphQL `updateProjectV2ItemFieldValue` com `value: { number: X }` ou `value: { date: "YYYY-MM-DD" }` respectivamente.
 
-| Status      | Option ID  |
-| ----------- | ---------- |
-| Done        | `98236657` |
-| In progress | `47fc9ee4` |
-| To Do       | `61e4505c` |
-| Backlog     | `f75ad846` |
+| Status                  | Option ID  |
+| ----------------------- | ---------- |
+| Backlog                 | `7de56815` |
+| Discovery               | `bc261486` |
+| Em prototipacao         | `23f51f2a` |
+| Pronto pra Tech         | `d2c63592` |
+| Handoff Realizado       | `40fd64d4` |
+| Refinamento Concluido   | `1d8def79` |
+| Blocked                 | `8ae79bc2` |
+| To Do                   | `8042c61b` |
+| Bugs                    | `36b7ad33` |
+| In progress             | `46203a32` |
+| Dev Testing             | `cfe4dca6` |
+| PR review               | `5a0dbc82` |
+| In Product Review       | `bb7c9294` |
+| Product Reviewed        | `aa507816` |
+| Waiting Staging         | `487d8b23` |
+| In Staging              | `b9c9d2bb` |
+| In Mirror               | `a62e17eb` |
+| Deploying               | `e678890f` |
+| Done                    | `2c2f548e` |
+| Rollout - Fase 1        | `3fc64093` |
+| Rollout - Fase 2        | `d92fb0c3` |
+| Rollout Finalizado      | `1fbd5f01` |
+| Amplamente Disponivel   | `41df697e` |
 
 | Priority | Option ID  |
 | -------- | ---------- |
