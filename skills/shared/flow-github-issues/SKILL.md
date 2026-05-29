@@ -349,8 +349,55 @@ Antes de preencher, pergunte ao usuário:
 | **Horas Gastas** | Number        | Horas reais               | Quantas horas foram gastas?    |
 | **Start date**   | Date          | `YYYY-MM-DD`              | Qual a data de início?         |
 | **Target date**  | Date          | `YYYY-MM-DD`              | Qual a data de entrega?        |
+| **Team**         | Single Select | ver tabela em 7.5         | Qual o time?                   |
 
 Inferir pelo contexto quando possível (ex: se a issue é uma fase pequena, sugira `S` e `P1`; se foi concluída hoje, start date e target date = hoje). Confirme antes de aplicar.
+
+> **`Team` — sempre perguntar** quando não estiver óbvio pelo contexto. Não assumir default — squads usam isso pra métricas e atribuição equivocada vira ruído no painel.
+
+### 7.1.1 Labels obrigatórias (rodam ao lado dos campos do board)
+
+Além dos campos do board, o validador `validate_done` (`zoppy-eng-metrics/scripts/validate_done.py`) **também** reverte cards de Done quando faltam **labels** obrigatórias na issue. Antes de mover pra Done, garantir:
+
+| Label       | Obrigatória quando…                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `work: *`   | **Sempre** (não-roadmap) — pelo menos uma das `work: feature / bug / revisao-pr / demanda / poc / investigation / debitos` |
+| `epic: *`   | Card é `work: bug` ou `work: feature` **E** criado em/depois de `2026-04-25`                                               |
+| `origin: *` | Card é `work: bug` **E** criado em/depois de `2026-04-25`                                                                  |
+
+Adicionar via REST:
+
+```bash
+gh issue edit <N> --repo Zoppy-crm/<repo> --add-label "work: feature" --add-label "epic: billing"
+```
+
+### 7.1.2 Campos extras condicionais
+
+Esses campos do board ficam obrigatórios em cenários específicos:
+
+| Campo                  | Tipo | Obrigatório quando…                                     |
+| ---------------------- | ---- | ------------------------------------------------------- |
+| **Retorno de Solução** | Text | Card é `work: bug` (sempre, independente da data)       |
+| **Prazo Dev**          | Date | Card é `roadmap` **E** criado em/depois de `2026-04-25` |
+| **Prazo QA**           | Date | Card é `roadmap` **E** criado em/depois de `2026-04-25` |
+
+Preencher via GraphQL (campos TEXT e DATE não funcionam com `gh project item-edit`):
+
+```bash
+# Retorno de Solução (TEXT)
+gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: {
+  projectId: "PVT_kwDOCAubUc4BQdrV", itemId: "'$ITEM_ID'",
+  fieldId: "PVTF_lADOCAubUc4BQdrVzg-wo9s",
+  value: { text: "Comportamento corrigido — <resumo p/ cliente, não técnico>." }
+}) { projectV2Item { id } } }'
+
+# Prazo Dev / Prazo QA (DATE)
+# Field IDs: Prazo Dev = PVTF_lADOCAubUc4BQdrVzg-y-k4, Prazo QA = PVTF_lADOCAubUc4BQdrVzg-y-lA
+```
+
+> **Por que duas datas?** O validate_done aplica as regras estritas (epic/origin/Prazo Dev/Prazo QA) **apenas** a cards criados em/depois de **2026-04-25**. Cards antigos passam direto. Verificar `createdAt` antes de exigir esses campos.
+
+> **Retorno de Solução é cliente-facing** — propósito da feature + trade-off de design + impacto na UX. Identificadores e detalhes técnicos vão só no comentário do issue, não no campo do board.
 
 ### 7.2 Obter o Item ID no project
 
@@ -459,43 +506,47 @@ gh project item-edit \
 
 ### 7.5 Referência rápida de IDs
 
-| Campo        | Field ID                         | Tipo         | Como atualizar                          |
-| ------------ | -------------------------------- | ------------ | --------------------------------------- |
-| Status       | `PVTSSF_lADOCAubUc4BQdrVzg-k0-w` | SingleSelect | `gh project item-edit`                  |
-| Priority     | `PVTSSF_lADOCAubUc4BQdrVzg-k1Ns` | SingleSelect | `gh project item-edit`                  |
-| Size         | `PVTSSF_lADOCAubUc4BQdrVzg-k1Nw` | SingleSelect | `gh project item-edit`                  |
-| Estimate     | `PVTF_lADOCAubUc4BQdrVzg-k1N0`   | Number       | GraphQL `updateProjectV2ItemFieldValue` |
-| Horas Gastas | `PVTF_lADOCAubUc4BQdrVzg-opYQ`   | Number       | GraphQL `updateProjectV2ItemFieldValue` |
-| Start date   | `PVTF_lADOCAubUc4BQdrVzg-k1N4`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
-| Target date  | `PVTF_lADOCAubUc4BQdrVzg-k1N8`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
+| Campo              | Field ID                         | Tipo         | Como atualizar                          |
+| ------------------ | -------------------------------- | ------------ | --------------------------------------- |
+| Status             | `PVTSSF_lADOCAubUc4BQdrVzg-k0-w` | SingleSelect | `gh project item-edit`                  |
+| Priority           | `PVTSSF_lADOCAubUc4BQdrVzg-k1Ns` | SingleSelect | `gh project item-edit`                  |
+| Size               | `PVTSSF_lADOCAubUc4BQdrVzg-k1Nw` | SingleSelect | `gh project item-edit`                  |
+| Team               | `PVTSSF_lADOCAubUc4BQdrVzg-lLqc` | SingleSelect | `gh project item-edit`                  |
+| Estimate           | `PVTF_lADOCAubUc4BQdrVzg-k1N0`   | Number       | GraphQL `updateProjectV2ItemFieldValue` |
+| Horas Gastas       | `PVTF_lADOCAubUc4BQdrVzg-opYQ`   | Number       | GraphQL `updateProjectV2ItemFieldValue` |
+| Start date         | `PVTF_lADOCAubUc4BQdrVzg-k1N4`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
+| Target date        | `PVTF_lADOCAubUc4BQdrVzg-k1N8`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
+| Prazo Dev          | `PVTF_lADOCAubUc4BQdrVzg-y-k4`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
+| Prazo QA           | `PVTF_lADOCAubUc4BQdrVzg-y-lA`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
+| Retorno de Solução | `PVTF_lADOCAubUc4BQdrVzg-wo9s`   | Text         | GraphQL `updateProjectV2ItemFieldValue` |
 
 > **Regra crítica:** Campos do tipo `NUMBER` e `DATE` **não funcionam com `gh project item-edit`**. Sempre usar a mutation GraphQL `updateProjectV2ItemFieldValue` com `value: { number: X }` ou `value: { date: "YYYY-MM-DD" }` respectivamente.
 
-| Status                  | Option ID  |
-| ----------------------- | ---------- |
-| Backlog                 | `7de56815` |
-| Discovery               | `bc261486` |
-| Em prototipacao         | `23f51f2a` |
-| Pronto pra Tech         | `d2c63592` |
-| Handoff Realizado       | `40fd64d4` |
-| Refinamento Concluido   | `1d8def79` |
-| Blocked                 | `8ae79bc2` |
-| To Do                   | `8042c61b` |
-| Bugs                    | `36b7ad33` |
-| In progress             | `46203a32` |
-| Dev Testing             | `cfe4dca6` |
-| PR review               | `5a0dbc82` |
-| In Product Review       | `bb7c9294` |
-| Product Reviewed        | `aa507816` |
-| Waiting Staging         | `487d8b23` |
-| In Staging              | `b9c9d2bb` |
-| In Mirror               | `a62e17eb` |
-| Deploying               | `e678890f` |
-| Done                    | `2c2f548e` |
-| Rollout - Fase 1        | `3fc64093` |
-| Rollout - Fase 2        | `d92fb0c3` |
-| Rollout Finalizado      | `1fbd5f01` |
-| Amplamente Disponivel   | `41df697e` |
+| Status                | Option ID  |
+| --------------------- | ---------- |
+| Backlog               | `7de56815` |
+| Discovery             | `bc261486` |
+| Em prototipacao       | `23f51f2a` |
+| Pronto pra Tech       | `d2c63592` |
+| Handoff Realizado     | `40fd64d4` |
+| Refinamento Concluido | `1d8def79` |
+| Blocked               | `8ae79bc2` |
+| To Do                 | `8042c61b` |
+| Bugs                  | `36b7ad33` |
+| In progress           | `46203a32` |
+| Dev Testing           | `cfe4dca6` |
+| PR review             | `5a0dbc82` |
+| In Product Review     | `bb7c9294` |
+| Product Reviewed      | `aa507816` |
+| Waiting Staging       | `487d8b23` |
+| In Staging            | `b9c9d2bb` |
+| In Mirror             | `a62e17eb` |
+| Deploying             | `e678890f` |
+| Done                  | `2c2f548e` |
+| Rollout - Fase 1      | `3fc64093` |
+| Rollout - Fase 2      | `d92fb0c3` |
+| Rollout Finalizado    | `1fbd5f01` |
+| Amplamente Disponivel | `41df697e` |
 
 | Priority | Option ID  |
 | -------- | ---------- |
