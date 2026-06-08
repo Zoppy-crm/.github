@@ -93,7 +93,14 @@ O card deve ser criado com o seguinte formato no body (GitHub-flavored markdown)
 
 ### Monitoramento e Observabilidade
 
-<!-- Métricas, alertas, dashboards, logs estruturados. "N/A" se não aplicável. -->
+<!--
+Como vamos saber, EM PRODUÇÃO, que essa entrega funcionou e que ela não quebrou? Preencher com sinais concretos, não "N/A" genérico. Veja "Observabilidade — como decidir" abaixo.
+- Sinal de sucesso: o que precisa estar verde em prod (ex.: error rate da rota < X, fila drena, N eventos processados/h).
+- Sinal de falha / alerta: condição que merece alerta + quem é avisado.
+- Logs estruturados: que log o caminho crítico emite no ponto de falha provável (com companyId/requestId/entity id).
+- Métrica / dashboard: métrica nova necessária ou painel onde se olha a saúde da feature.
+Estes sinais são exatamente o que a skill flow-post-deploy-watch verifica depois do deploy.
+-->
 
 ### Feature Flag
 
@@ -206,6 +213,7 @@ gh project item-add 7 --owner Zoppy-crm --url "$SUB_URL"
 -   **Infraestrutura**: seja específico (nome da fila, nome do bucket, nome da env var)
 -   **Permissões**: use os Guards reais do codebase (RoleGuard, FeatureGuard, BlockFreeTierGuard)
 -   **Roteiro de teste (QA)**: pense como QA — descreva os passos pra validar cada critério de aceite
+-   **Monitoramento e Observabilidade**: campo de primeira classe, não decorativo. Só aceite "N/A" se a feature genuinamente não produz comportamento observável em runtime (raro). Para qualquer coisa com rota, fila, job ou regra de negócio nova, exija ao menos um sinal de sucesso e um sinal de falha concretos — veja "Observabilidade — como decidir"
 -   Se um campo não é aplicável, escreva "N/A" — não deixe em branco
 
 ## Fechamento de bug — dois artefatos
@@ -353,3 +361,19 @@ Pergunte: "Esse endpoint é chamado pelo frontend ou por um sistema externo/parc
 **Testes E2E de Frontend (zoppy-FE)**: para fluxos que o usuário final interage via browser. Pergunte: "Existe tela nova ou fluxo alterado no frontend por causa dessa feature?"
 
 O objetivo é que, ao final do refinamento, o card tenha uma visão clara de **o que testar, onde testar, e por que testar** em cada camada.
+
+## Observabilidade — como decidir
+
+Tão importante quanto a estratégia de testes, e quase sempre esquecida. Muitos devs (e produto) não pensam em monitoramento por conta própria — **o seu papel é puxar esse assunto ativamente em todo refinamento**, não esperar o usuário trazer. Testes provam que funciona no merge; observabilidade prova que continua funcionando em produção. Interaja com o desenvolvedor (e, quando o sinal for de negócio, com o produto) pra responder:
+
+**1. Como vamos saber que funcionou — em produção?** Não "deu certo", e sim um sinal observável. Pergunte: "Depois que isso subir, o que eu olho pra ter certeza de que está saudável? Qual número/estado em prod comprova que funcionou?" (ex.: error rate da rota < X%, a fila Z drena, N eventos processados/hora, contador de sucesso sobe). Este é o sinal que o produto/PM também deve conseguir traduzir em termos de negócio.
+
+**2. Como vamos saber que quebrou — e quem é avisado?** Pergunte: "Qual condição aqui merece um alerta? Quem deveria ser acordado se isso degradar?" (ex.: 5xx acima de X, fila parada por > N min, job falhando em série). Se a resposta for "ninguém vai saber até o cliente reclamar", isso é a lacuna a resolver no card.
+
+**3. O caminho crítico loga o suficiente pra investigar depois?** Pergunte: "Quando isso falhar para um cliente específico, o log vai me dar contexto pra achar a causa?" Exija log estruturado via `LogService` no ponto de falha provável, com `companyId`, identificador da entidade e — quando aplicável — `requestId`. Mensagem em inglês (convenção do time).
+
+**4. Precisa de métrica ou dashboard novo?** Pergunte: "As métricas existentes (latência, volume, taxa de erro por rota/fila) já cobrem isso, ou essa feature precisa de um contador/histograma novo? Tem onde alguém olhar a saúde dela?" Não invente instrumentação se a existente cobre — mas registre explicitamente a decisão.
+
+Preencha o campo **### Monitoramento e Observabilidade** com as respostas concretas. Esses sinais não são burocracia: são exatamente o que a skill `flow-post-deploy-watch` vai conferir depois do deploy (sinal de sucesso vs baseline, condição de alerta, logs do caminho crítico). Card define o critério → watch verifica o critério.
+
+Regra prática de escopo: feature com **rota, fila, job ou regra de negócio nova** sempre tem sinal observável — não aceite "N/A" nesses casos. "N/A" só é legítimo para mudanças sem comportamento de runtime (refactor puro, ajuste de copy, etc.).

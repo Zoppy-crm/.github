@@ -11,6 +11,8 @@ This skill will be invoked when the user wants to create a PRD. You may skip ste
 
 3. Interview the user relentlessly about every aspect of this plan until you reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one.
 
+    Among the branches you MUST walk: **observability and success signals**. Most people — devs and product alike — won't raise monitoring on their own, so you raise it. For every meaningful capability, force concrete answers: "Once this ships, how will we know it worked in production?" (a real signal, not "it works" — e.g. error rate below X, a queue drains, N events processed/hour), "How will we know it broke, and who gets alerted?", and "When it fails for one specific user, will the logs give us enough to investigate?". Push product to frame the business success signal and the dev to translate it into telemetry (structured logs, a metric, an alert). Capture the answers in the "Observabilidade & Sinais de Sucesso" section of the template. These are the same signals the `flow-post-deploy-watch` skill verifies after deploy — the PRD defines the criterion, the watch checks it.
+
 4. Sketch out the major modules you will need to build or modify to complete the implementation. Actively look for opportunities to extract deep modules that can be tested in isolation.
 
 A deep module (as opposed to a shallow module) is one which encapsulates a lot of functionality in a simple, testable interface which rarely changes.
@@ -64,6 +66,17 @@ A list of testing decisions that were made. Include:
 -   A description of what makes a good test (only test external behavior, not implementation details)
 -   Which modules will be tested
 -   Prior art for the tests (i.e. similar types of tests in the codebase)
+
+## Observabilidade & Sinais de Sucesso
+
+How we will know, in production, that this feature works and stays working. Required for any capability with runtime behavior (a route, a queue, a job, a new business rule). Cover:
+
+-   **Sinal de sucesso** — the observable state that proves the feature is healthy in prod (e.g. error rate of route X below Y, queue Z drains, N events processed per hour). Frame it so product can read it as a business outcome and the dev can read it as telemetry.
+-   **Sinal de falha / alerta** — the condition that warrants an alert and who gets notified. If today the answer is "nobody knows until a customer complains", that gap is itself a requirement.
+-   **Logs estruturados** — what the critical path emits at the likely failure point, with enough context (companyId, entity id, requestId) to investigate a single failing case.
+-   **Métrica / dashboard** — whether existing metrics cover this or a new counter/histogram is needed, and where someone looks to see the feature's health.
+
+These signals are exactly what `flow-post-deploy-watch` verifies after the deploy — this section defines the criterion, the watch confirms it.
 
 ## Fora do Escopo
 
