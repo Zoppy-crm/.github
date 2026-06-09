@@ -1,6 +1,6 @@
 ---
 name: flow-github-issues
-description: Documenta trabalho no GitHub Issues da organização Zoppy-crm — epics, sub-issues por fase ou issues avulsas. Use quando o usuário quiser criar epics, sub-issues ou qualquer issue no GitHub a partir de PRDs, planos de fases ou descrições livres. Também use quando o usuário quiser preencher ou atualizar campos de uma issue no Project Board (horas gastas, start date, target date, priority, size, estimate). Ativado por "cria issue", "documenta no github", "cria epic", "sobe para o github", "cria as issues", "documenta as fases", "lança no github", "abre issue", "cria o epic", "preenche campos da issue", "atualiza horas gastas", "coloca a start date", "preenche o board", "atualiza o projeto".
+description: Documenta trabalho no GitHub Issues da organização Zoppy-crm — epics, sub-issues por fase ou issues avulsas. Use quando o usuário quiser criar epics, sub-issues ou qualquer issue no GitHub a partir de PRDs, planos de fases ou descrições livres. Também use quando o usuário quiser preencher ou atualizar campos de uma issue no Project Board (horas gastas, start date, target date, priority, size, estimate). Também use quando o usuário quiser mover um card de status no board — em especial pra Done — pois esta skill preenche os campos obrigatórios antes do move pra evitar que o validate_done reverta o card. Ativado por "cria issue", "documenta no github", "cria epic", "sobe para o github", "cria as issues", "documenta as fases", "lança no github", "abre issue", "cria o epic", "preenche campos da issue", "atualiza horas gastas", "coloca a start date", "preenche o board", "atualiza o projeto", "marca como done", "move o card", "move pra done", "finaliza a issue", "fecha o card", "coloca em done", "muda o status do card".
 ---
 
 # GitHub Issues — Zoppy-crm
@@ -131,7 +131,7 @@ Cada sub-issue:
   - Labels: refinement | origin: master | work: feature | epic: <nome>
   - Body: conteúdo do .md correspondente (incluindo seção "### Criado com auxílio de IA?")
   - Vinculada ao epic via GraphQL addSubIssue
-  - Adicionada ao Project Board #7 com Priority/Size/Estimate setados
+  - Adicionada ao Project Board #7 com Priority/Size/Estimate setados e Start date = data de criação (hoje)
   - Label `ai-assisted` aplicada manualmente após criação
 
 Confirma? (ou ajuste o que quiser)
@@ -238,10 +238,11 @@ Após criar cada issue (epic e sub-issues), adicionar ao board e capturar o Item
 ITEM_ID=$(gh project item-add 7 --owner Zoppy-crm --url <issue-url> --format json | jq -r '.id')
 ```
 
-**Imediatamente após adicionar**, setar os campos obrigatórios do board (Priority, Size, Estimate). Sem isso, o item pode ficar **invisível** por filtros ativos no board.
+**Imediatamente após adicionar**, setar os campos obrigatórios do board (Priority, Size, Estimate) **e a `Start date`**. Sem Priority/Size/Estimate o item pode ficar **invisível** por filtros ativos no board.
 
 ```bash
 PROJECT_ID="PVT_kwDOCAubUc4BQdrV"
+TODAY=$(date +%F)  # data de criação do card — default da Start date
 
 # Priority (single select) — usa gh project item-edit
 gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
@@ -261,9 +262,22 @@ mutation {
     value: { number: <estimate> }
   }) { projectV2Item { id } }
 }'
+
+# Start date (Date) — DEFAULT = data de criação do card (hoje). REQUER GraphQL.
+gh api graphql -f query='
+mutation {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: "'$PROJECT_ID'"
+    itemId: "'$ITEM_ID'"
+    fieldId: "PVTF_lADOCAubUc4BQdrVzg-k1N4"
+    value: { date: "'$TODAY'" }
+  }) { projectV2Item { id } }
+}'
 ```
 
 > **Aprendizado:** Issues no board sem Priority/Size/Estimate ficam ocultas quando há filtros ativos. Sempre preencher esses campos ao adicionar.
+
+> **`Start date` por padrão = data de criação do card.** Sempre setar a Start date pra `$(date +%F)` ao criar/adicionar o card no board, a menos que o usuário informe outra data explicitamente. Vale pra epic e sub-issues.
 
 ### 4.6 Aplicar label `ai-assisted` quando criado com auxílio de IA
 
@@ -315,11 +329,45 @@ Quando o usuário pedir para mover uma issue de status:
 3. **Garantir que a issue tem assignee** — se não tiver, setar com `gh issue edit`
 4. **Mover o status** usando o field ID e option ID da tabela de referência (seção 7.5)
 
+> **Se o destino for `Done` (ou o usuário pedir "finaliza/fecha o card"), siga a Fase 7 inteira** — preencha TODOS os obrigatórios do tipo do card (tabela 7.0.0) e faça o read-back (7.3.5) antes de mover. Mover pra Done sem isso faz o `validate_done` reverter o card automaticamente.
+
 ---
 
 ## Fase 7 — Mover issue para Done
 
-Quando o usuário pedir para marcar uma issue como "Done" (ex: "marca como done", "fecha essa issue", "coloca como done", "finaliza a issue"), os seguintes campos obrigatórios do Project Board #7 devem ser preenchidos **antes** de mover o status para Done. Caso contrário, um bot automático reverterá para "In progress".
+Quando o usuário pedir para marcar uma issue como "Done" (ex: "marca como done", "fecha essa issue", "coloca como done", "finaliza a issue"), **NUNCA mova o status pra Done antes de preencher TODOS os campos obrigatórios**. O validador `validate_done` (`zoppy-eng-metrics/scripts/validate_done.py`) roda a cada 30 min, reverte o card pro status anterior, reabre a issue e notifica o time no chat. Mover sem preencher = card volta + ruído pro time. Esse passo não é opcional.
+
+### 7.0.0 Checklist de campos obrigatórios — FONTE DA VERDADE (`validate_done`)
+
+Os campos exigidos **dependem do tipo do card** (labels). Esta tabela espelha exatamente `project_validation.py` — siga-a, não invente. Determine o tipo do card pelas labels **antes** de coletar/preencher qualquer coisa.
+
+**Regras de sempre (qualquer data de criação):**
+
+| Tipo do card                                  | Campos/labels obrigatórios                                         |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| **Comum** (sem label `roadmap`)               | `Priority` + `Size` + `Estimate` + ≥1 label `work: *`              |
+| **Roadmap** (label `roadmap`)                 | `Priority` (NÃO exige Size/Estimate)                               |
+| **Bug** (`work: bug`)                         | tudo do comum/roadmap **+** `Retorno de Solução` (texto não vazio) |
+| **Qualquer `work: *`** exceto `work: reuniao` | **+** `Horas Gastas` (pode ser `0`, mas não nulo)                  |
+
+> `work: *` que exigem Horas Gastas: `bug`, `feature`, `revisao-pr`, `demanda`, `poc`, `investigation`, `debitos`. Só `work: reuniao` é isenta (e é deprecated).
+
+**Regras estritas — só pra cards criados em/depois de `2026-04-25`** (verificar `createdAt`; cards anteriores ficam imunes):
+
+| Tipo do card                                       | Campos/labels extras     |
+| -------------------------------------------------- | ------------------------ |
+| **Roadmap**                                        | `Prazo Dev` + `Prazo QA` |
+| **Bug ou Feature** (`work: bug` / `work: feature`) | ≥1 label `epic: *`       |
+| **Bug** (`work: bug`)                              | ≥1 label `origin: *`     |
+
+**Procedimento obrigatório antes de mover pra Done:**
+
+1. Identificar a issue e o repo (7.0).
+2. Ler as labels da issue (`gh issue view <N> --repo Zoppy-crm/<repo> --json labels,createdAt`) e classificar o card (comum/roadmap, bug/feature, work types).
+3. Montar a lista de obrigatórios pela tabela acima.
+4. Coletar os valores que faltam (7.1) e preencher TODOS (7.3) — campos do board E labels (7.1.1).
+5. **Verificar com read-back que nenhum obrigatório ficou nulo (7.3.5).**
+6. Só então mover pra Done (7.4).
 
 ### 7.0 Identificar a issue e o repositório a partir do handoff
 
@@ -364,6 +412,8 @@ Além dos campos do board, o validador `validate_done` (`zoppy-eng-metrics/scrip
 | `work: *`   | **Sempre** (não-roadmap) — pelo menos uma das `work: feature / bug / revisao-pr / demanda / poc / investigation / debitos` |
 | `epic: *`   | Card é `work: bug` ou `work: feature` **E** criado em/depois de `2026-04-25`                                               |
 | `origin: *` | Card é `work: bug` **E** criado em/depois de `2026-04-25`                                                                  |
+
+> **`Horas Gastas` (campo Number do board, não label):** obrigatório **sempre** que o card tiver qualquer `work: *` **exceto** `work: reuniao` — ou seja `bug / feature / revisao-pr / demanda / poc / investigation / debitos`. Pode ser `0`, mas não pode ficar nulo. Não tem cutoff de data.
 
 Adicionar via REST:
 
@@ -491,9 +541,31 @@ mutation {
 
 > **Importante:** Campos do tipo `DATE` e `NUMBER` **não funcionam** com `gh project item-edit`. Sempre usar a mutation GraphQL `updateProjectV2ItemFieldValue` para esses tipos.
 
+### 7.3.5 Verificar (read-back) ANTES de mover — passo obrigatório
+
+Preencher campo pode falhar silenciosamente (field-id errado, tipo errado, opção inexistente). **Releia os valores do item no board e confirme que nenhum obrigatório (da tabela 7.0.0) está nulo antes de mover.** Se algum estiver vazio, corrija e releia — não mova com campo faltando.
+
+```bash
+gh project item-list 7 --owner Zoppy-crm --format json --limit 500 \
+  | python3 -c "
+import json, sys
+ISSUE = <ISSUE_NUMBER>; REPO = 'Zoppy-crm/<repo>'
+data = json.load(sys.stdin)
+for it in data.get('items', []):
+    c = it.get('content', {})
+    if c.get('number') == ISSUE and c.get('repository') == REPO:
+        # checa os campos que VOCÊ determinou obrigatórios na 7.0.0
+        for f in ['priority','size','estimate','Horas Gastas','Retorno de Solução','Prazo Dev','Prazo QA']:
+            print(f'{f:20} = {it.get(f, \"(vazio)\")}')
+        break
+"
+```
+
+Também confirme as labels obrigatórias com `gh issue view <N> --repo Zoppy-crm/<repo> --json labels`. Só avance pra 7.4 quando todos os obrigatórios do tipo do card estiverem preenchidos.
+
 ### 7.4 Mover para Done
 
-Após preencher todos os campos obrigatórios:
+Após preencher **e verificar (7.3.5)** todos os campos obrigatórios:
 
 ```bash
 # Status Done = 2c2f548e
@@ -575,7 +647,8 @@ gh project item-edit \
 -   **Sempre incluir seção `### Criado com auxílio de IA?` no body** — alinha com o template oficial `technical-refinement.yml`
 -   **Sempre capturar a URL** de cada issue criada para vincular sub-issues e adicionar ao board
 -   **Sempre setar campos do board ao adicionar** — Priority, Size e Estimate devem ser preenchidos imediatamente ao adicionar issue ao Project Board. Issues sem esses campos ficam invisíveis quando há filtros ativos
--   **Sempre verificar campos antes de mover status** — ao mover para In Progress/Done, garantir que Priority, Size, Estimate e assignee estão preenchidos
+-   **Sempre setar `Start date` = data de criação do card (hoje)** ao criar/adicionar o card no board, salvo data explícita do usuário — vale pra epic e sub-issues
+-   **NUNCA mover pra Done sem preencher TODOS os obrigatórios do tipo do card** — usar a tabela 7.0.0 (fonte da verdade = `validate_done`) e fazer o read-back (7.3.5) antes do move. Mover sem preencher faz o bot reverter o card e notificar o time
 -   **Usar GraphQL para vincular sub-issues** — `addSubIssue` mutation com `node_id`, não REST API
 -   **Usar GraphQL para campos Number e Date no board** — `gh project item-edit` não funciona pra esses tipos; só single-select.
 -   **Preferir `--body-file` sobre `--body` HEREDOC** — quando o body é longo (> 50 linhas), evita escape hell.
