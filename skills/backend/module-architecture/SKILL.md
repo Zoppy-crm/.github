@@ -11,6 +11,26 @@ description: >
 
 # Module Architecture
 
+## North Star — Incremental migration off the god modules
+
+The codebase still has three **god modules** that every new change should help shrink, never grow:
+
+-   **`DomainModule`** (`src/domain/domain.module.ts`) — imports/re-exports ~all domains.
+-   **The god `ApplicationModule`** (`src/application/application.module.ts`) — applications registered as flat providers.
+-   **The root `HttpModule`** (`src/access/http/http.module.ts`) — controllers dumped into one `controllers` array.
+
+**The goal is to delete all three.** They are being broken into per-feature modules (the Domain layer breakup is the furthest along; Http/Application are in progress). The strategy is incremental: **whenever you touch a slice of code, migrate that slice to the layered pattern before moving on.** You don't refactor the whole tree at once — you leave each area you visit a little more modular than you found it.
+
+### Rules that follow from this
+
+1. **New code never imports the god `DomainModule`.** Import only the specific feature domain modules you need (e.g. `CompanyModule`, `ZoppyCoinDomainModule`, `UserActionDomainModule`). If the domain you need has no feature module yet, create one (or extract it) — don't reach into the god module.
+2. **New controllers never join the root `HttpModule` `controllers` array.** Put them in a dedicated `*HttpModule` (like `PaymentHttpModule`, `BillingHttpModule`) imported into the root `HttpModule`.
+3. **New applications never become flat providers in the god `ApplicationModule`.** They live in a dedicated feature application module.
+4. **Use the re-export bridge to stay green during migration.** When you extract a domain/application into its own module, have the old god module re-export it (import the new module, list it in `exports`) so existing consumers keep compiling. Once every consumer imports the feature module directly, drop the entry from the god module. When the god module is empty, delete it.
+5. **When you split a god service, split its module wiring too.** Moving methods out of a 80-dependency application into a focused one is only real if the new module imports just the feature domain modules those methods use — not the god `DomainModule`.
+
+Treat this as the default lens for any module work below: the patterns in this skill describe the **target** state every touched slice should move toward.
+
 ## Feature Module Pattern
 
 Each bounded context should have its own NestJS module. The `UploadDataModule` is the reference implementation.
@@ -37,7 +57,8 @@ src/application/<feature>/
 
 ```typescript
 @Module({
-    imports: [DomainModule, SessionModule, QueueServiceModule, LogModule],
+    // Import ONLY the feature domain modules this feature uses — never the god DomainModule.
+    imports: [FeatureDomainModule, RelatedDomainModule, SessionModule, QueueServiceModule, LogModule],
     providers: [
         FeatureApplication, // public → exported
         FeatureProcessApplication, // public → exported
@@ -51,15 +72,20 @@ export class FeatureModule {}
 
 ### Registering the module
 
-Import in `src/application/application.module.ts` and add to both `imports` and `exports`. The HTTP module already imports `ApplicationModule`, so controllers automatically get access to exported applications.
+Wire the feature module into the composition through dedicated bounded-context modules, not the god modules:
+
+-   **HTTP**: register the controller in a dedicated `*HttpModule` (e.g. `FeatureHttpModule`) and import that into the root `HttpModule` — alongside `PaymentHttpModule`, `BillingHttpModule`, etc. Do **not** add the controller to the root `HttpModule` `controllers` array.
+-   **Application**: import your feature application module where it's consumed. During migration, the god `ApplicationModule` may temporarily re-export it (list it in `imports` + `exports`) as a compat bridge so existing consumers keep working — but the target is for consumers to import the feature module directly and the god module to shrink to nothing.
 
 ### When NOT to create a module
 
-Simple features with a single application and no private services can live directly in `ApplicationModule` as providers. Create a dedicated module when:
+Default to a dedicated module — it's the unit the god modules are being broken into. Even a small feature is better as its own module than as a flat provider in the god `ApplicationModule` (which we are trying to delete). Reach for a module especially when:
 
 -   You have 2+ private services that shouldn't be exposed
 -   The feature has internal orchestration logic (sync services, strategies, pipelines)
 -   You want to prevent other modules from depending on implementation details
+
+Only inline a provider into an existing module when you're extending that same bounded context — never to avoid creating a module that would otherwise belong on its own.
 
 ---
 
