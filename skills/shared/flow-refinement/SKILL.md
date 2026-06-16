@@ -207,7 +207,7 @@ gh project item-add 7 --owner Zoppy-crm --url "$SUB_URL"
 -   **Resumo**: descreva o estado atual, não a solução
 -   **Objetivo**: descreva o estado desejado, não os passos
 -   **Critérios de aceite**: mensuráveis e verificáveis, sem ambiguidade
--   **Detalhamento técnico**: inclua paths reais de arquivos que serão modificados — explore o código antes de preencher
+-   **Detalhamento técnico**: inclua paths reais de arquivos que serão modificados — explore o código antes de preencher. Sempre avalie a modularização em camadas (ver "Modularização em camadas — sempre considerar" + skill `module-architecture`)
 -   **Serviços afetados**: liste todos os repos/packages que precisam de mudança
 -   **Migrations**: se houver, especifique o tipo (create table, add column, etc.)
 -   **Infraestrutura**: seja específico (nome da fila, nome do bucket, nome da env var)
@@ -377,3 +377,16 @@ Tão importante quanto a estratégia de testes, e quase sempre esquecida. Muitos
 Preencha o campo **### Monitoramento e Observabilidade** com as respostas concretas. Esses sinais não são burocracia: são exatamente o que a skill `flow-post-deploy-watch` vai conferir depois do deploy (sinal de sucesso vs baseline, condição de alerta, logs do caminho crítico). Card define o critério → watch verifica o critério.
 
 Regra prática de escopo: feature com **rota, fila, job ou regra de negócio nova** sempre tem sinal observável — não aceite "N/A" nesses casos. "N/A" só é legítimo para mudanças sem comportamento de runtime (refactor puro, ajuste de copy, etc.).
+
+## Modularização em camadas — sempre considerar
+
+Toda história que mexe no backend é uma chance de avançar a quebra dos **god modules** (`DomainModule`, god `ApplicationModule`, root `HttpModule`). A meta do time é **deletar os três**, de forma incremental: cada fatia tocada deve sair mais modular do que entrou. Antes de fechar qualquer refinamento de backend, **consulte a skill `module-architecture`** (seção "North Star — Incremental migration off the god modules") e capture as decisões no **Detalhamento Técnico** do card.
+
+Pergunte ao desenvolvedor (e deixe explícito no card):
+
+1. **A fatia tocada já está modularizada por camada?** Controller num `*HttpModule` próprio, application num módulo de feature, domains em feature domain modules — ou ainda mora nos god modules?
+2. **Dá pra migrar essa fatia agora?** Se o card já vai mexer ali, prefira extrair pro padrão de camadas em vez de só "adicionar mais um método no god service / mais um controller no array raiz".
+3. **As importações de domain estão corretas?** A application deve importar **só os feature domain modules que usa** — nunca o god `DomainModule`. Se o domain necessário não tem feature module, criar/extrair é parte do escopo.
+4. **A ponte de re-export está prevista?** Ao extrair algo de um god module, o god module re-exporta temporariamente pra não quebrar consumidores; registrar isso como passo.
+
+Regra prática: se o card **adiciona código novo** (controller, application, domain), o default é nascer no padrão de camadas — não nos god modules. Se a decisão for adiar a migração, **justifique no card** em vez de deixar implícito. Refactor puro de modularização também é card de refinamento válido (ex.: extrair um bounded context inteiro).

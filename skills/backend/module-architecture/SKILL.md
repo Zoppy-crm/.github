@@ -124,6 +124,24 @@ Application services orchestrate Domains, queue services, and internal services.
 
 **Critical rule: never inject one Application into another Application.** If two Applications need shared logic, extract it to a Domain, Helper, or Service. This is the most common architecture violation — watch for it.
 
+#### Keep applications thin — extract private services
+
+An application should stay small. When it grows (many public methods, a long constructor), split cohesive parts into **private services** (`*.service.ts` listed in `providers` but **not** in `exports`) and let the application become a **thin orchestrator** — each public method delegates to a private service method. This is also the antidote to recreating a smaller god service when you extract from the god `ApplicationModule`: don't move 30 methods into one new application, move them into a few focused private services behind it.
+
+Why it pays off:
+
+-   **Fewer responsibilities per class** — each service owns one cohesive concern.
+-   **High unit-test coverage** — a private service is tested in isolation, without wiring the whole application.
+-   **Encapsulation** — internals stay private to the module; only the application is injectable from `access`.
+
+Group private services by cohesion, not by "one per method". Typical cuts:
+
+-   a `*QueryService` for reads + access-scoping (shared scoping logic lives in one private helper);
+-   a `*LifecycleService` for state transitions / multi-domain orchestration;
+-   a dedicated service for a single **risky** operation (cascading writes, side-effect-heavy flows) so it can be covered exhaustively.
+
+Still push **single-entity** transitions down into the Domain (see Domain Layer) — private services are for orchestration **across** domains and for side effects, not for logic that belongs on one entity.
+
 ```typescript
 @Injectable()
 export class FeatureApplication {
