@@ -135,6 +135,30 @@ jobs:
                       rm -rf ".claude/skills/.synced-from-org"
                       mkdir -p ".claude/skills"
 
+                      # Build the canonical skill-name set for this repo (mirror, not additive)
+                      declare -A CANON_SKILLS
+                      for folder in "${FOLDERS[@]}"; do
+                        SOURCE="$GITHUB_WORKSPACE/skills/$folder"
+                        if [ -d "$SOURCE" ]; then
+                          for skill_dir in "$SOURCE"/*/; do
+                            if [ -d "$skill_dir" ]; then
+                              CANON_SKILLS["$(basename "$skill_dir")"]=1
+                            fi
+                          done
+                        fi
+                      done
+
+                      # Prune orphan skills not in the canonical set (keeps .claude/skills a true mirror)
+                      for existing in .claude/skills/*/; do
+                        [ -d "$existing" ] || continue
+                        name=$(basename "$existing")
+                        if [ -z "${CANON_SKILLS[$name]:-}" ]; then
+                          rm -rf "$existing"
+                          echo "  🗑️  pruned orphan skill: $name"
+                        fi
+                      done
+                      unset CANON_SKILLS
+
                       # Copy skills from each mapped folder
                       for folder in "${FOLDERS[@]}"; do
                         SOURCE="$GITHUB_WORKSPACE/skills/$folder"
@@ -214,7 +238,7 @@ jobs:
                       fi
 
                       # Commit and push (force-add so gitignored paths like .claude/settings.json still commit)
-                      git add -f .claude/ .github/copilot-instructions.md
+                      git add -fA .claude/ .github/copilot-instructions.md
                       git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
 
                       if git push origin "$BRANCH" 2>&1; then
