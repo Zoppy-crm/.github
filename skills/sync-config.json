@@ -9,6 +9,10 @@
             "folders": ["shared", "wpp-commerce"],
             "repos": ["zoppy-whatsapp-commerce"]
         },
+        "wpp-commerce-fe": {
+            "folders": ["shared"],
+            "repos": ["zoppy-whatsapp-commerce-FE"]
+        },
         "frontend": {
             "folders": ["shared", "frontend"],
             "repos": ["zoppy-FE", "ui-components", "zoppy-partners-fe"]
