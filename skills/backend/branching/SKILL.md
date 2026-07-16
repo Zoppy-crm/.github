@@ -39,7 +39,7 @@ staging ← milestone/<feature>  (PR final)
 master  ← staging
 ```
 
-1. Create `milestone/<feature>` from `development`
+1. Create `milestone/<feature>` from `master` — **always branch off `master`, never `development`**
 2. For each unit of work, create `task/<feature>/<task>` from the milestone branch
 3. Open PR: `task/...` → `milestone/...` — review and merge
 4. When the feature is complete, open PR: `milestone/...` → `staging` → `master`
