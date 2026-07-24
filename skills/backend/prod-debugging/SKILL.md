@@ -1,6 +1,6 @@
 ---
 name: prod-debugging
-description: Production debugging playbook for Zoppy — how to get ground truth from Grafana (Loki, Tempo, Prometheus, MySQL-via-proxy), RDS Performance Insights, BullMQ metrics, ECS/SSM, and git archaeology, with the epistemic rules that prevent wrong root causes. Use this skill whenever investigating ANY production incident, customer bug report, regression, outage, latency spike, error burst, "data not saving", "worked yesterday", queue backlog, or database saturation — even if the user only pastes a GitHub issue or a customer complaint. Also use it before asserting "no logs/no errors found", before declaring a root cause, and when verifying a fix landed in prod. Complements root-cause (code trace path) — root-cause tells you where to read code; this skill tells you how to observe production.
+description: Use when investigating ANY production incident or customer bug report in Zoppy — regressions, outages, 500s, latency spikes, error bursts, "data not saving", "worked yesterday", queue backlogs, database saturation, "no logs found" — even if the user only pastes a GitHub issue or customer complaint. Also use before declaring a root cause, before asserting that logs/traces/data don't exist, and when verifying a fix landed in prod. Covers Loki, Tempo, Prometheus, prod MySQL via Grafana proxy, RDS Performance Insights, BullMQ metrics, SSM, and regression-dating git archaeology. Complements root-cause (which walks the code layers).
 ---
 
 # Production Debugging (Zoppy)
@@ -20,7 +20,7 @@ alternative hypothesis eliminated by data.
 | Prometheus datasource | `fen6jmubhxwjkd` |
 | MySQL (prod read replica, via proxy) | `een6cmg0t4xkwf` — tables need the `zoppy.` prefix |
 | API service label | `service_name="production_zoppy-api_API"` |
-| Worker labels | `production_zoppy-api_WORKER`, `production_zoppy-api_WORKER_QUEUE_LIGHT_PIPELINE`, others — **census first** (below) |
+| Worker service labels | see the Service topology table below |
 | BullMQ metrics | `bullmq_job_count{job="zoppy_api_bullmq", queue="…_QUEUE", state=…}` — queue names carry the `_QUEUE` suffix |
 | Loki retention | ~7 days (app logs have burned at ~3 days before — query flood windows immediately) |
 | Tempo retention | ~7 days, sampled; error traces may be absent entirely |
@@ -33,51 +33,72 @@ universal output adapter — gcx prints a `hint:` line that corrupts JSON:
 gcx <anything> -o json 2>/dev/null | sed '/^hint:/d' | python3 -c "..."
 ```
 
+## Service topology — where logs land
+
+Pick the `service_name` by where the code *runs*, not where the feature lives.
+A public HTTP request logs in `API`; a service-to-service call in `PVT`; a queue
+job in its worker pipeline — never in `API`.
+
+| `service_name` (prefix `production_zoppy-api_`) | What runs there |
+| --- | --- |
+| `API` | Public HTTP API (customer/dashboard traffic) |
+| `PVT` | Private API — service-to-service calls |
+| `GIFTCARDS`, `PARTNERS` | Their dedicated public API surfaces |
+| `WORKER_MESSAGE_PIPELINE` | Campaign/message-send queue processors |
+| `WORKER_WORKFLOW_PIPELINE` | Workflow-engine queue processors |
+| `WORKER_INTEGRATION_CORE_PIPELINE`, `WORKER_INTEGRATION_PROVIDER_PIPELINE` | Provider/data-sync queue processors |
+| `WORKER_QUEUE_LIGHT_PIPELINE`, `WORKER_QUEUE_HEAVY_PIPELINE` | Everything else, split by job weight (safety evaluations, enrichment, reports…) |
+
+Sibling services log under their own names: `production_zoppy-workflow`,
+`production_zoppy-command`, `production_zoppy-event-bridge`,
+`production_zoppy-pixel-lambda`. Which queue runs in which pipeline is defined in
+`zoppy-api/src/access/queues/` (`queue-pool/queue-light|heavy.module.ts`,
+`message-pipeline.module.ts`, `workflow-pipeline.module.ts`) — grep the
+processor's module registration when unsure, or census live:
+`gcx logs labels -d <loki> -l service_name`.
+
 ## Doctrine — the rules that have decided real incidents
 
-1. **An empty query result is not elimination until the same query shape finds a
-   known-positive.** Wrong service label, wrong Prometheus label value, wrong span
-   attribute, and retention horizons all return the same empty set as "it never
-   happened". Before treating absence as evidence: run the label census
-   (`gcx logs labels -d <loki> -l service_name`, `group by (queue) (bullmq_job_count{...})`)
-   and re-run the query for an event you know exists (a control probe). This has
-   flipped conclusions more than once — including a safety-queue clobber that was
-   "eliminated" because the query hit `_API` while the writer lived in
-   `_WORKER_QUEUE_LIGHT_PIPELINE`.
-2. **"UPDATE ran and returned 200" does not mean "the request's values were
-   written".** When data reverts or "doesn't save", hunt for a **second writer**:
-   list every code path that writes the row (queue processors, safety/enrichment
-   jobs, denormalizers), and check whether any does a full-row write from an
-   entity loaded earlier (stale-snapshot clobber). Compare the row's `updatedAt`
-   against the timestamps of *all* candidate writers, not just the obvious route.
-3. **When a diff makes a write "more conservative" (stops nulling, stops
-   deleting, adds an `if !== undefined` guard), ask which downstream consumer
-   depended on the old destructive behavior.** A nulled column can be the very
-   thing that made a background job skip; keeping the value arms the job.
-4. **Queue depth outranks query text for causality.** Under DB saturation,
-   Performance Insights' top-SQL is a symptom ranking — everything looks slow and
-   the loudest digest wins your attention. `topk(15, bullmq_job_count{state="waiting"})`
-   tells you where work is accumulating faster than it drains.
-5. **Date the regression before naming the culprit.** Daily
-   `count_over_time` buckets over 30–60d for the error string, matched against
+1. **This codebase mixes very old legacy anti-patterns with modern conforming
+   code — expect strange names and strange behavior.** Real examples: email
+   template content is persisted only through a route named `sync-whatsapp`;
+   rows have multiple independent writers (ancient double-write debt), so a
+   fresh write can be silently overwritten by a background job holding a stale
+   snapshot. When data behaves impossibly (saves that revert, values from
+   nowhere), enumerate *every* code path that writes the row — queue processors,
+   enrichment/safety jobs, denormalizers — and compare the row's `updatedAt`
+   against all of their timestamps, not just the obvious route's.
+2. **Queue depth outranks the database's top-SQL ranking for causality.** Under
+   DB saturation, RDS Performance Insights ranks *symptoms* — everything looks
+   slow and the loudest statement wins your attention.
+   `topk(15, bullmq_job_count{state="waiting"})` tells you where work is
+   accumulating faster than it drains, which is the causal fact.
+3. **Date the regression before naming the culprit.** Daily `count_over_time`
+   buckets over 30–60d for the error string, matched against
    `git log --first-parent` merge/deploy timestamps, plus the "was every prior
    morning quiet?" 7-day same-hour baseline. First-run-after-deploy and chronic
    load look identical in a single snapshot.
-6. **Trust the instrument only as far as you've validated it.** Tempo drops error
-   traces (sampling + New Relic coexistence) — empty TraceQL means "unknown", not
-   "no errors"; pivot to Loki. `bullmq_job_event_total` has shipped broken
-   (stuck at 1). `rate()` over ALB-scraped multi-process counters is garbage.
-   Loki `count(sum by(id)(...))` hits a 500-series cap on wide windows — ladder
-   1h→6h→12h→24h to find the ceiling.
-7. **Read-only until diagnosed; predictions before probes.** Never fire a prod
-   write "just to watch it throw". When your diagnosis is right it should
-   *predict* observations before you make them (e.g. why the user's repro fails).
-   Prod-invasive diagnostics (tcpdump, MONITOR) need explicit user sign-off.
-8. **Sweep, then triage.** After the fix, sweep the whole route family
-   (Loki 30d + traces + DB integrity query) for adjacent failure modes, and file
-   each as its own card. Ship the fix together with a spec pinning the behavior
-   and an alert on the error *class* — the alert you create today catches the
-   next bug (this has literally happened the same evening).
+4. **If you don't find the data, don't conclude it doesn't exist — persist.**
+   Absence has many boring causes that all return the same empty set: wrong
+   `service_name` (see topology above), wrong label value (queue names carry a
+   `_QUEUE` suffix), filtering structured metadata as if it were a label,
+   retention horizons (Loki ~7d, sometimes less), trace sampling/ingestion gaps
+   (logged trace_ids often don't resolve in Tempo; whole windows can be missing),
+   or a broken exporter (a BullMQ counter once shipped stuck at 1). Before
+   accepting absence as evidence: run a positive control (the same query shape
+   for an event you *know* happened) and try a second instrument (Loki↔Tempo↔DB).
+5. **Prod is read-only until diagnosed; everywhere else, experiment freely.**
+   Reproduce at will in dev, staging, and mirror — including UI-driven repros
+   with the authenticated browser (`lg chrome`). In prod: no writes "just to
+   watch it throw", and invasive captures (tcpdump, redis MONITOR) need explicit
+   user sign-off. A correct diagnosis should *predict* what a probe will show
+   before you run it — state the prediction first.
+6. **After the fix: sweep the surface, file separately, pin with a spec.**
+   Sweep the same route family / code surface for adjacent latent bugs (Loki
+   over 30d, DB integrity queries) — refactors rarely break exactly one thing.
+   File each finding as its own card; never widen the fix. The fix must ship
+   with a spec pinning the corrected behavior (obligatory). An alert on the
+   error class is often worth it — **suggest it to the user; it's their call.**
 
 ## Workflow by symptom
 
@@ -90,7 +111,7 @@ between rows date and discriminate saves) → Tempo for the request's span tree 
 even send it?). See `references/grafana-toolbox.md`.
 
 **Error burst / 500s / regression** →
-regression-onset dating (doctrine 5) → merge-parent git archaeology
+regression-onset dating (doctrine 3) → merge-parent git archaeology
 (`git diff <merge>^1 <merge>`, `git grep <sym> <merge>^1`, `-S` pickaxe,
 `git log --diff-filter=A`) → library-version diff via package-lock when the bump
 is in a package → close the loop with a live provider probe *with a control

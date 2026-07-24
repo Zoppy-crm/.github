@@ -23,7 +23,12 @@ gcx logs query -d $DS '{service_name="production_zoppy-api_API"} |= "<trace_id>"
 
 Pipe to python, sort chronologically, print `ts | level | route | line`.
 
-**Service-label census before any negative claim** (doctrine 1):
+**There are no per-request HTTP access logs in Loki** — only what the app
+explicitly logs via LogService. "Did the request reach the API and with what
+payload?" is a *Tempo* question (§4: root span + `db.statement` children +
+`http.request_content_length_uncompressed`), not a Loki one.
+
+**Service-label census before any negative claim** (doctrine 4 — see the topology table in SKILL.md for what runs where):
 
 ```bash
 gcx logs labels -d $DS -l service_name -o json
@@ -87,7 +92,7 @@ Walk `trace.resourceSpans[].scopeSpans[].spans[]`; attributes are
   span discriminates "client never sent it" from "server dropped it", and
   byte-identical sizes across "different" saves suggest identical payloads.
 
-Trust caveats (doctrine 6): sampling + New Relic coexistence mean logged
+Trust caveats (doctrine 4): sampling + New Relic coexistence mean logged
 trace_ids often don't resolve and error traces may be wholly absent; ingestion
 gaps happen (whole mornings missing). Sanity-check any negative with a query for
 a request you know occurred.
