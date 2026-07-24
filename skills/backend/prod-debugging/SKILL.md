@@ -33,6 +33,16 @@ universal output adapter — gcx prints a `hint:` line that corrupts JSON:
 gcx <anything> -o json 2>/dev/null | sed '/^hint:/d' | python3 -c "..."
 ```
 
+If the gcx plugin's skills are installed, they complement this one — load them
+for what this skill doesn't carry: `gcx:gcx` (full command surface / flags),
+`gcx:setup-gcx` (auth, contexts, connection troubleshooting — use when gcx
+itself errors), `gcx:debug-with-grafana` (generic stack-agnostic diagnostic
+workflow), `gcx:manage-dashboards` (dashboard authoring beyond the round-trip
+in the toolbox). This skill carries what those can't know: the Zoppy datasource
+UIDs, service topology, label semantics, and incident doctrine. Without the
+plugin, the inline recipes here are self-sufficient; `gcx --help` and
+`gcx help-tree <topic>` cover flag details.
+
 ## Service topology — where logs land
 
 Pick the `service_name` by where the code *runs*, not where the feature lives.
