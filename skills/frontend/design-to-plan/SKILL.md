@@ -24,9 +24,9 @@ Se o usuário não forneceu a imagem, peça:
 
 ## Catálogo do Design System Zoppy
 
-Antes de planejar, mapeie cada elemento visual para os componentes abaixo. Prefira sempre um componente existente a criar um novo.
+Antes de planejar, mapeie cada elemento visual para os componentes abaixo. Prefira sempre um componente existente a criar um novo. Documentação interativa (Storybook): **https://ui-components.zoppy.com.br**
 
-### Componentes UI (versão atual — prefira estes)
+### Componentes UI (versão atual — sempre use estes)
 
 | Elemento visual    | Componente                                                                    | Import                       |
 | ------------------ | ----------------------------------------------------------------------------- | ---------------------------- |
@@ -45,7 +45,17 @@ Antes de planejar, mapeie cada elemento visual para os componentes abaixo. Prefi
 | Alerta informativo | `<ui-info-alert type="warning" icon="warning" title="..." description="...">` | `@Zoppy-crm/ui-info-alert`   |
 | Tag de filtro      | `<ui-filter-tag>`                                                             | `@Zoppy-crm/ui-filter-tag`   |
 | Radio button       | `<ui-radio-button>`                                                           | `@Zoppy-crm/ui-radio-button` |
-| Ícone              | `<ps-icon [icon]="'nome'" class="text-20 neutral-500">`                       | `@Zoppy-crm/icon`            |
+| Ícone              | `<ui-icon [icon]="'nome'" class="text-xl text-neutral-500">`                  | `@Zoppy-crm/ui-icon`         |
+| Checkbox           | `<ui-checkbox>`                                                               | `@Zoppy-crm/ui-checkbox`     |
+| Switch / Toggle    | `<ui-switch>`                                                                 | `@Zoppy-crm/ui-switch`       |
+| Busca              | `<ui-search-bar>`                                                             | `@Zoppy-crm/ui-search-bar`   |
+| Paginação          | `<ui-pagination>`                                                             | `@Zoppy-crm/ui-pagination`   |
+| Loading skeleton   | `<ui-skeleton>`                                                               | `@Zoppy-crm/ui-skeleton`     |
+| Confirmação        | `<ui-confirm-action>`                                                         | `@Zoppy-crm/ui-confirm-action` |
+| Menu de contexto   | `<ui-mini-menu>`                                                              | `@Zoppy-crm/ui-mini-menu`    |
+| Avatar             | `<ui-avatar>`                                                                 | `@Zoppy-crm/ui-avatar`       |
+| Upload de arquivo  | `<ui-input-file>`                                                             | `@Zoppy-crm/ui-input-file`   |
+| Tooltip (diretiva) | `<button uiTooltip [tooltipText]="'Ajuda'" tooltipDirection="up">`            | `@Zoppy-crm/ui-tooltip`      |
 | Toast (serviço)    | `UiToastService`                                                              | `@Zoppy-crm/ui-toast`        |
 
 **Alertas e warnings:** Sempre usar `<ui-info-alert>` para blocos de aviso/alerta. Tipos disponíveis: `info`, `warning`, `error`, `success`, `primary`. O componente já renderiza ícone, border, background e tipografia automaticamente — **nunca criar div custom para alertas**.
@@ -57,9 +67,11 @@ Antes de planejar, mapeie cada elemento visual para os componentes abaixo. Prefi
 | Modal / Dialog | `ModalService`   | `src/shared/components/modal/modal.service` | `modal.open({ component, data, callback })` — renderiza componente dinâmico. Dentro do modal: `inject(ModalService)`, lê `modal.data`, fecha via `modal.close(executeCallback, response)` |
 | Toast          | `UiToastService` | `@Zoppy-crm/ui-toast`                       | `toast.success('msg')`, `toast.error('msg')`                                                                                                                                              |
 
-### Componentes legados (ainda em uso — use se já existir no contexto)
+### Componentes legados `ps-*` (DESCONTINUADOS — nunca usar em planos)
 
-`<checkbox>`, `<switch>`, `<skeleton>`, `<pagination>`, `<stepper>`, `<confirm-action>`, `<tooltip>`, `<infinite-scroll>`, `<search-bar>`, `<mini-menu>`, `<contact>`
+Os componentes `ps-*` estão descontinuados em favor dos `ui-*` (drop-in, mesma assinatura). **Nunca planejar tela nova com `ps-*`**. Se a tela existente usa `ps-*`, o plano deve incluir a migração para o `ui-*` equivalente (trocar selector + import).
+
+Únicos legados ainda sem substituto `ui-*` (permitidos até existir equivalente): `<ps-stepper>`, `<ps-infinite-scroll>`, `<ps-contact>`, `<ps-template-input>`, `<ps-tutorial-menu>`, `<floating-input>`, `<pressable-button>`
 
 ### Utilitários
 
@@ -195,7 +207,7 @@ Mapeamento explícito elemento → componente:
 Botão "Salvar"         → <ui-button type="primary" size="medium" text="Salvar" (onClick)="save()">
 Campo "Nome"           → <ui-input>
 Dropdown "Status"      → <ui-dropdown>
-Ícone de fechar        → <ps-icon [icon]="'close'" class="text-20 neutral-500">
+Ícone de fechar        → <ui-icon [icon]="'icon-close'" class="text-xl text-neutral-500">
 Badge de status        → <ui-tag-pill variant="success">
 Abas da tela           → <ui-tab>
 [elemento sem par]     → criar localmente
@@ -213,7 +225,7 @@ Esboço do template HTML do smart container e dos sub-components principais, usa
     <app-feature-filters [filters]="state.filters()" (filterChanged)="state.setFilters($event)" />
 
     @if (state.loading()) {
-    <skeleton />
+    <ui-skeleton />
     } @else {
     <app-feature-list [items]="state.items()" [loading]="state.loading()" (itemSelected)="state.selectItem($event)" />
     }
@@ -267,6 +279,7 @@ Liste o que não ficou claro e precisa de confirmação antes de implementar:
 -   **Sempre incluir pipes de formatação** em templates que exibem datas, porcentagens e números
 -   **Services HTTP devem estender `ApiService`** — nunca usar `HttpClient` direto. Usar `this.get()`, `this.post()`, `this.put()`, `this.delete()` e `this.url`
 -   Sempre prefira componentes `@Zoppy-crm/*` a criar locais
+-   **Nunca usar componentes `ps-*` em planos** — estão descontinuados; usar o `ui-*` equivalente (drop-in, mesma assinatura). Se a tela existente usa `ps-*`, incluir a migração no plano
 -   Se um componente do catálogo cobrir parcialmente, liste o gap — não reimplemente do zero
 -   Se a tela for complexa (>5 componentes ou >2 fluxos distintos), sugira dividir em fases
 -   Tipagem explícita em todos os signals: `const x: WritableSignal<T> = signal(value)`

@@ -88,10 +88,10 @@ const item: Locator = page.getByTestId('menu-item-integrations');
 
 ### `getByRole('link')` — cuidado com nome acessível
 
-`getByRole('link', { name: 'Texto' })` pode falhar quando o `<a>` contém ícones (`ps-icon`, `mat-icon`) — o nome acessível inclui o texto do ícone concatenado ao label. Preferir `getByTestId`:
+`getByRole('link', { name: 'Texto' })` pode falhar quando o `<a>` contém ícones (`ui-icon`, `ps-icon` legado, `mat-icon`) — o nome acessível inclui o texto do ícone concatenado ao label. Preferir `getByTestId`:
 
 ```typescript
-// ERRADO — falha se <a> contém <ps-icon> junto ao texto
+// ERRADO — falha se <a> contém <ui-icon> junto ao texto
 const item = page.getByRole('link', { name: 'Integrações' });
 
 // CORRETO — adicionar data-testid="main-menu-configurations" no template

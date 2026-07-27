@@ -12,7 +12,7 @@ Convenções e padrões para desenvolvimento frontend nos projetos Angular da Zo
 -   **Angular**: 19+ (standalone components, signals, new control flow)
 -   **TypeScript**: 5.5+
 -   **Styling**: Tailwind CSS com preset `@Zoppy-crm/tailwind`
--   **Design System**: `ui-components` (monorepo com 45+ packages `@Zoppy-crm/*`)
+-   **Design System**: `ui-components` (monorepo com 45+ packages `@Zoppy-crm/*`) — docs em https://ui-components.zoppy.com.br (Storybook)
 -   **Testes**: Jasmine + Karma (unit), Playwright (e2e)
 -   **Build**: Angular CLI + ng-packagr (para libraries)
 
@@ -360,11 +360,13 @@ Usar breakpoints do Tailwind (`sm:`, `md:`, `lg:`). Mobile-first.
 
 ## Design System — ui-components
 
+Documentação interativa (Storybook): **https://ui-components.zoppy.com.br** — catálogo com controles, exemplos, acessibilidade e testes de interação. Consultar antes de usar um componente.
+
 ### Quando usar
 
 **Sempre** que um componente `@Zoppy-crm/*` existir para o caso de uso. Antes de criar um componente local, verificar se já existe no `ui-components`.
 
-Componentes disponíveis: `ui-button`, `ui-input`, `ui-dropdown`, `ui-selector`, `ui-multi-select`, `ui-datepicker`, `ui-timepicker`, `ui-toast`, `ui-text`, `ui-tag-pill`, `ui-label`, `ui-tab`, `ui-progress`, `ui-info-alert`, `icon`, `tooltip`, `skeleton`, `pagination`, `stepper`, `confirm-action`, `switch`, `checkbox`, `radio-button`, `search-bar`, `infinite-scroll`, entre outros.
+Componentes disponíveis: `ui-button`, `ui-input`, `ui-dropdown`, `ui-selector`, `ui-multi-select`, `ui-datepicker`, `ui-timepicker`, `ui-toast`, `ui-text`, `ui-tag-pill`, `ui-label`, `ui-tab`, `ui-progress`, `ui-info-alert`, `ui-icon`, `ui-tooltip`, `ui-skeleton`, `ui-pagination`, `ui-confirm-action`, `ui-switch`, `ui-checkbox`, `ui-radio-button`, `ui-search-bar`, `ui-mini-menu`, `ui-avatar`, `ui-code-input`, `ui-filter-tag`, `ui-input-file`, entre outros.
 
 ```typescript
 // CORRETO — usar design system
@@ -372,6 +374,58 @@ import { UiButtonComponent } from '@Zoppy-crm/ui-button';
 import { UiInputComponent } from '@Zoppy-crm/ui-input';
 import { UiDropdownComponent } from '@Zoppy-crm/ui-dropdown';
 ```
+
+### `ps-*` está descontinuado — usar `ui-*`
+
+Os componentes `ps-*` (packages `@Zoppy-crm/<nome>` sem prefixo `ui-`) estão **descontinuados**. Os componentes `ui-*` são **drop-in replacements**: mantêm a mesma assinatura de inputs/outputs, então a migração é trocar o selector e o import.
+
+-   **Código novo**: nunca usar `ps-*`. Sempre `ui-*`.
+-   **Código existente**: ao editar um template que usa `ps-*`, migrar para o `ui-*` equivalente no mesmo PR (troca de selector + import).
+-   **Sem equivalente `ui-*` ainda**: `ps-stepper`, `ps-infinite-scroll`, `ps-contact`, `ps-template-input`, `ps-tutorial-menu`, `floating-input`, `pressable-button` — nesses casos, manter o legado até o `ui-*` existir.
+
+```typescript
+// ERRADO — package legado (descontinuado)
+import { ButtonComponent } from '@Zoppy-crm/button';
+
+// CORRETO — package ui-*
+import { UiButtonComponent } from '@Zoppy-crm/ui-button';
+```
+
+```html
+<!-- ERRADO — selectors ps-* descontinuados -->
+<ps-button type="primary" size="medium" text="Salvar" (onClick)="save()"></ps-button>
+<ps-icon [icon]="'icon-warning'" class="text-xl text-warning"></ps-icon>
+<div appTooltip [tooltipText]="'Ajuda'">...</div>
+
+<!-- CORRETO — mesma assinatura, selector ui-* -->
+<ui-button type="primary" size="medium" text="Salvar" (onClick)="save()"></ui-button>
+<ui-icon [icon]="'icon-warning'" class="text-xl text-warning"></ui-icon>
+<div uiTooltip [tooltipText]="'Ajuda'">...</div>
+```
+
+Mapa de migração:
+
+| Legado (descontinuado)               | Substituto                | Package                      |
+| ------------------------------------ | ------------------------- | ---------------------------- |
+| `<ps-button>`                        | `<ui-button>`             | `@Zoppy-crm/ui-button`       |
+| `<ps-input>`                         | `<ui-input>`              | `@Zoppy-crm/ui-input`        |
+| `<ps-icon>`                          | `<ui-icon>`               | `@Zoppy-crm/ui-icon`         |
+| `<ps-dropdown>`                      | `<ui-dropdown>`           | `@Zoppy-crm/ui-dropdown`     |
+| `<ps-selector>`                      | `<ui-selector>`           | `@Zoppy-crm/ui-selector`     |
+| `<ps-multi-select>`                  | `<ui-multi-select>`       | `@Zoppy-crm/ui-multi-select` |
+| `<ps-checkbox>`                      | `<ui-checkbox>`           | `@Zoppy-crm/ui-checkbox`     |
+| `<ps-switch>`                        | `<ui-switch>`             | `@Zoppy-crm/ui-switch`       |
+| `<ps-radio-button>`                  | `<ui-radio-button>`       | `@Zoppy-crm/ui-radio-button` |
+| `<ps-datepicker>`                    | `<ui-datepicker>`         | `@Zoppy-crm/ui-datepicker`   |
+| `<ps-timepicker>`                    | `<ui-timepicker>`         | `@Zoppy-crm/ui-timepicker`   |
+| `<ps-search-bar>`                    | `<ui-search-bar>`         | `@Zoppy-crm/ui-search-bar`   |
+| `<ps-pagination>`                    | `<ui-pagination>`         | `@Zoppy-crm/ui-pagination`   |
+| `<ps-skeleton>`                      | `<ui-skeleton>`           | `@Zoppy-crm/ui-skeleton`     |
+| `<ps-confirm-action>`                | `<ui-confirm-action>`     | `@Zoppy-crm/ui-confirm-action` |
+| `<ps-mini-menu>`                     | `<ui-mini-menu>`          | `@Zoppy-crm/ui-mini-menu`    |
+| `<ps-input-file>`                    | `<ui-input-file>`         | `@Zoppy-crm/ui-input-file`   |
+| `<ps-toast>` / `ToastService`        | `UiToastService`          | `@Zoppy-crm/ui-toast`        |
+| `[appTooltip]` / `<ps-tooltip>`      | `[uiTooltip]` (diretiva)  | `@Zoppy-crm/ui-tooltip`      |
 
 ### `ui-button` — uso correto
 
@@ -440,7 +494,7 @@ O `<ui-info-alert>` renderiza blocos de aviso/alerta com ícone, border, backgro
 
 <!-- ERRADO — div custom para alertas -->
 <div class="p-4 bg-surface-warning rounded-2xl border border-warning flex gap-2">
-    <ps-icon [icon]="'icon-warning'" class="text-xl text-warning"></ps-icon>
+    <ui-icon [icon]="'icon-warning'" class="text-xl text-warning"></ui-icon>
     <ui-text>Texto de aviso</ui-text>
 </div>
 ```
@@ -593,6 +647,7 @@ src/core/pages/dashboard/
 
 ### Não fazer
 
+-   Não usar componentes `ps-*` em código novo — estão descontinuados; usar o equivalente `ui-*` (ver mapa de migração na seção Design System)
 -   Não usar `any` — tipar tudo
 -   Não omitir o tipo explícito em declarações de signals, inputs e outputs — sempre declarar `const x: WritableSignal<T> = signal(value)`
 -   Não usar `console.log` em código commitado

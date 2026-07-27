@@ -190,7 +190,7 @@ Para cada passo:
 1. **Criar os arquivos** conforme a estrutura de pastas do plano
 2. **COPIAR LITERALMENTE os templates do plano** — usar copy-paste mental exato dos blocos de codigo do plano. NAO reinterpretar, NAO simplificar, NAO remover atributos que "parecem desnecessarios". A tendencia de "limpar" ou "simplificar" ao transcrever e o erro mais comum — combater ativamente.
 3. **Aplicar as validacoes especificas do stack** (lidas do plano geral):
-    - **frontend:** validar classes Tailwind (nao PascalCase), OnPush, tipagem explicita, ui-text com htmlTag+type+className, ps-icon com [icon] binding
+    - **frontend:** validar classes Tailwind (nao PascalCase), OnPush, tipagem explicita, ui-text com htmlTag+type+className, ui-icon com [icon] binding, nenhum componente ps-* (descontinuados — usar o equivalente ui-*)
     - **backend:** validar DTOs com class-validator, guards com @UseGuards, services @Injectable
     - **fullstack:** aplicar as validacoes do stack da fase
 4. **Aplicar os padroes** do checklist do plano
