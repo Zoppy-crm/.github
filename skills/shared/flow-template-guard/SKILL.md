@@ -52,7 +52,8 @@ Se o plano referencia uma imagem:
 >
 > -   Ajustes de compilação (tipos TypeScript, imports)
 > -   Correção de tokens Figma PascalCase → Tailwind kebab-case (conforme tabela da skill `design-to-plan`)
-> -   Adaptações de API de componentes do DS (ex: `(clicked)` → `(onClick)`, `<switch>` → `<ps-switch>`)
+> -   Adaptações de API de componentes do DS (ex: `(clicked)` → `(onClick)`, `<switch>` → `<ui-switch>`)
+> -   Migração de componentes descontinuados `ps-*` → `ui-*` (ex: `<ps-icon>` → `<ui-icon>`, `<ps-button>` → `<ui-button>` — drop-in, mesma assinatura)
 >
 > **NÃO FAZER neste modo:**
 >
@@ -113,7 +114,7 @@ Para cada `<ui-button>` no template do plano:
 -   [ ] `icon` e `[iconBefore]`/`[iconAfter]` presentes se o plano define?
 -   [ ] `[wide]` presente se o plano define?
 
-Para cada `<ps-icon>` no template do plano:
+Para cada `<ui-icon>` no template do plano (se o plano trouxer `<ps-icon>`, implementar como `<ui-icon>` — mesma assinatura):
 
 -   [ ] `[icon]` presente e idêntico ao plano?
 -   [ ] `class` presente e idêntico ao plano?

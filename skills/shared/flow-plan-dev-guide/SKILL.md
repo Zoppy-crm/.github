@@ -33,7 +33,8 @@ Mapa de referencia que associa cada stack ao kit de skills que o dev-guide-v2 de
 **Validacoes especificas:**
 
 -   ui-text exige htmlTag + type + className
--   ps-icon com [icon] binding
+-   ui-icon com [icon] binding
+-   Nenhum componente ps-\* — descontinuados; usar o equivalente ui-\* (drop-in, mesma assinatura)
 -   Classes Tailwind: nao usar PascalCase (tokens Figma devem ser convertidos)
 -   OnPush obrigatorio, tipagem explicita em signals
 
@@ -547,7 +548,8 @@ Para **fullstack**, separar por stack quando relevante:
 **Validacoes especificas (frontend):**
 
 -   ui-text exige htmlTag + type + className
--   ps-icon com [icon] binding
+-   ui-icon com [icon] binding
+-   Nenhum componente ps-\* — descontinuados; usar o equivalente ui-\* (drop-in, mesma assinatura)
 -   Classes Tailwind: nao usar PascalCase
 
 **Validacoes especificas (backend):**
