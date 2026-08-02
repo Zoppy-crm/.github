@@ -7,7 +7,7 @@ description: "Supervise a long-running Claude or Fable coding session against ex
 
 Act as an air-traffic controller, not a second pilot grabbing the controls. Keep the accepted destination, every in-flight deliverable, and the evidence for landing visible. Intervene only when the current path threatens completion or correctness.
 
-Read [references/report-contract.md](references/report-contract.md) before starting. Use [scripts/claude_session_delta.py](scripts/claude_session_delta.py) as an index over transcript deltas; adjudicate relevant raw records and current repository state yourself.
+Read [references/report-contract.md](references/report-contract.md) before starting. For Zoppy reviewer or coworker deliverables, also read [references/html-report-contract.md](references/html-report-contract.md). Use [scripts/claude_session_delta.py](scripts/claude_session_delta.py) as an index over transcript deltas; adjudicate relevant raw records and current repository state yourself.
 
 ## Priority order
 
@@ -35,6 +35,8 @@ Before observing, record:
 - permitted feedback, GitHub writes, branch/PR creation, code takeover, staging access, and production access;
 - forbidden checks, especially the full test suite;
 - requested morning artifacts.
+
+For Zoppy audiences, list the required HTML reports explicitly. Markdown may remain as editable source, but it is not the delivered report.
 
 An alternative slice count is a proposal, not completion. Keep the accepted matrix unchanged until the user explicitly approves another count.
 
@@ -181,6 +183,7 @@ Before declaring success:
 - PR-prep and review-guide artifacts are current where requested;
 - validation and monitoring conclusions distinguish executable proof from manual plans;
 - report and state files are durable;
+- every substantive Zoppy report has a deterministic HTML counterpart that follows the embedded Zoppy visual contract;
 - exact unrun gates and unmeasured surfaces are named.
 
 The final answer leads with deliverables: completed, incomplete, blocked, and handed off. Critique follows. Do not replace concrete PR/artifact links with a long narrative.

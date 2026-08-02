@@ -22,7 +22,7 @@ Use this contract for reviewer-facing PT-BR. The goal is the Portuguese equivale
 | freshness / frescor | dado atualizado; atualidade do dado |
 | ownership | responsabilidade; camada responsável |
 | spine | fluxo central; cadeia de envio |
-| caller | chamador; consumidor |
+| caller | consumidor |
 | cleanup | liberação; limpeza; etapa final, according to behavior |
 | retryable | que permite nova tentativa; use `retryable` only for a code enum/name |
 | delayed state | estado `delayed` do BullMQ |

@@ -77,7 +77,7 @@ Write reviewer-facing prose in the PR's established language. For PT-BR, apply t
 
 ### 5. Order the review
 
-Use explicit dependency facts first: definitions, schemas, invariants, operations, callers, wiring, then tests. Record unresolved imports and editorial relationships separately; do not call a partial import extractor an exact dependency graph.
+Use explicit dependency facts first: definitions, schemas, invariants, operations, consumers, wiring, then tests. Record unresolved imports and editorial relationships separately; do not call a partial import extractor an exact dependency graph.
 
 Each changed path appears exactly once. Each session has:
 
@@ -110,7 +110,7 @@ Produce:
 
 ### 7. Visual verification policy
 
-Do not request an authenticated Zoppy screen. The design contract and bundled font are the approved reference.
+Do not request a Zoppy screen or another visual input. The embedded design contract and bundled font are the complete fixed input.
 
 For an ordinary PR run, perform deterministic structural checks only: embedded font, required tokens/components, no external asset requests, valid responsive CSS, and no integrity failures. Do not take four screenshots or repeatedly judge aesthetics.
 

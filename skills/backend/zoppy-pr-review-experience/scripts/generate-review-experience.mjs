@@ -170,12 +170,29 @@ const EXPLICIT_COVERAGE = M.coverage || [];
 function groupedCoverage(p, h) {
   return EXPLICIT_COVERAGE.filter(item => item.path === p && (item.fullFile || (Number(item.start) <= h.newEnd && Number(item.end) >= h.newStart)) && prepComments.some(comment => String(comment.id) === String(item.commentId) && comment.path === p));
 }
+const normalizedMoveLine = value => String(value || '').trim().replace(/\s+/g, ' ');
+function explainedMoveDestination(p, source, deletedRow) {
+  const target = normalizedMoveLine(deletedRow.txt);
+  if (!target) return true;
+  return FILES[p].hunks.some(candidate => {
+    if (candidate === source || !candidate.rows.some(row => row.t === '+' && normalizedMoveLine(row.txt) === target)) return false;
+    const comments = hunkComments(p, candidate);
+    const changed = candidate.rows.filter(row => row.t !== ' ');
+    return comments.length > 0 || groupedCoverage(p, candidate).length > 0 || VIEWED.has(p) || changed.every(row => NOISE.some(re => re.test(row.txt)));
+  });
+}
+function isExplainedPureMove(p, h) {
+  const changed = h.rows.filter(row => row.t !== ' ');
+  const deleted = changed.filter(row => row.t === '-');
+  return deleted.length > 0 && changed.every(row => row.t === '-') && deleted.every(row => explainedMoveDestination(p, h, row));
+}
 function classify(h, cs, p) {
   if (cs.length) return 'told';
   if (groupedCoverage(p, h).length) return 'grouped';
   const changed = h.rows.filter(r => r.t !== ' ');
   if (!changed.length) return 'told';
   if (VIEWED.has(p)) return 'viewed';
+  if (isExplainedPureMove(p, h)) return 'moved';
   return changed.every(r => NOISE.some(re => re.test(r.txt))) ? 'noise' : 'quiet';
 }
 function renderHunk(p, h, idx) {
@@ -195,8 +212,12 @@ function renderHunk(p, h, idx) {
   const position = deleted ? '' : `R${h.newStart}`;
   const meta = deleted ? `arquivo deletado · −${nchg} ${plural}` : `L${h.newStart}–${h.newEnd} · ${nchg} ${plural}`;
   const ghlink = `<a class="gh" href="https://github.com/${M.repo}/pull/${M.pr}/files#${anchor(p)}${position}" target="_blank" rel="noopener">comentar no GitHub ↗</a>`;
-  if (kind === 'noise' || kind === 'viewed') {
-    const summary = kind === 'viewed' ? 'arquivo trivial já marcado Viewed no GitHub' : 'ruído: imports / injeção de dependência';
+  if (kind === 'noise' || kind === 'viewed' || kind === 'moved') {
+    const summary = kind === 'viewed'
+      ? 'arquivo trivial já marcado Viewed no GitHub'
+      : kind === 'moved'
+        ? 'bloco movido; o destino idêntico está explicado'
+        : 'ruído: imports / injeção de dependência';
     return `<div class="hunk noise">
   <details><summary class="nsum">${summary} <span class="hmeta">${meta}</span></summary>
   <div class="dtbl"><table>${rows}</table></div></details>
@@ -284,7 +305,7 @@ const integrity = `
 <li><b>${paths.length}</b> arquivos no diff · <b>${stops.length}</b> paradas no manifesto · <b>${missing.length}</b> não cobertos${missing.length?': '+missing.map(esc).join(', '):''}</li>
 <li><b>${prepComments.filter(c=>CANONICAL_PREP.test(c.body || '')).length}</b> comentários canônicos <code>🤖 [prep]</code> · <b>${prepComments.filter(c=>LEGACY_PREP.test(c.body || '')).length}</b> no formato ordinal legado · <b>${nonPrepComments.length}</b> comentários de revisão separados</li>
 <li>Linhas: lógica <b>${M.loc.logicAdd-M.loc.logicDel}</b> de saldo (+${M.loc.logicAdd} / −${M.loc.logicDel}) · testes <b>${M.loc.specAdd-M.loc.specDel}</b> de saldo (+${M.loc.specAdd} / −${M.loc.specDel})</li>
-<li><b>${edgeViolations}/${edgeCount}</b> (${Math.round(100*edgeViolations/(edgeCount||1))}%) das arestas de import reais aparecem <i>caller primeiro</i> na ordem alfabética do GitHub</li>
+<li><b>${edgeViolations}/${edgeCount}</b> (${Math.round(100*edgeViolations/(edgeCount||1))}%) das arestas de importação reais aparecem com o <i>consumidor primeiro</i> na ordem alfabética do GitHub</li>
 <li><b>${pairInversions}/${pairs}</b> (${Math.round(100*pairInversions/(pairs||1))}%) dos pares de arquivos estão na ordem relativa errada no GitHub</li>
 <li>Trechos com lógica e <b>zero</b> nota de preparação ancorada no próprio trecho: <b>${gapHunks.length}</b>${gapHunks.length?' — '+gapHunks.map(esc).join(', '):''}</li>
 <li>achados relacionados: <b>${(M.findings || []).filter(f => f.classification === 'introduced_bug').length}</b> bug(s) introduzido(s) aberto(s) · <b>${(M.findings || []).filter(f => f.classification === 'fixed_introduced_bug').length}</b> bug(s) introduzido(s) corrigido(s) · <b>${(M.findings || []).filter(f => f.classification === 'inherited_debt').length}</b> dívida(s) herdada(s) · <b>${(M.findings || []).filter(f => f.classification === 'speculative').length}</b> hipótese(s)</li>

@@ -1,6 +1,6 @@
 # Deterministic Zoppy design contract
 
-This file is the approved visual reference for every generated review guide. It was extracted once from Zoppy's `ui-components/projects/visual-identity` assets and the established application shell. Do not require a live or authenticated product page on each run.
+This file is the fixed visual contract for every generated review guide. It was extracted once from Zoppy's `ui-components/projects/visual-identity` assets and established application shell. Never request a live page, authenticated page, screenshot, or user-selected reference during normal generation.
 
 ## Identity
 
