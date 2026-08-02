@@ -159,6 +159,32 @@ const md = s => esc(s)
   .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   .replace(/\b(MUDANÇA|ALTERNATIVA|EQUIVALÊNCIA|POR QUE|O QUE FORÇOU|POR QUE FOI POSSÍVEL|NÃO|CHANGE|WHY)\b:/g,
            '<b class="kw">$1:</b>');
+const normalizeLegacyPrepLanguage = value => {
+  if (!M.normalizeLegacyPrepLanguage) return value;
+  return String(value || '')
+    .replace(/o alvo de produção é exatamente o mesmo da Opção A corrigida/gi, 'o alvo de produção permanece o mesmo já validado na cabeça final')
+    .replace(/\bcallers\b/gi, 'consumidores')
+    .replace(/\bcaller\b/gi, 'consumidor')
+    .replace(/\bchamadores\b/gi, 'consumidores')
+    .replace(/\bchamador\b/gi, 'consumidor')
+    .replace(/\bowners\b/gi, 'responsáveis')
+    .replace(/\bowner\b/gi, 'responsável')
+    .replace(/(?<!\.)\bspecs\b(?!\.ts)/gi, 'testes')
+    .replace(/(?<!\.)\bspec\b(?!\.ts)/gi, 'teste')
+    .replace(/\bwiring\b/gi, 'composição')
+    .replace(/\bshape\b/gi, 'estrutura')
+    .replace(/\bruntime\b/gi, 'execução')
+    .replace(/\bgates\b/gi, 'verificações')
+    .replace(/\bgate\b/gi, 'verificação')
+    .replace(/\bproduct-tree convergence\b/gi, 'convergência da árvore de produção')
+    .replace(/\bnon-goal\b/gi, 'limite explícito')
+    .replace(/\bepic\b/gi, 'épico')
+    .replace(/\breview\b/gi, 'revisão')
+    .replace(/\bslice\b/gi, 'fatia')
+    .replace(/\bseam\b/gi, 'ponto de substituição')
+    .replace(/\bdrift\b/gi, 'divergência')
+    .replace(/\bfacade\b/gi, 'fachada');
+};
 
 const NOISE = [
   /^\s*import\s/, /^\s*}\s*from\s/, /^\s*[A-Za-z][\w]*,?$/,
@@ -203,7 +229,7 @@ function renderHunk(p, h, idx) {
     const commented = cs.some(c => c.line === r.n);
     return `<tr class="${cls}${commented?' hit':''}"><td class="ln">${ln||''}</td><td class="sg">${r.t==='+'?'+':r.t==='-'?'−':''}</td><td class="tx">${esc(r.txt)||'&nbsp;'}</td></tr>`;
   }).join('');
-  const why = cs.map(c => `<blockquote class="prep"><b>Contexto da mudança${LEGACY_PREP.test(c.body || '') ? ' · formato legado' : ''}</b> <span class="at">@${esc(c.user.login)} · L${c.line}</span><p>${md(stripPrep(c.body))}</p></blockquote>`).join('');
+  const why = cs.map(c => `<blockquote class="prep"><b>Contexto da mudança${LEGACY_PREP.test(c.body || '') ? ' · redação normalizada' : ''}</b> <span class="at">@${esc(c.user.login)} · L${c.line}</span><p>${md(normalizeLegacyPrepLanguage(stripPrep(c.body)))}</p></blockquote>`).join('');
   const grouped = groupedCoverage(p, h).map(item => `<div class="prep grouped"><b>Cobertura geral declarada · comentário ${esc(item.commentId)}</b><p>${md(item.reason)}</p></div>`).join('');
   const nchg = h.rows.filter(r=>r.t!==' ').length;
   const kind = classify(h, cs, p);
@@ -267,7 +293,7 @@ const sessionHtml = M.sessions.map(s => {
     <p class="orderwhy"><b>por que agora:</b> ${md(st.why)}</p>
   </header>
   ${proofCards(st.proofs)}
-  ${fl.map(c=>`<blockquote class="prep file"><b>Contexto geral do arquivo${LEGACY_PREP.test(c.body || '') ? ' · formato legado' : ''}</b> <span class="at">@${esc(c.user.login)}</span><p>${md(stripPrep(c.body))}</p></blockquote>`).join('')}
+  ${fl.map(c=>`<blockquote class="prep file"><b>Contexto geral do arquivo${LEGACY_PREP.test(c.body || '') ? ' · redação normalizada' : ''}</b> <span class="at">@${esc(c.user.login)}</span><p>${md(normalizeLegacyPrepLanguage(stripPrep(c.body)))}</p></blockquote>`).join('')}
   ${reviewContext.length ? `<details class="review-context"><summary>Discussão de revisão (${reviewContext.length})</summary>${reviewContext.map(c=>`<blockquote><b>${esc(c.user?.login || 'autor desconhecido')}</b><p>${md(c.body || '')}</p></blockquote>`).join('')}</details>` : ''}
   ${f.hunks.map((h,i)=>renderHunk(st.path,h,i)).join('')}
 </section>`;
