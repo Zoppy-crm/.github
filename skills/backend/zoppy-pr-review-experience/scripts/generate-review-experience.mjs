@@ -544,7 +544,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding:24px 0;font-size
   <div class="prog"><b id="pc">0/${stops.length}</b><span>paradas lidas · ~${M.sessions.reduce((a,s)=>a+s.minutes,0)} min no total</span><div class="bar"><i id="pb"></i></div></div>
   <div class="railscroll">${rail}</div>
   <div class="sidefoot"><p class="kbd"><kbd>j</kbd>/<kbd>k</kbd> navegar · <kbd>x</kbd> marcar lida<br>progresso salvo neste navegador</p>
-  <p style="font-size:.7rem;color:var(--muted);margin:.75rem 0 0"><a href="../wpp-review-experience.html">← Todas as revisões</a></p></div>
+  <p style="font-size:.7rem;color:var(--muted);margin:.75rem 0 0"><a href="${esc(M.indexHref || '../wpp-review-experience.html')}">← Todas as revisões</a></p></div>
 </aside>
 <main>
 <div class="topbar"><div class="crumb"><span class="productdot" aria-hidden="true"></span><b>WhatsApp epic</b><span>/</span><span>PR #${M.pr}</span></div>
