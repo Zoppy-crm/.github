@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zoppy PR Review Experience"
+  short_description: "Generate a deterministic guided Zoppy PR review"
+  default_prompt: "Use $zoppy-pr-review-experience to prepare this PR and produce a revision-pinned, dependency-ordered local review guide with explicit bug provenance."
