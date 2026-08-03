@@ -329,6 +329,36 @@ const classes = cn(
 );
 ```
 
+### `[class]` com `cn()` no lugar de `[ngClass]`
+
+Em template, usar `[class]` com `cn()`. **Não usar `[ngClass]` nem `[ngStyle]` em código novo**, e migrar os existentes ao editar o template — mesma regra dos componentes `ps-*`.
+
+O Angular **não** deprecou `NgClass`/`NgStyle`, então não há warning de compilação. É convenção do time: desde a v19 o binding nativo `[class]` cobre os casos que antes exigiam a diretiva, e o `cn()` já é o utilitário da casa para compor classes.
+
+Juntar a classe estática dentro do mesmo `cn()`, para o elemento ter **uma única fonte de classes** em vez de um atributo estático mais um mapa condicional.
+
+```html
+<!-- ERRADO — diretiva + classe estática separada -->
+<ui-icon class="flex items-center text-2xl" [ngClass]="coupon.iconClass"></ui-icon>
+<span [ngClass]="{ 'text-gray-200': !coupon.code, 'text-gray-600': coupon.code }"></span>
+<div class="rounded-full bg-white" [ngClass]="{ hidden: !isOpen() }"></div>
+
+<!-- CORRETO — binding nativo, classes num lugar só -->
+<ui-icon [class]="cn('flex items-center text-2xl', coupon.iconClass)"></ui-icon>
+<span [class]="cn(coupon.code ? 'text-gray-600' : 'text-gray-200')"></span>
+<div [class]="cn('rounded-full bg-white', !isOpen() && 'hidden')"></div>
+```
+
+Expor `cn` no componente para o template alcançar:
+
+```typescript
+import { cn } from '@Zoppy-crm/visual-identity';
+
+export class FeatureComponent {
+    public readonly cn: typeof cn = cn;
+}
+```
+
 ### Design tokens
 
 Usar os tokens do preset `@Zoppy-crm/tailwind`. Não hardcodar cores.
@@ -405,27 +435,27 @@ import { UiButtonComponent } from '@Zoppy-crm/ui-button';
 
 Mapa de migração:
 
-| Legado (descontinuado)               | Substituto                | Package                      |
-| ------------------------------------ | ------------------------- | ---------------------------- |
-| `<ps-button>`                        | `<ui-button>`             | `@Zoppy-crm/ui-button`       |
-| `<ps-input>`                         | `<ui-input>`              | `@Zoppy-crm/ui-input`        |
-| `<ps-icon>`                          | `<ui-icon>`               | `@Zoppy-crm/ui-icon`         |
-| `<ps-dropdown>`                      | `<ui-dropdown>`           | `@Zoppy-crm/ui-dropdown`     |
-| `<ps-selector>`                      | `<ui-selector>`           | `@Zoppy-crm/ui-selector`     |
-| `<ps-multi-select>`                  | `<ui-multi-select>`       | `@Zoppy-crm/ui-multi-select` |
-| `<ps-checkbox>`                      | `<ui-checkbox>`           | `@Zoppy-crm/ui-checkbox`     |
-| `<ps-switch>`                        | `<ui-switch>`             | `@Zoppy-crm/ui-switch`       |
-| `<ps-radio-button>`                  | `<ui-radio-button>`       | `@Zoppy-crm/ui-radio-button` |
-| `<ps-datepicker>`                    | `<ui-datepicker>`         | `@Zoppy-crm/ui-datepicker`   |
-| `<ps-timepicker>`                    | `<ui-timepicker>`         | `@Zoppy-crm/ui-timepicker`   |
-| `<ps-search-bar>`                    | `<ui-search-bar>`         | `@Zoppy-crm/ui-search-bar`   |
-| `<ps-pagination>`                    | `<ui-pagination>`         | `@Zoppy-crm/ui-pagination`   |
-| `<ps-skeleton>`                      | `<ui-skeleton>`           | `@Zoppy-crm/ui-skeleton`     |
-| `<ps-confirm-action>`                | `<ui-confirm-action>`     | `@Zoppy-crm/ui-confirm-action` |
-| `<ps-mini-menu>`                     | `<ui-mini-menu>`          | `@Zoppy-crm/ui-mini-menu`    |
-| `<ps-input-file>`                    | `<ui-input-file>`         | `@Zoppy-crm/ui-input-file`   |
-| `<ps-toast>` / `ToastService`        | `UiToastService`          | `@Zoppy-crm/ui-toast`        |
-| `[appTooltip]` / `<ps-tooltip>`      | `[uiTooltip]` (diretiva)  | `@Zoppy-crm/ui-tooltip`      |
+| Legado (descontinuado)          | Substituto               | Package                        |
+| ------------------------------- | ------------------------ | ------------------------------ |
+| `<ps-button>`                   | `<ui-button>`            | `@Zoppy-crm/ui-button`         |
+| `<ps-input>`                    | `<ui-input>`             | `@Zoppy-crm/ui-input`          |
+| `<ps-icon>`                     | `<ui-icon>`              | `@Zoppy-crm/ui-icon`           |
+| `<ps-dropdown>`                 | `<ui-dropdown>`          | `@Zoppy-crm/ui-dropdown`       |
+| `<ps-selector>`                 | `<ui-selector>`          | `@Zoppy-crm/ui-selector`       |
+| `<ps-multi-select>`             | `<ui-multi-select>`      | `@Zoppy-crm/ui-multi-select`   |
+| `<ps-checkbox>`                 | `<ui-checkbox>`          | `@Zoppy-crm/ui-checkbox`       |
+| `<ps-switch>`                   | `<ui-switch>`            | `@Zoppy-crm/ui-switch`         |
+| `<ps-radio-button>`             | `<ui-radio-button>`      | `@Zoppy-crm/ui-radio-button`   |
+| `<ps-datepicker>`               | `<ui-datepicker>`        | `@Zoppy-crm/ui-datepicker`     |
+| `<ps-timepicker>`               | `<ui-timepicker>`        | `@Zoppy-crm/ui-timepicker`     |
+| `<ps-search-bar>`               | `<ui-search-bar>`        | `@Zoppy-crm/ui-search-bar`     |
+| `<ps-pagination>`               | `<ui-pagination>`        | `@Zoppy-crm/ui-pagination`     |
+| `<ps-skeleton>`                 | `<ui-skeleton>`          | `@Zoppy-crm/ui-skeleton`       |
+| `<ps-confirm-action>`           | `<ui-confirm-action>`    | `@Zoppy-crm/ui-confirm-action` |
+| `<ps-mini-menu>`                | `<ui-mini-menu>`         | `@Zoppy-crm/ui-mini-menu`      |
+| `<ps-input-file>`               | `<ui-input-file>`        | `@Zoppy-crm/ui-input-file`     |
+| `<ps-toast>` / `ToastService`   | `UiToastService`         | `@Zoppy-crm/ui-toast`          |
+| `[appTooltip]` / `<ps-tooltip>` | `[uiTooltip]` (diretiva) | `@Zoppy-crm/ui-tooltip`        |
 
 ### `ui-button` — uso correto
 
