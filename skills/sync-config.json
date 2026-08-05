@@ -15,7 +15,7 @@
         },
         "frontend": {
             "folders": ["shared", "frontend"],
-            "repos": ["zoppy-FE", "ui-components", "zoppy-partners-fe"]
+            "repos": ["zoppy-FE", "ui-components", "zoppy-partners-fe", "zoppy-admin-fe"]
         },
         "e2e": {
             "folders": ["shared", "e2e"],
