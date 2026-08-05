@@ -108,7 +108,7 @@ skills/
 | **backend**         | `shared` + `backend`      | zoppy-api, zoppy-workflow, zoppy-pixel-lambda, zoppy-event-bridge |
 | **wpp-commerce**    | `shared` + `wpp-commerce` | zoppy-whatsapp-commerce                                         |
 | **wpp-commerce-fe** | `shared`                  | zoppy-whatsapp-commerce-FE (React — recebe só as skills shared) |
-| **frontend**        | `shared` + `frontend`     | zoppy-FE, ui-components, zoppy-partners-fe                       |
+| **frontend**        | `shared` + `frontend`     | zoppy-FE, ui-components, zoppy-partners-fe, zoppy-admin-fe       |
 | **e2e**             | `shared` + `e2e`          | zoppy-e2e-api                                                    |
 
 Para adicionar repos ou grupos, edite `skills/sync-config.json`.
