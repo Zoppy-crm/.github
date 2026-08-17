@@ -20,6 +20,10 @@
         "e2e": {
             "folders": ["shared", "e2e"],
             "repos": ["zoppy-e2e-api"]
+        },
+        "observability": {
+            "folders": ["shared"],
+            "repos": ["zoppy-eng-metrics"]
         }
     }
 }
