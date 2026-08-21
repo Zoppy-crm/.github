@@ -22,7 +22,7 @@
             "repos": ["zoppy-e2e-api"]
         },
         "observability": {
-            "folders": ["shared"],
+            "folders": ["shared", "observability"],
             "repos": ["zoppy-eng-metrics"]
         }
     }
