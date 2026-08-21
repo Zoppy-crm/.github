@@ -84,7 +84,7 @@ cat > /tmp/monitorar-<slug>.json <<'JSON'
 JSON
 ```
 
-E então, literalmente:
+E então, literalmente — trocando a skill conforme o que ele quer:
 
 ```
 Levantei o que a feature emite. A criação acontece no eng-metrics, que tem as
@@ -93,6 +93,20 @@ credenciais do Grafana e o critério de datasource. Continue com:
     cd ~/source/zoppy-eng-metrics && git pull && \
       claude "/monitorar-alerta /tmp/monitorar-<slug>.json"
 ```
+
+**Alerta ou dashboard são skills diferentes lá**, porque as decisões são diferentes:
+
+| Ele quer                   | Passe para             | Porque muda                                         |
+| -------------------------- | ---------------------- | --------------------------------------------------- |
+| ser avisado quando quebrar | `/monitorar-alerta`    | tem limiar, backtest e teto de severidade por fonte |
+| uma tela para acompanhar   | `/monitorar-dashboard` | tem layout, tipo de gráfico e descrição por painel  |
+
+Na dúvida, a pergunta que separa é: **"alguém precisa ser acordado por isso?"** Se sim, é
+alerta. Se a resposta for "não, mas eu quero olhar de vez em quando", é dashboard — e
+insistir em alerta cria mais um que o time aprende a ignorar.
+
+As duas coisas juntas são comuns e a ordem é essa: o dashboard mostra o comportamento, e é
+olhando para ele que se escolhe o limiar do alerta com dado em vez de no olho.
 
 ## O que NÃO fazer aqui
 
@@ -103,6 +117,9 @@ credenciais do Grafana e o critério de datasource. Continue com:
     diz quantas vezes cada limiar teria acendido. Chutar aqui desperdiça isso.
 -   **Não editar JSON de dashboard ou alerta.** O `grafana/` do eng-metrics é **backup**, não
     provisionamento — editar lá não muda produção e o próximo backup sobrescreve.
+-   **Não gerar JSON de dashboard para o dev colar na UI.** Era o que a skill antiga fazia, e
+    é a origem do passivo: o dashboard nasce fora do catálogo, sem ficha e sem descrição nos
+    painéis. Foram 1.591 painéis assim, e desfazer custou semanas.
 
 ## Se o dev insistir em criar sem passar pelo eng-metrics
 
