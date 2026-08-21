@@ -14,9 +14,11 @@ description: >
 
 ## Papel
 
-Você é quem impede que nasça mais um alerta que não avisa ninguém. O acervo tem 190, e as
-falhas que custaram caro foram sempre silenciosas: alerta que nunca acende, alerta que
-acende no vazio, alerta que conta o passado, alerta sem instrução para quem foi acordado.
+Você é quem impede que nasça mais um alerta que não avisa ninguém.
+
+**Todo alerta é documentado, e a documentação nasce com ele.** As falhas que custaram caro
+aqui foram sempre silenciosas: alerta que nunca acende, alerta que acende no vazio, alerta
+que conta o passado, alerta sem instrução para quem foi acordado.
 
 Nada aqui é opinião sua. **Leia os fatos do repo em vez de lembrar deles** — eles mudam, e
 uma skill que repete número envelhece calada:
@@ -33,6 +35,22 @@ pergunta que separa Loki de Prometheus (`DISCRIMINANTE`), a regra de cardinalida
 (`REGRA_DURA`) e o perfil de cada fonte. É a fonte única.
 
 ## Processo
+
+### 0. Confirme que está lendo o repo de hoje
+
+Antes de ler qualquer coisa:
+
+```bash
+git -C . rev-parse --abbrev-ref HEAD && git -C . fetch -q && git -C . status -sb | head -1
+```
+
+Se não estiver em `master` sincronizado, pare e atualize. Tudo que esta skill manda ler
+muda toda semana — o critério de datasource, o catálogo de sinais, a convenção, as fichas.
+Num clone atrasado ela recomenda com o mundo de duas semanas atrás **e não tem como saber
+disso**: sai uma recomendação errada com cara de certa, que é o pior tipo.
+
+Se o diretório atual não for o `zoppy-eng-metrics`, esta skill não roda aqui. Peça para o
+dev abrir o terminal lá — é onde as credenciais do Grafana e o catálogo existem.
 
 ### 1. Recupere o contexto
 
@@ -62,9 +80,9 @@ Três resultados possíveis, e três respostas diferentes:
 -   **Está no catálogo** → Loki é viável. Os `campos` e `eventos` dizem por onde a query pode
     filtrar e agrupar. Os `levels` dizem se faz sentido tratar como erro.
 -   **Não está, e o repo é o zoppy-api** → _provavelmente_ o código não emite. Mas o catálogo
-    declara 568 chamadas sem identifier e 130 expressões não resolvidas, então **não afirme**:
-    diga que não conseguiu confirmar e peça para o dev checar. Falso positivo é o pior
-    resultado.
+    declara quantas chamadas ficaram sem identifier e quantas expressões não resolveu — leia
+    o bloco `resumo` dele. Então **não afirme**: diga que não conseguiu confirmar e peça para
+    o dev checar. Falso positivo é o pior resultado.
 -   **O repo não é o zoppy-api** → não há catálogo. Pergunte, não adivinhe.
 
 Ao recomendar, diga **por que** e o que a fonte custa — os campos `quando`, `quando_nao` e
@@ -83,7 +101,7 @@ gh workflow run backtest-alerta.yml \
 Espere e leia o resultado. A tabela dá disparos, disparos/dia e fração do tempo aceso.
 Como ler:
 
--   **0 disparo em 30 dias** → o alerta nunca acende. São 15 assim no acervo.
+-   **0 disparo em 30 dias** → o alerta nunca acende. Já há vários assim no acervo.
 -   **~1 por semana** → é o que se espera de algo que vale acordar alguém.
 -   **vários por dia** → o time aprende a ignorar, e ignora também quando importar.
 -   **aceso mais de 50% do tempo** → não é alerta, é estado. Vira dashboard.
@@ -103,13 +121,13 @@ saber, e que já foram respondidas nas perguntas do passo 1:
     query em prosa. É o texto que faz alguém entender o risco sem conhecer o sistema.
 -   **`ficha.d`** — como o número sai: agregação, limiar, por quanto tempo sustentado. É o que
     permite discutir se o limiar é o certo.
--   **`ficha.n`** — a ressalva: o que o alerta _não_ mede. Opcional, mas 155 das 187 fichas
-    têm uma.
+-   **`ficha.n`** — a ressalva: o que o alerta _não_ mede. Opcional, e a grande maioria das
+    fichas tem uma.
 
 E o que vai no Grafana, não na ficha:
 
 -   **`annotations.description`** — o que fazer. **Chega na notificação**, e é o único texto
-    que quem foi acordado lê antes de abrir qualquer coisa. Faltava em 68 dos 190.
+    que quem foi acordado lê antes de abrir qualquer coisa.
 
 Leia `docs/formato-da-ficha.md` se tiver dúvida sobre o que vai onde. Tem um exemplo de par
 bem escrito lá.
@@ -148,10 +166,10 @@ religar. Ver `scripts/aguardando_deploy.py`.
 ## Erros que este repo já pagou, e que você não deve repetir
 
 -   **Não escolha o datasource de cabeça.** Athena não sustenta `critical`: o dado chega ao
-    lake com atraso, então o alerta conta o passado. Baixar o `for` não resolve. São 6 assim.
+    lake com atraso, então o alerta conta o passado. Baixar o `for` não resolve.
 -   **Não aperte o intervalo "para detectar mais rápido".** Detecção é `for` + intervalo, e o
-    ganho encolhe rápido enquanto o custo cresce linear. Foi assim que 92 dos 190 alertas
-    foram parar em 1 minuto.
+    ganho encolhe rápido enquanto o custo cresce linear. Foi assim que metade do acervo foi
+    parar no intervalo mais fino que existe, sem ninguém ter decidido isso.
 -   **Não ponha `companyId` como label de Prometheus.** Cardinalidade alta derruba o servidor.
 -   **Não edite JSON em `grafana/`.** É backup, não provisionamento. O próximo backup
     sobrescreve.

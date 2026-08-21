@@ -14,10 +14,12 @@ description: >
 
 ## Papel
 
-Você é quem impede que nasça mais um painel que ninguém sabe o que mede. O acervo tem 314
-dashboards, e **1.591 painéis passaram meses sem uma linha de descrição** — quem abria via
-um número e tinha que ler a query para saber do que se tratava. Escrever isso depois custou
-semanas. Escrever junto custa a mesma conversa que já se tem ao escolher o gráfico.
+Você é quem impede que nasça mais um painel que ninguém sabe o que mede.
+
+**Todo dashboard é documentado, e a documentação nasce com ele.** Não é meta nem boa
+intenção: é o que o gate cobra, e é a razão de esta skill existir. Escrever depois já custou
+um mutirão de semanas neste repo. Escrever junto custa a mesma conversa que já se tem ao
+escolher o gráfico.
 
 Nada aqui é opinião sua. **Leia os fatos do repo em vez de lembrar deles** — eles mudam, e
 uma skill que repete número envelhece calada:
@@ -28,15 +30,15 @@ uma skill que repete número envelhece calada:
 | O que o código do zoppy-api emite              | `docs/alertas/sinais-zoppy-api.json`    |
 | O que se escreve na ficha, e o que não         | `docs/formato-da-ficha.md`              |
 | A definition of done de dashboard              | `docs/boas-praticas-observabilidade.md` |
-| **314 dashboards reais, para copiar a forma**  | `grafana/dashboards/`                   |
+| **Dashboards reais, para copiar a forma**      | `grafana/dashboards/`                   |
 
 ## Não invente JSON de dashboard
 
 Esta é a diferença que mais economiza tempo, e a que mais evita erro.
 
-O acervo tem 314 dashboards que funcionam, com o `schemaVersion` certo, o `pluginVersion`
-certo e as variáveis que este Grafana tem. **Copie a forma de um que já se pareça com o que
-você quer** em vez de montar do zero:
+O acervo está cheio de dashboards que funcionam, com o `schemaVersion` certo, o
+`pluginVersion` certo e as variáveis que este Grafana tem. **Copie a forma de um que já se
+pareça com o que você quer** em vez de montar do zero:
 
 ```bash
 # um que use a mesma fonte e o mesmo tipo de painel
@@ -50,6 +52,22 @@ Um skeleton escrito dentro de uma skill envelhece: a versão do Grafana sobe, o 
 muda, a variável some. Um dashboard do acervo é do backup de hoje.
 
 ## Processo
+
+### 0. Confirme que está lendo o repo de hoje
+
+Antes de ler qualquer coisa:
+
+```bash
+git -C . rev-parse --abbrev-ref HEAD && git -C . fetch -q && git -C . status -sb | head -1
+```
+
+Se não estiver em `master` sincronizado, pare e atualize. Tudo que esta skill manda ler
+muda toda semana — o critério de datasource, o catálogo de sinais, a convenção, as fichas.
+Num clone atrasado ela recomenda com o mundo de duas semanas atrás **e não tem como saber
+disso**: sai uma recomendação errada com cara de certa, que é o pior tipo.
+
+Se o diretório atual não for o `zoppy-eng-metrics`, esta skill não roda aqui. Peça para o
+dev abrir o terminal lá — é onde as credenciais do Grafana e o catálogo existem.
 
 ### 1. Recupere o contexto
 
@@ -123,8 +141,8 @@ frase nas duas desperdiça a segunda:
 Mais `ficha.o` (que pergunta a tela responde), `ficha.c` (a composição) e `ficha.q` (de onde
 vem o dado).
 
-**A chave é o `id` do painel, nunca o título.** 148 painéis do acervo repetem título, e
-casar por ele soltou 772 linhas em silêncio.
+**A chave é o `id` do painel, nunca o título.** Muito painel do acervo repete título, e
+casar por ele já soltou a ficha de centenas deles em silêncio, num renome que ninguém viu.
 
 ### 5. Crie
 
@@ -156,10 +174,10 @@ O gate exige a linha de ficha só em painel **composto** — mais de uma consult
 transformation, unidade percentual, ou divisão na query. Não é burocracia seletiva: é onde
 o erro é invisível.
 
-O caso que originou a regra: o CTR de dois dashboards mostrou **0,98% por meses quando o
-valor era 0,74%** — cliques de todos os formatos divididos por impressões só de vídeo.
-Nenhuma das duas consultas estava errada. A combinação estava, e nenhuma descrição pegaria
-isso, porque descrição fala da intenção. A conta escrita pega.
+O caso que originou a regra: um painel de CTR mostrou por meses um número um terço maior
+que o real, porque o numerador contava cliques de todos os formatos e o denominador só
+impressões de vídeo. Nenhuma das duas consultas estava errada. A combinação estava, e
+nenhuma descrição pegaria isso, porque descrição fala da intenção. A conta escrita pega.
 
 Quando montar um painel de razão, escreva na ficha **o numerador e o denominador**, não
 "taxa de clique".
@@ -174,7 +192,7 @@ Quando montar um painel de razão, escreva na ficha **o numerador e o denominado
 -   **Não deixe painel sem `id`.** Sem ele não há deep link: nem do catálogo, nem do
     `__panelId__` de um alerta. Conserta-se no Grafana com `scripts/grafana_panel_ids.py`,
     **não** adaptando a ficha para casar por título.
--   **Não aceite "Panel Title" nem "New dashboard".** O acervo tem 15 painéis e 2 dashboards
-    assim, e ninguém sabe o que são.
+-   **Não aceite "Panel Title" nem "New dashboard".** O acervo tem painel e dashboard assim,
+    e ninguém sabe o que são.
 -   **Não classifique dashboard por nome.** Já errou nos dois sentidos aqui: dashboards com
     "Teste" no título eram produção.

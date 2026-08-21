@@ -24,8 +24,8 @@ A criação acontece no `zoppy-eng-metrics`, e por um motivo concreto: `GRAFANA_
 critério de datasource, o backtest de limiar e o catálogo. Tentar criar daqui não funciona.
 
 **Não invente o identifier.** Se não achar no código, pergunte. Alerta que consulta um
-identifier que ninguém emite nunca dispara e parece saudável na tela — aconteceu 15 vezes
-no acervo, e é o modo de falhar mais caro que existe aqui.
+identifier que ninguém emite nunca dispara e parece saudável na tela — já aconteceu várias
+vezes no acervo, e é o modo de falhar mais caro que existe aqui.
 
 ## Processo
 
@@ -90,8 +90,19 @@ E então, literalmente — trocando a skill conforme o que ele quer:
 Levantei o que a feature emite. A criação acontece no eng-metrics, que tem as
 credenciais do Grafana e o critério de datasource. Continue com:
 
-    cd ~/source/zoppy-eng-metrics && git pull && \
+    cd ~/source/zoppy-eng-metrics && git checkout master && git pull && \
       claude "/monitorar-alerta /tmp/monitorar-<slug>.json"
+```
+
+**O `master` atualizado não é detalhe de higiene.** Tudo que a skill de lá vai ler muda
+toda semana: o critério de datasource, o catálogo de sinais que diz o que o código emite, a
+convenção, as fichas. Num clone velho ela recomenda com o mundo de duas semanas atrás e não
+tem como saber disso — e é uma recomendação errada que parece certa, que é o pior tipo.
+
+Se ele não tiver o repo, é um clone e pronto:
+
+```bash
+git clone git@github.com:Zoppy-crm/zoppy-eng-metrics.git ~/source/zoppy-eng-metrics
 ```
 
 **Alerta ou dashboard são skills diferentes lá**, porque as decisões são diferentes:
@@ -111,7 +122,7 @@ olhando para ele que se escolhe o limiar do alerta com dado em vez de no olho.
 ## O que NÃO fazer aqui
 
 -   **Não escolher o datasource.** O critério é medido e vive no eng-metrics
-    (`scripts/datasources.py`). Escolher aqui, de cabeça, é como se chegou a 6 alertas
+    (`scripts/datasources.py`). Escolher aqui, de cabeça, é como se chegou a alerta
     `critical` em Athena — uma fonte que conta o passado.
 -   **Não sugerir limiar.** Existe backtest lá: ele roda a query sobre os últimos 30 dias e
     diz quantas vezes cada limiar teria acendido. Chutar aqui desperdiça isso.
@@ -119,10 +130,13 @@ olhando para ele que se escolhe o limiar do alerta com dado em vez de no olho.
     provisionamento — editar lá não muda produção e o próximo backup sobrescreve.
 -   **Não gerar JSON de dashboard para o dev colar na UI.** Era o que a skill antiga fazia, e
     é a origem do passivo: o dashboard nasce fora do catálogo, sem ficha e sem descrição nos
-    painéis. Foram 1.591 painéis assim, e desfazer custou semanas.
+    painéis. Desfazer isso custou um mutirão de semanas.
 
 ## Se o dev insistir em criar sem passar pelo eng-metrics
 
 Diga o que se perde, sem impedir: a ficha do catálogo não nasce, o alerta aparece na
 listagem marcado como pendente, e o limiar vai sem backtest. Em seguida, ofereça o caminho
 completo de novo — ele custa poucos minutos a mais.
+
+O que **não** fazer é tentar suprir daqui. Você não tem as credenciais, não tem o critério e
+não tem o catálogo; o que sairia daqui seria um palpite com cara de recomendação.
