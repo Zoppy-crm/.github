@@ -8,7 +8,8 @@ description: >
     alerta", "monitorar essa feature", "preciso de um alerta pra isso", "como eu monitoro
     X", "criar dashboard", "quero saber quando isso quebrar", "adicionar observabilidade",
     "alerta de produção", ou logo depois de terminar uma feature quando ele perguntar como
-    acompanhar em produção. Também use quando perguntarem qual datasource usar (Loki,
+    acompanhar em produção. Use também quando um bug acabou de ser classificado como
+    `alavanca:monitoramento` pelo `/retorno-solucao` — nesse caso o bug é a especificação. Também use quando perguntarem qual datasource usar (Loki,
     Prometheus, MySQL, Athena, CloudWatch).
 ---
 
@@ -26,6 +27,27 @@ critério de datasource, o backtest de limiar e o catálogo. Tentar criar daqui 
 **Não invente o identifier.** Se não achar no código, pergunte. Alerta que consulta um
 identifier que ninguém emite nunca dispara e parece saudável na tela — já aconteceu várias
 vezes no acervo, e é o modo de falhar mais caro que existe aqui.
+
+## Quando a entrada é um bug já corrigido
+
+Se você chegou aqui porque o `/retorno-solucao` classificou um bug como
+`alavanca:monitoramento`, o passo 1 vem quase pronto: **o sintoma já aconteceu de verdade**,
+e o card tem a causa raiz escrita. Use o bug como especificação em vez de perguntar do zero —
+o que dá errado e por que importa já estão no retorno.
+
+Duas coisas mudam:
+
+-   **O limiar tem um caso real para calibrar.** Diga ao eng-metrics a data da ocorrência: o
+    backtest pode rodar sobre a janela em que o bug estava acontecendo, o que é bem melhor que
+    calibrar no vazio. Só funciona se a fonte tiver memória daquele período — se não tiver,
+    diga isso em vez de fingir que o limiar foi provado.
+-   **Se o sinal não existe, ele sobe no PR do bugfix** — não num card para depois. O dev está
+    no código e acabou de entender a causa; é o momento mais barato que existe para emitir o
+    log ou a métrica que faltava. Sem o sinal, não há alerta possível, e o card de alerta
+    nasceria morto esperando instrumentação.
+
+Isso vale **só** quando a alavanca é monitoramento. Em bug de regra de negócio o caminho é
+teste, não alerta — alerta avisa depois que o bug aconteceu, e não derruba reincidência.
 
 ## Processo
 

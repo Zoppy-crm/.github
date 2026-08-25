@@ -1,6 +1,6 @@
 ---
 name: retorno-solucao
-description: Registra o retorno de solução de um card (issue) do Zoppy em dois lugares — field "Retorno de Solução" do Project v2 "Zoppy Engineering" (#7) com texto alto-nível (cliente/CSM), e um comentário técnico no issue (time). Use sempre que o usuário pedir "dá o retorno no card", "retorno de solução", "retorno técnico do card", "/retorno-solucao <issue>", "dá esse retorno", "gera retorno de solução", "retorno pro cliente", ou qualquer variação para fechar/comunicar a resolução de um bug/card. Também acionado automaticamente via hook post-commit em branches `bugfix/*` e `hotfix/*` — nesse caso, o nº da issue vem do nome da branch. Convenção firme: NUNCA editar o body do issue (a seção `### Retorno de Solução` do template é ignorada pelo time).
+description: Registra o retorno de solução de um card (issue) do Zoppy em dois lugares — field "Retorno de Solução" do Project v2 "Zoppy Engineering" (#7) com texto alto-nível (cliente/CSM), e um comentário técnico no issue (time). Use sempre que o usuário pedir "dá o retorno no card", "retorno de solução", "retorno técnico do card", "/retorno-solucao <issue>", "dá esse retorno", "gera retorno de solução", "retorno pro cliente", ou qualquer variação para fechar/comunicar a resolução de um bug/card. Também acionado automaticamente via hook post-commit em branches `bugfix/*` e `hotfix/*` — nesse caso, o nº da issue vem do nome da branch. Também classifica a alavanca do bug ("o que teria pego isso antes?") numa label `alavanca:*`, e daí encaminha para `/flow-monitorar` ou abre o card do teste que faltou. Convenção firme: NUNCA editar o body do issue (a seção `### Retorno de Solução` do template é ignorada pelo time).
 ---
 
 # Retorno de Solução
@@ -9,6 +9,11 @@ Registra o retorno de solução de um card do Zoppy Engineering. Toda vez que o 
 
 1. **Field `Retorno de Solução`** do Project v2 "Zoppy Engineering" (#7) — alimenta views/relatórios do time.
 2. **Comentário** no próprio issue — garante visibilidade no feed do card para quem acompanha.
+
+E, quando o card é um bug, sai daqui **uma terceira coisa**: a classificação da alavanca —
+_o que teria pego este bug antes?_ — gravada como label. Ver **A pergunta que fecha o loop**,
+mais abaixo. É o único momento em que alguém sabe a causa raiz, e por isso o único momento
+barato de responder.
 
 ## O que NÃO fazer
 
@@ -141,6 +146,86 @@ Regras:
 
 Se o bug tinha reprodução **intermitente** ou dependente de estado, mencione explicitamente a condição no caso ("após X rodadas do job", "com cupom aplicado no mesmo ciclo", etc.) — senão QA vai testar uma vez, não reproduzir, e fechar como OK.
 
+## A pergunta que fecha o loop
+
+Depois do retorno, **uma pergunta**: _o que teria pego este bug antes?_
+
+Ela existe porque este é o único momento em que alguém sabe a causa raiz. Depois que o card
+fecha, a informação se perde — e recuperá-la vira censo manual, lendo bug por bug.
+
+A resposta vira uma label no issue, e a label é o que permite ver a distribuição do trimestre
+sem reler nada. **Não é formulário e não bloqueia merge**: uma pergunta, uma label, segue o
+jogo.
+
+### A árvore, na ordem
+
+Não ofereça as cinco opções de uma vez — quem escolhe de uma lista escolhe
+`monitoramento` por hábito. Pergunte na ordem:
+
+**1. Para reproduzir, você precisa do mundo real?** Terceiro respondendo diferente, dado sujo
+do cliente, tempo, volume, rotina que não rodou. Se sim → `alavanca:monitoramento`.
+
+Nenhuma suíte de teste reproduz esses. Para eles a jogada não é pegar antes, é **ver
+primeiro**.
+
+**2. Se não precisa: quantas peças você tem que montar?**
+
+| Resposta | Label | O que caracteriza |
+| --- | --- | --- |
+| entrada conhecida e banco bastam | `alavanca:api` | regra de negócio, cálculo, ou contrato entre peças nossas |
+| um componente, entrada conhecida | `alavanca:front` | renderiza ou se comporta errado |
+| a stack inteira montada | `alavanca:e2e` | preview × envio real, estado que muda ao recarregar |
+
+**3. Nenhuma das duas?** → `alavanca:nada`. Solicitação operacional, ajuste manual, relato sem
+informação suficiente.
+
+`alavanca:nada` é **resposta legítima e sem atrito**. Sem ela o time inventa alerta para não
+parecer omisso, e ruído com cara de cobertura é pior que buraco declarado.
+
+### Gravar
+
+```bash
+gh issue edit <N> --repo <ORG>/<REPO> --add-label "alavanca:<valor>"
+```
+
+A label é lida pela coleta que alimenta os painéis de bug — por isso ela, e não uma seção de
+texto no comentário. Texto não agrega.
+
+Se a label não existir no repo, ela é sincronizada a partir do
+`zoppy-eng-metrics` (`config/epic-labels.yml`). Avise em vez de criar uma label solta à mão:
+label criada fora do vocabulário não entra em painel nenhum, e ninguém descobre.
+
+### O que a resposta dispara
+
+**`alavanca:monitoramento` → passe o bastão para `/flow-monitorar`.** Não escolha datasource,
+não sugira limiar e não escreva alerta aqui — você não tem o critério nem o catálogo, e
+palpite com cara de recomendação é como se chegou a alerta que nunca acende.
+
+E trate **instrumentar como parte da correção**: se o sinal que faltava é um log que ninguém
+emite, ele sobe **no PR do bugfix**. O dev está no código e acabou de entender a causa — é o
+momento mais barato que existe para emitir o sinal. Isto não é "PR não sobe sem log": vale
+só quando a alavanca é monitoramento.
+
+**`alavanca:api` / `front` / `e2e` → abra o card do caso que faltou**, com o cenário concreto
+deste bug, não "melhorar cobertura":
+
+```bash
+gh issue create --repo <ORG>/<REPO> \
+  --title "[Teste] <o cenário que faltou>" \
+  --label "work: debitos" --label "epic: <frente>"
+```
+
+`work: debitos`, nunca `work: bug` — o card é o teste que falta, não um defeito novo, e
+`work: bug` alimenta a métrica de bugs do time.
+
+**`alavanca:nada` → nada mais.** Só a label.
+
+### Quando o card nasce em outro repo
+
+O sinal que falta pode ser no `zoppy-api` enquanto o bug foi corrigido num frontend. Abra o
+card **no repo que emite o sinal** — outro revisor, outro prazo. Quem sabe qual repo é o
+`/flow-monitorar`, que consulta o catálogo; não decida isto de cabeça.
+
 ## Checklist antes de postar
 
 Como são ações visíveis (impactam shared state), **sempre confirme o texto com o usuário antes de executar** — principalmente o alto-nível do campo, que aparece em views de management.
@@ -151,6 +236,8 @@ Como são ações visíveis (impactam shared state), **sempre confirme o texto c
 -   [ ] Issue `<N>` e repo conferidos
 -   [ ] Issue está no Project #7 (passo 1 retornou item com `project.number == 7`)
 -   [ ] Body do issue **não** foi editado
+-   [ ] Se é bug: label `alavanca:*` aplicada, e o desdobramento dela feito (bastão para
+        `/flow-monitorar`, ou card do teste que faltou, ou nada no caso de `alavanca:nada`)
 
 ## Exemplo preenchido
 
@@ -252,3 +339,9 @@ Sempre mostre os textos gerados pro usuário antes de publicar.
 -   Se o usuário não especificar a divisão, pergunte se quer alto-nível no campo + técnico no comentário (default) ou outra distribuição.
 -   Após postar, ecoe ao usuário: link do issue com o comentário + confirmação de que o field foi atualizado.
 -   Se o issue não estiver no Project #7, avise antes de prosseguir — não adicione o item ao project sem confirmar.
+-   **A classificação da alavanca é uma pergunta, não um questionário.** Se o dev responder
+    "não sei", ofereça a árvore uma vez e aceite a resposta que vier. Insistir transforma um
+    gancho que roda sozinho em atrito que alguém desliga.
+-   **Nunca deduza a alavanca do diff sozinho e aplique calado.** Proponha, com o motivo em uma
+    linha, e deixe o dev confirmar — ele é quem sabe se o bug precisava do mundo real. Rótulo
+    errado envenena o painel, e ninguém revisa label depois.
