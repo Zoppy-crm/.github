@@ -5,6 +5,11 @@ on:
         branches: [development]
         paths:
             - 'skills/**'
+            # Os hooks sao distribuidos no mesmo passo (merge em .claude/settings.json).
+            # Sem esta linha, mudanca so em hook nunca dispara a sync: fica parada ate
+            # alguem empurrar uma skill e o hook pegar carona. Foi assim que os repos
+            # ficaram meses mandando rodar uma skill que nao existe mais.
+            - 'config/hooks-template.json'
 
     workflow_dispatch:
         inputs:
