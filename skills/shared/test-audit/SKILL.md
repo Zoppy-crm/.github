@@ -5,27 +5,29 @@ description: Use when reviewing whether an existing spec actually verifies the c
 
 # Test audit
 
-## Princípio
+## Principle
 
-Cobertura diz que a linha rodou, não que um teste falharia se a saída estivesse errada. A pergunta desta skill é uma só: **supondo que o código tem um defeito que o spec não pega, qual é ele?**
+Coverage says the line ran, not that a test would fail if the output were wrong. This skill asks a single question: **assuming the code has a defect the spec does not catch, what is it?**
 
-Medido em bugs reais que escaparam de specs existentes, essa pergunta, feita de forma direta e com entrada concreta, apontou o defeito em cerca de 1 a cada 3. Um procedimento mais longo (catálogo de classes, tabela completa) não aumentou esse número. Por isso a skill é curta: faça a pergunta bem.
+Measured on real bugs that escaped existing specs, this question, asked directly and with a concrete input, pointed at the defect in about 1 case out of 3. A longer procedure (a class catalog, a full table) did not raise that number. That is why the skill is short: ask the question well.
 
-## Como fazer
+## How to do it
 
-Leia o arquivo-fonte, o spec e as factories ou helpers de seed que o spec usa. Depois liste **exatamente 5 lacunas**, da mais para a menos provável. Cada uma com:
+Read the source file, the spec, and the factories or seed helpers the spec uses. Then list **exactly 5 gaps**, from most to least likely. Each one with:
 
-- **Entrada ou estado concreto** que o spec não exercita ou não verifica. Valor, não categoria: `fullName = '   '`, não "testar strings".
-- **O que o código faz** com essa entrada, lendo o código, e se isso parece errado.
-- **Por que o spec não pega:** não exercita; exercita, mas a asserção não distingue certo de errado; ou o spec afirma algo que pode estar errado.
+- **A concrete input or state** the spec does not exercise or does not verify. A value, not a category: `fullName = '   '`, not "test strings".
+- **What the code does** with that input, from reading the code, and whether it looks wrong.
+- **Why the spec does not catch it:** it does not exercise it; it exercises it, but the assertion cannot tell right from wrong; or the spec asserts something that may be wrong.
 
-## Onde costuma estar
+## Where it usually is
 
-- Fixture que usa um valor só em todos os testes para um campo que o código lê.
-- Asserção fraca sobre valor calculado: `toBeDefined`, `length > 0`, `toHaveBeenCalled` sem argumento.
-- Teste que afirma recusa, bloqueio, stub ou "não faz": confira se outra fonte (quem chama, o card, o outro sistema) concorda com esse esperado.
-- Mock que aceita qualquer argumento, ou que pula a serialização que o real faz.
+- A fixture that uses a single value across every test for a field the code reads.
+- A weak assertion on a computed value: `toBeDefined`, `length > 0`, `toHaveBeenCalled` with no arguments.
+- A test that asserts a rejection, a block, a stub, or "does not do": check whether another source (the caller, the card, the other system) agrees with that expected value.
+- A mock that accepts any argument, or that skips the serialization the real thing does.
 
-## O que não pega
+## What it does not catch
 
-Regra que ninguém escreveu, contrato com outro sistema, concorrência e estado que muda entre execuções raramente aparecem lendo só o arquivo e o spec. Se o card da feature existir, leia-o antes: é dali que vem o esperado certo.
+A rule nobody wrote down, a contract with another system, concurrency, and state that changes between runs rarely show up from reading only the file and the spec. If the feature's card exists, read it first: that is where the right expected value comes from.
+
+Write the gaps in the dev's language.

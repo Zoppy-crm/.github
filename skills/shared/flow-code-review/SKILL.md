@@ -63,6 +63,8 @@ Compare diff against `project-conventions.md`:
 #### C. Tests
 
 -   New behavior introduced — is it tested?
+-   For every changed `*.spec.ts`: apply the `test-audit` skill and report its gaps under 🧪 Testes
+-   PR body has the `## Achados` section with the line `Bugs pegos na criação dos testes: N` (added by `test-design` / `flow-publish`); if tests changed and it is missing, flag it
 -   Tests follow project's test patterns (describe/it style, file naming, co-location)
 -   Tests verify behavior through public interfaces, not implementation details
 -   No `test.only` or `test.skip` left behind

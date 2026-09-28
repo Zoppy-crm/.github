@@ -27,6 +27,7 @@ Mapa de referencia que associa cada stack ao kit de skills que o dev-guide-v2 de
 
 **Skills de teste:**
 
+-   `test-design` — testes unitarios: tabela de entradas, esperado vindo da regra, pergunta ao dev quando a regra nao diz
 -   `e2e-zoppy` — regras e padroes para testes E2E Playwright
 -   `playwright-best-practices` — boas praticas Playwright
 
@@ -565,7 +566,7 @@ Para **fullstack**, separar por stack quando relevante:
 
 **Skills a carregar por stack:**
 
--   **frontend:** `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular` (carregar as que forem relevantes para a fase, nao todas sempre)
+-   **frontend:** `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular`, `test-design` (carregar as que forem relevantes para a fase, nao todas sempre; `test-design` sempre que a fase tiver teste unitario)
 -   **backend:** `nestjs-best-practices`, `controller`, `application-service`, `test-design` (sempre carregar a skill de teste junto com as de implementacao)
 -   **fullstack:** combinar frontend + backend conforme a fase
 -   **e2e:** `e2e-zoppy`, `playwright-best-practices`

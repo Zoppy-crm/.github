@@ -3,69 +3,69 @@ name: property-tests
 description: Use when writing or changing tests for a helper, normalizer, formatter, parser, mapper, price or date calculation, cache/serialization round-trip, or any operation that must be idempotent — "normaliza telefone", "formata", "converte", "mapeia o payload", "roda duas vezes", "teste de propriedade", "fast-check", "property-based".
 ---
 
-# Testes por propriedade
+# Property-based tests
 
-## Princípio
+## Principle
 
-Teste de exemplo verifica as entradas que alguém lembrou de escrever. Teste de propriedade gera centenas de entradas e verifica uma regra que vale para **todas**. Ele pega exatamente o que escapa na Zoppy: string só com espaços, `NaN`, caixa trocada, `undefined` virando `"undefined"`, segunda execução duplicando, valor que volta diferente do cache.
+An example test checks the inputs someone remembered to write. A property test generates hundreds of inputs and checks a rule that holds for **all** of them. It catches exactly what escapes at Zoppy: a whitespace-only string, `NaN`, swapped case, `undefined` turning into `"undefined"`, a second run duplicating data, a value that comes back different from the cache.
 
-Não substitui o teste de exemplo. Complementa, onde a função tem uma regra geral.
+It does not replace example tests. It complements them where the function has a general rule.
 
-## Quando usar
+## When to use
 
-- **Sim:** helper, normalizador, formatador, parser, mapper de payload, cálculo de preço, data ou cupom, serialização, operação que roda de novo (sync, backfill, atribuição).
-- **Não:** orquestração cujo resultado só faz sentido com um cenário montado à mão. Ali, use teste de exemplo com a skill `test-design`.
+- **Yes:** helper, normalizer, formatter, parser, payload mapper, price, date or coupon calculation, serialization, an operation that runs again (sync, backfill, assignment).
+- **No:** orchestration whose result only makes sense with a hand-built scenario. There, use example tests with the `test-design` skill.
 
-## As propriedades
+## The properties
 
-Escolha as que valem para a função. Cada uma é um `it()`.
+Pick the ones that hold for the function. Each one is an `it()`.
 
-| Propriedade | Forma | Pega |
+| Property | Form | Catches |
 |---|---|---|
-| **Não quebra** | qualquer entrada do tipo aceito, inclusive `null` e `undefined` se o tipo permite, não lança erro inesperado | TypeError com lista vazia, id nulo |
-| **Saída válida** | a saída sempre cumpre o contrato: nunca `"undefined"`/`"null"`, nunca `NaN`, preço ≥ 0, telefone só dígitos | `String(undefined)`, sentinela `0` |
-| **Idempotência** | `f(f(x))` é igual a `f(x)` | normalização aplicada duas vezes |
-| **Ida e volta** | `ler(gravar(x))` é igual a `x` | data voltando como string do cache |
-| **Equivalência** | `f(x)` é igual a `f(variante(x))` quando devem ser iguais: caixa, espaço nas pontas, máscara | e-mail com caixa diferente |
-| **Repetir não duplica** | rodar a operação 2 vezes deixa o mesmo estado que 1 vez | atribuição de features duplicando |
+| **Does not crash** | any input of the accepted type, including `null` and `undefined` if the type allows them, throws no unexpected error | TypeError on an empty list, a null id |
+| **Valid output** | the output always meets the contract: never `"undefined"`/`"null"`, never `NaN`, price ≥ 0, phone digits only | `String(undefined)`, sentinel `0` |
+| **Idempotence** | `f(f(x))` equals `f(x)` | normalization applied twice |
+| **Round-trip** | `read(write(x))` equals `x` | a date coming back from the cache as a string |
+| **Equivalence** | `f(x)` equals `f(variant(x))` when they should be equal: case, leading/trailing spaces, mask | an email with different case |
+| **Repeating does not duplicate** | running the operation twice leaves the same state as once | feature assignment duplicating |
 
-## Geradores
+## Generators
 
-Os geradores padrão raramente produzem os valores que quebram. Misture sempre:
+Default generators rarely produce the values that break things. Always mix in:
 
 ```typescript
 import fc from 'fast-check';
 
-const textoArriscado = fc.oneof(
+const riskyText = fc.oneof(
     fc.string(),
     fc.constantFrom('', ' ', '   ', '\t', '\n'),
     fc.string().map((s) => `  ${s}  `),
     fc.mixedCase(fc.string())
 );
-const numeroArriscado = fc.oneof(fc.double(), fc.constantFrom(0, 1, -1, NaN, Infinity, -Infinity));
-const opcional = <T>(arb: fc.Arbitrary<T>) => fc.option(arb, { nil: undefined });
+const riskyNumber = fc.oneof(fc.double(), fc.constantFrom(0, 1, -1, NaN, Infinity, -Infinity));
+const optional = <T>(arb: fc.Arbitrary<T>) => fc.option(arb, { nil: undefined });
 ```
 
-## Exemplo
+## Example
 
 ```typescript
 it('normalizePhone é idempotente e nunca devolve texto que não seja dígito', () => {
     fc.assert(
-        fc.property(opcional(textoArriscado), (entrada) => {
-            const uma = normalizePhone(entrada);
-            expect(normalizePhone(uma)).toEqual(uma);
-            expect(uma === null || /^\d*$/.test(uma)).toBe(true);
+        fc.property(optional(riskyText), (input) => {
+            const once = normalizePhone(input);
+            expect(normalizePhone(once)).toEqual(once);
+            expect(once === null || /^\d*$/.test(once)).toBe(true);
         })
     );
 });
 ```
 
-Com banco (sync, backfill), use `fc.asyncProperty` com `{ numRuns: 20 }` e limpe o banco a cada execução.
+With a database (sync, backfill), use `fc.asyncProperty` with `{ numRuns: 20 }` and clean the database on every run.
 
-## Quando uma propriedade falha
+## When a property fails
 
-O fast-check reduz a entrada ao menor contraexemplo. Transforme esse contraexemplo num **teste de exemplo fixo**, com o valor literal. Ele documenta o caso e continua rodando mesmo se o gerador mudar. Se a função foi corrigida por causa dele, é uma linha nova da tabela "Entradas testadas" do PR.
+fast-check shrinks the input to the smallest counterexample. Turn that counterexample into a **fixed example test** with the literal value. It documents the case and keeps running even if the generator changes. If the function was fixed because of it, it is a new row in the PR's "Entradas testadas" table.
 
 ## Setup
 
-`fast-check` ainda não está em nenhum repo da Zoppy. Adicionar como devDependency mexe no `package.json` e no lock: **confirme com o dev antes**, e siga a regra de lock do repo (o `npm i` de alguns repos poda pacotes; confira o diff do lock).
+`fast-check` is not in any Zoppy repo yet. Adding it as a devDependency changes `package.json` and the lock file: **confirm with the dev first**, and follow the repo's lock-file rule (in some repos `npm i` prunes packages; check the lock diff). Without it, write the same properties as loops over hand-built lists of risky values.

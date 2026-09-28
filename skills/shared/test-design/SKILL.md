@@ -5,59 +5,63 @@ description: Use when writing, adding or changing tests or spec files during dev
 
 # Test design
 
-## Princípio
+## Principle
 
-Um teste existe para **tentar quebrar o código**, não para confirmar o que ele já faz. Por isso o esperado de cada teste vem da **regra**: card, critério de aceite, contrato de quem chama. Nunca da leitura da implementação.
+A test exists to **try to break the code**, not to confirm what it already does. So the expected value of every test comes from the **rule**: the card, the acceptance criteria, the contract of the caller. Never from reading the implementation.
 
-Se a regra não diz como o sistema deve se comportar numa situação, isso não é um detalhe para preencher com o que o código faz hoje. É uma **pergunta para o dev**, e ela vem antes do teste.
+If the rule does not say how the system should behave in a situation, that is not a detail to fill in with whatever the code does today. It is a **question for the dev**, and it comes before the test.
 
-**As duas regras que não têm exceção:**
-1. Não escreva um esperado que você só conhece porque leu o código.
-2. Não mude um esperado para o teste passar. Teste que falha contra o código é um achado, não um erro do teste.
+**The two rules with no exceptions:**
+1. Do not write an expected value you only know because you read the code.
+2. Do not change an expected value to make the test pass. A test that fails against the code is a finding, not a test error.
 
-## Procedimento
+## Procedure
 
-### 1. Leia a regra antes do código
+### 1. Read the rule before the code
 
-Procure, nesta ordem: a tabela "Exemplos" dos critérios de aceite do card; o resto do card ou do refinamento; o concept OKF da feature; o contrato de quem chama (outro serviço, o nó do workflow, a tela). Anote o que cada fonte diz. Só depois leia a implementação.
+Look, in this order, at: the "Exemplos" table in the card's acceptance criteria; the rest of the card or the refinement; the feature's OKF concept; the caller's contract (another service, the workflow node, the screen). Write down what each source says. Only then read the implementation.
 
-### 2. Liste as classes de cada entrada
+### 2. List the classes of each input
 
-Para cada coisa que a função recebe ou lê (parâmetros, campos do payload inclusive os opcionais, sessão, estado prévio no banco, quantas vezes roda, ambiente), liste as classes de equivalência e os limites. Use o [catalogo-de-entradas.md](catalogo-de-entradas.md). Em todo limite numérico ou de data: o valor exato, um abaixo, um acima. Para helper, normalizador ou mapper, some a skill `property-tests`.
+For everything the function receives or reads (parameters, payload fields including the optional ones, session, prior state in the database, how many times it runs, environment), list the equivalence classes and the boundaries. Use [input-catalog.md](input-catalog.md). For every numeric or date boundary: the exact value, one below, one above. For a helper, normalizer or mapper, add the `property-tests` skill.
 
-### 3. Decida o esperado de cada classe: pergunte o que importa, declare o resto
+### 3. Decide the expected value of each class: ask what matters, declare the rest
 
-Para cada linha, o esperado e a fonte dele. Quando nenhuma fonte responde, a linha é **pergunta** ou **suposição**. O dev responde poucas perguntas com atenção e ignora uma lista longa, então separe:
+For each row, the expected value and its source. When no source answers, the row is a **question** or an **assumption**. A dev answers a few questions carefully and ignores a long list, so separate them:
 
-**Pergunta** é a linha em que o comportamento atual do código é **suspeito**:
-1. o código contradiz outra fonte (quem chama, o outro sistema, o concept, o nome do método);
-2. o código trata uma classe **em silêncio**: descarta, usa default, trata vazio ou `0` como ausente, engole erro;
-3. há um limite (número, data, quantidade) sem regra que diga de que lado ele fica;
-4. a regra vale para uma variante (método, provedor, role, status) e não se sabe se vale para as outras.
+A **question** is a row where the current behavior of the code is **suspicious**:
+1. the code contradicts another source (the caller, the other system, the concept, the method name);
+2. the code handles a class **silently**: discards it, uses a default, treats empty or `0` as missing, swallows an error;
+3. there is a boundary (number, date, quantity) with no rule saying which side it falls on;
+4. the rule applies to one variant (payment method, provider, role, status) and nobody knows whether it applies to the others.
 
-**No máximo 5 perguntas por arquivo**, na ordem acima. Cada uma diz o que o código faz, por que é suspeito e qual teste depende da resposta:
+**At most 5 questions per file**, in the order above. Each one says what the code does, why it is suspicious, and which test depends on the answer. Write the questions in the dev's language:
 
 > **E4 — cupom de R$1.** O código recusa (`amount <= 1`). O nó de cupom do workflow aceita R$1. Qual é o certo? Se for "aceita", o teste E4 vai falhar contra o código atual.
 
-**Suposição** é o resto: a linha sem regra em que o código faz algo razoável. Não pergunte. Escreva o teste com o comportamento atual, marque a fonte como `suposição` e liste todas num bloco só, para o dev corrigir se quiser:
+An **assumption** is everything else: a row with no rule where the code does something reasonable. Do not ask. Write the test with the current behavior, mark its source as `suposição`, and list all of them in a single block for the dev to correct if they want:
 
 > Vou assumir, salvo correção: E9 lista vazia devolve `[]`; E11 telefone sem DDI é aceito; E14 …
 
-**Nunca pergunte** sobre a mecânica do teste (mockar ou não, qual helper, adicionar dependência): decida pelas convenções do projeto. Nem sobre detalhe interno que nenhum chamador enxerga.
+**Never ask** about test mechanics (mock or not, which helper, adding a dependency): decide from the project conventions. Nor about internal details no caller can see.
 
-A resposta de cada pergunta vira a fonte da linha (`dev, <data>`).
+The answer to each question becomes the source of that row (`dev, <date>`).
 
-### 4. Escreva e rode os testes
+### 4. Write and run the tests
 
-Um `it()` por linha que o teste unitário cobre, com o ID no começo do nome: `it('E4 cupom de R$1 é válido')`. Cada teste monta a fixture **com o valor da linha** e verifica **o esperado exato**. Evite os vícios de [vicios-de-spec.md](vicios-de-spec.md). Convenções de setup do backend em [convencoes-nest.md](convencoes-nest.md).
+One `it()` per row covered by a unit test, with the ID at the start of the name: `it('E4 cupom de R$1 é válido')`. Each test builds the fixture **with the row's value** and asserts **the exact expected value**. Avoid the smells in [spec-smells.md](spec-smells.md).
 
-Rode só o spec do arquivo. Quando um teste falhar:
+**Setup and mechanics come from the repo, not from this skill.** Read the test conventions the repo documents: the file its `CLAUDE.md` points to (in zoppy-api, `rules/testing.md`) or the "Testing" section of the `CLAUDE.md` itself. That file also lists the repo's own history of escaped bugs; add those classes to the catalog when the code under test is in that area. If the repo documents nothing, follow the patterns of the existing specs next to the file.
+
+Run only the file's spec. When a test fails:
 
 > **E4 falhou.** Esperado (dev, 26/09): cupom de R$1 válido. O código recusa em `create-provider-coupon.helper.ts:88`. É bug no código, ou a regra é outra?
 
-**Pare e mostre ao dev.** Não altere o esperado nem o código sem a decisão dele.
+**Stop and show it to the dev.** Do not change the expected value or the code without their decision.
 
-## Saída no PR
+## Output in the PR
+
+The PR is written in Portuguese. Keep these headings and the counted line **verbatim**:
 
 ```markdown
 ## Entradas testadas
@@ -76,22 +80,22 @@ Bugs pegos na criação dos testes: 1
 - E9: <o que era esperado × o que o código fazia> → regra era outra, teste ajustado (não conta)
 ```
 
-"Coberto por" é `unit`, `QA` (vira caso de QA pela `return-solution`) ou `não coberto: <motivo>`.
+"Coberto por" is `unit`, `QA` (becomes a QA case through `return-solution`) or `não coberto: <reason>`.
 
-**A linha "Bugs pegos na criação dos testes: N" é obrigatória**, com esse texto exato, mesmo quando N é 0. Ela é contada automaticamente nos PRs, e o PR com 0 também entra na conta, como denominador. Conta como bug pego o teste que falhou contra o código, que o dev confirmou ser bug, e que teve o código corrigido. Não conta quando o dev decidiu que a regra era outra e o teste foi ajustado; esse achado fica listado, marcado "não conta".
+**The line "Bugs pegos na criação dos testes: N" is mandatory**, with that exact text, even when N is 0. It is counted automatically across PRs, and a PR with 0 still counts, as part of the denominator. A bug counts as caught when a test failed against the code, the dev confirmed it was a bug, and the code was fixed. It does not count when the dev decided the rule was different and the test was adjusted; that finding stays listed, marked "não conta".
 
 ## Bugfix
 
-A linha E1 é a entrada que quebrou, e o teste dela **falha antes do fix**. Rode-o antes de corrigir e confirme. Depois passe pelas classes vizinhas da mesma dimensão, porque o bug costuma ter irmãos.
+Row E1 is the input that broke, and its test **fails before the fix**. Run it before fixing and confirm. Then go through the neighboring classes of the same dimension, because bugs tend to have siblings.
 
-## Sinais de que você está fazendo o teste passar
+## Signs you are making the test pass
 
-| Pensamento | O que fazer |
+| Thought | What to do |
 |---|---|
-| "O código faz X, então o esperado é X" | De onde vem X além do código? Se de lugar nenhum, pergunte |
-| "O card não fala disso, mas é óbvio" | Se o código trata em silêncio ou contradiz alguém, pergunte. Se não, declare como suposição |
-| "Vou perguntar tudo que não sei" | Até 5 perguntas, as suspeitas. O resto vira suposição declarada |
-| "O teste falhou, vou ajustar o valor esperado" | É um achado. Mostre ao dev |
-| "Esse caso de borda é improvável" | Pergunte se é impossível. Improvável acontece em produção |
-| "Vou testar só o caminho feliz e o do bug" | Passe por todas as dimensões do catálogo que o código lê |
-| "Uso o valor padrão da factory, funciona" | O valor da linha é o ponto do teste |
+| "The code does X, so the expected value is X" | Where does X come from besides the code? If nowhere, ask |
+| "The card doesn't mention it, but it's obvious" | If the code handles it silently or contradicts someone, ask. Otherwise, declare it as an assumption |
+| "I'll ask about everything I don't know" | Up to 5 questions, the suspicious ones. The rest becomes declared assumptions |
+| "The test failed, I'll adjust the expected value" | It is a finding. Show it to the dev |
+| "This edge case is unlikely" | Ask whether it is impossible. Unlikely happens in production |
+| "I'll test only the happy path and the bug" | Go through every catalog dimension the code reads |
+| "I'll use the factory default, it works" | The row's value is the point of the test |
