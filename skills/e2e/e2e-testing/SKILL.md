@@ -49,6 +49,8 @@ Partners tests use a separate `E2E_PARTNERS_TOKEN` (ExternalToken) configured in
 
 ## Writing Tests
 
+Teste que exercita jornada crítica (integração, segmentação, campanha, giftback, carrinho abandonado, Partners API…) leva `@jornada:<id>` no `describe` e `@happy-path` no fim a fim: siga a skill `jornadas-criticas`.
+
 ### Partners API Tests
 
 Use the `partners` fixture and `PartnersApi` helper class:
