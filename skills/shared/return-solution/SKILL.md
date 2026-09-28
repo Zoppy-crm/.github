@@ -122,10 +122,19 @@ gh issue comment <N> --repo <ORG>/<REPO> --body "$(cat <<'EOF'
 - **Casos pontuais:** <como estão sendo tratados>
 - **Solução definitiva:** <plano estrutural / refactor / PR>
 
+### Entradas testadas
+<tabela da seção "## Entradas testadas" do PR, ou o link para ela>
+
+Bugs pegos na criação dos testes: <N, copiado da seção "## Achados" do PR>
+
 ### Casos de teste propostos (QA)
-1. <cenário> → <resultado esperado>
-2. <cenário de regressão adjacente> → <resultado esperado>
-3. <edge case / estado intermediário> → <resultado esperado>
+#### Caso 1 — <cenário, em nome de tela> · cobre <ID da tabela>
+- **Ambiente:** <staging/mirror> · features: <todas as listadas ligadas> · role: <role, nunca MASTER> · empresa: <não bloqueada / inadimplente / ...>
+- **Dado:** <o que precisa existir> — **como criar:** <caminho>
+- **Passos:** 1. … 2. …
+- **Esperado:** <o que aparece na tela>
+- **É bug se:** <o sinal exato de falha>
+- **Não é bug se:** <o que parece falha e não é>
 EOF
 )"
 ```
@@ -134,7 +143,31 @@ Não é obrigatório seguir exatamente esse template — ajuste conforme o caso.
 
 ### Casos de teste propostos — orientação
 
-A seção é insumo direto pra QA. Cada caso deve ser acionável, com **setup**, **ação** e **resultado esperado** — mas enxuto, não precisa ser um plano de teste formal.
+A seção é insumo direto pra QA, e o QA executa literalmente o que está escrito. Por isso cada caso segue o formato do modelo acima, com os seis campos. Caso sem pré-condição faz o QA testar no estado errado e fechar como OK.
+
+**Ambiente**, tirado dos guards da rota e da tela que o QA usa:
+
+| O código tem | O caso diz |
+| --- | --- |
+| `@Roles(...)` | a role a usar. **Nunca MASTER** quando há feature envolvida: MASTER pula o `FeatureGuard` do API e esconde a pré-condição |
+| `@RequireFeatures(A, B)` | no API basta **uma**; no front a tela exige **todas**. Para caso pela tela, liste todas ligadas |
+| `BlockFreeTierGuard` | empresa com `blocked = false`. No front, `inadimplent` também bloqueia a tela |
+| `hasFeature(...)` dentro do código | a feature que muda o comportamento, e o que muda com ela desligada |
+| fila / processor | que o ambiente processa filas; slot local não processa |
+
+**Dado:** o que precisa existir e **como criar** (empresa de teste, planilha, painel Admin, registro no banco de staging). Se não dá para fabricar no ambiente, diga isso no caso em vez de deixar o QA descobrir.
+
+**Não é bug se** traz o que parece falha e não é. As armadilhas conhecidas:
+- flag ou `blocked` alterado direto no banco só vale quando o cache de sessão expira (até 24h), ou com novo login;
+- resposta 200 sem efeito por dedup ou `alreadyRunning`;
+- rate limit que só existe em produção;
+- 422 com mensagem genérica que cobre várias causas.
+
+**Cobre** aponta o ID da linha da tabela "Entradas testadas" do PR. Se o PR não tem a tabela, omita.
+
+**De onde tirar os casos:** se o card de refinamento da feature tem a tabela "Exemplos" nos critérios de aceite, parta dela. As linhas que o teste unitário não cobre (coluna "Coberto por" do PR ≠ `unit`) são os casos de QA. O esperado já está decidido ali, não invente outro.
+
+Escreva o caso depois de ter validado o comportamento. Caso tirado só da leitura do código manda o QA perseguir cenário impossível. O que não foi validado entra como limite ("não validado em mirror: …"), não como caso.
 
 Regras:
 
@@ -206,8 +239,7 @@ emite, ele sobe **no PR do bugfix**. O dev está no código e acabou de entender
 momento mais barato que existe para emitir o sinal. Isto não é "PR não sobe sem log": vale
 só quando a alavanca é monitoramento.
 
-**`alavanca:api` / `front` / `e2e` → abra o card do caso que faltou**, com o cenário concreto
-deste bug, não "melhorar cobertura":
+**`alavanca:api` / `front` / `e2e` → o teste que faltou entrou no PR do fix?** Se entrou (no bugfix com a skill `test-design`, é a linha E1 da tabela), o débito já está pago: **não abra card**, e diga no comentário técnico qual teste cobre o caso. Só quando o fix saiu **sem** esse teste, abra o card do caso que faltou, com o cenário concreto deste bug, não "melhorar cobertura":
 
 ```bash
 gh issue create --repo <ORG>/<REPO> \
@@ -219,6 +251,18 @@ gh issue create --repo <ORG>/<REPO> \
 `work: bug` alimenta a métrica de bugs do time.
 
 **`alavanca:nada` → nada mais.** Só a label.
+
+### Quando a alavanca é `api` ou `front`: a entrada estava na tabela?
+
+Uma segunda pergunta, só para esses dois casos, e com a mesma regra: propor, o dev confirma. Olhe a seção "## Entradas testadas" do PR que por último mexeu no arquivo corrigido antes deste bug:
+
+| Situação | Linha no comentário técnico |
+| --- | --- |
+| a entrada que quebrou não estava na tabela, ou não havia tabela | `Escape: fora-da-tabela` |
+| estava na tabela, sem teste | `Escape: listada-sem-teste` |
+| estava na tabela, com teste, e o esperado estava errado | `Escape: oraculo` |
+
+Não é label: é uma linha no comentário técnico, com esse texto exato, seguida do PR que foi olhado (`Escape: fora-da-tabela (PR #11250)`). É ela que mede se a tabela está funcionando, lida por busca no texto dos comentários. Se o processo funciona, `fora-da-tabela` cai com o tempo.
 
 ### Quando o card nasce em outro repo
 
@@ -232,12 +276,14 @@ Como são ações visíveis (impactam shared state), **sempre confirme o texto c
 
 -   [ ] Alto-nível (campo): 2–4 linhas, sem jargão, cobre: o que aconteceu + contorno + resolução definitiva
 -   [ ] Comentário: técnico, cobre causa raiz e plano
--   [ ] Comentário inclui **casos de teste propostos** (3–5 cenários acionáveis pra QA)
+-   [ ] Comentário inclui **casos de teste propostos** (3–5), cada um com ambiente, dado e como criar, passos, esperado, "é bug se" e "não é bug se"
+-   [ ] Se o PR tem a seção "Entradas testadas", ela está no comentário e cada caso diz qual linha cobre
 -   [ ] Issue `<N>` e repo conferidos
 -   [ ] Issue está no Project #7 (passo 1 retornou item com `project.number == 7`)
 -   [ ] Body do issue **não** foi editado
 -   [ ] Se é bug: label `alavanca:*` aplicada, e o desdobramento dela feito (bastão para
         `/flow-monitorar`, ou card do teste que faltou, ou nada no caso de `alavanca:nada`)
+-   [ ] Se a alavanca é `api` ou `front`: linha `Escape: ...` proposta, confirmada e escrita no comentário técnico
 
 ## Exemplo preenchido
 
@@ -275,8 +321,24 @@ Issue `Zoppy-crm/zoppy-api#6176` — cupom 100% aplicado mas cliente foi cobrada
 >
 > ### Casos de teste propostos (QA)
 >
-> 1. **Ciclo de billing normal com cupom 100%** — aplicar cupom, rodar o ciclo, conferir que apenas **uma** invoice zerada é gerada e nenhuma cobrança sai no cartão.
-> 2. **Regressão: ciclo com cupom parcial (50%)** — cenário que já funcionava. Conferir que a invoice é gerada com o valor com desconto e cobra corretamente no cartão (nada quebrou).
+> #### Caso 1 — Ciclo de billing com cupom 100%
+>
+> -   **Ambiente:** staging · empresa não bloqueada, com assinatura ativa e cartão cadastrado · o ambiente precisa processar filas
+> -   **Dado:** cupom de 100% para o próximo ciclo — **como criar:** painel Admin → Cupons, aplicado à empresa de teste
+> -   **Passos:** 1. aplicar o cupom 2. disparar o ciclo pelo endpoint admin 3. abrir Faturas
+> -   **Esperado:** uma única fatura zerada no ciclo, nenhuma cobrança no cartão
+> -   **É bug se:** aparecer uma segunda fatura no mesmo ciclo, ou qualquer cobrança no cartão
+> -   **Não é bug se:** a fatura demorar alguns minutos para aparecer (o ciclo roda em fila)
+>
+> #### Caso 2 — Regressão: ciclo com cupom parcial (50%)
+>
+> -   **Ambiente e dado:** os do caso 1, com cupom de 50%
+> -   **Passos:** os do caso 1
+> -   **Esperado:** uma fatura com metade do valor, cobrada no cartão
+> -   **É bug se:** a fatura vier cheia ou não for cobrada
+> -   **Não é bug se:** —
+>
+> Os casos 3 e 4 seguem o mesmo formato:
 > 3. **Reentrância do job** — forçar duas execuções sequenciais do job de billing pra mesma company no mesmo dia. Esperado: a segunda execução detecta o fechamento e não gera invoice duplicada.
 > 4. **Cupom 100% em company com assinatura em redundância** — cupom aplicado num ciclo onde a recurrency foi filtrada pela janela. Esperado: cupom **não** queima, invoice não é gerada.
 
@@ -314,7 +376,8 @@ Formato (markdown):
 ### O que aconteceu — sequência do incidente
 ### Causa raiz — componente, fluxo, por que aconteceu
 ### Tratativa — casos pontuais + solução definitiva
-### Casos de teste propostos (QA) — 3 a 5 cenários acionáveis, cobrindo happy path + regressão adjacente + edge case se aplicável
+### Entradas testadas — a tabela do PR, se existir
+### Casos de teste propostos (QA) — 3 a 5, cobrindo happy path + regressão adjacente + edge case se aplicável. Cada caso com: Ambiente (features, role nunca MASTER, estado da empresa) · Dado e como criar · Passos · Esperado · É bug se · Não é bug se · Cobre <ID da tabela>
 
 Regras:
 - Português (pt-BR), tom técnico, direto.

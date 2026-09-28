@@ -120,6 +120,9 @@ Use this template. Include the optional sections only when the diff actually add
 -   **Nome da página** (`/caminho`) — Breve descrição do que a página faz
 ```
 
+**Seções de teste (quando o PR adiciona ou altera testes).** Se a skill `test-design` rodou nesta branch, as seções dela vão no corpo do PR, depois de "Mudanças" e nesta ordem: `## Entradas testadas`, `## Perguntas feitas`, `## Suposições`, `## Achados`. Copie o conteúdo que ela produziu; não resuma nem reescreva.
+
+Se o diff adiciona ou altera `*.spec.ts` e a `test-design` não rodou, inclua mesmo assim a seção `## Achados` com a linha `Bugs pegos na criação dos testes: 0`, e avise o usuário de que a tabela de entradas não foi feita. O texto dessa linha é fixo: ele é contado automaticamente.
 To detect new routes and pages, look at the diff (`git diff <base>..HEAD`) for:
 
 -   **Routes:** new endpoint definitions — e.g., `router.get`, `router.post`, `app.use`, route file additions, controller decorators like `@Get()`, `@Post()`, etc.

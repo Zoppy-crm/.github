@@ -1,18 +1,12 @@
----
-name: testing
-description: >
-    Test conventions for the zoppy-api NestJS project: in-memory DB via TestUtils, minimize mocks,
-    layer-specific particularities (controller / application / domain). Use this skill whenever writing
-    or reviewing .spec.ts files, deciding what to mock vs what to run against a real DB, structuring
-    describe/it blocks, setting up integration tests, or answering "how do I test X in this project".
-    Triggers on: "write a test", "add tests", "test this service", "test this controller", "test this
-    domain", "how to test", "spec file", ".spec.ts", "TestUtils", "test conventions", "integration
-    test", "in-memory database", "minimize mocks", "TestingModule", "jest setup for zoppy-api".
----
+# Convenções de teste — backend (zoppy-api, zoppy-workflow)
 
-# TESTING.MD
+Setup e mecânica. **O que testar e qual o esperado** vem do `SKILL.md`; este arquivo só diz **como montar** o teste no projeto.
 
-This is a document outlining rules and best practices to write and mantain test code (.spec.ts files) within the zoppy-api codebase.
+Três decisões que antes se contradiziam entre documentos:
+
+- **Verificar pelo banco é permitido.** Depois de um método que grava, consultar o banco e comparar é o jeito certo de verificar o efeito.
+- **No zoppy-workflow, fixture pelo domain** (`domain.saveOne(...)` ou `@Zoppy-crm/workflow-test-utils`), nunca `Model.create`, que pula hooks e validação. No zoppy-api, `Model.create` em fixture é aceito.
+- **Mock só na fronteira:** HTTP de terceiro, SDK externo, tempo, aleatoriedade. Nunca Domain. E o mock tem que se comportar como o real: lançar erro com argumento inválido e serializar o que o real serializa.
 
 ## Overview
 
