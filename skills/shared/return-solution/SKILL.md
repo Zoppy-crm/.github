@@ -125,7 +125,10 @@ gh issue comment <N> --repo <ORG>/<REPO> --body "$(cat <<'EOF'
 ### Entradas testadas
 <tabela da seção "## Entradas testadas" do PR, ou o link para ela>
 
-Bugs pegos na criação dos testes: <N, copiado da seção "## Achados" do PR>
+Bugs pegos na criação dos testes: <N>
+Perguntas feitas: <X> (viraram bug: <Y>)
+Suposições corrigidas pelo dev: <Z> (viraram bug: <W>)
+<as três linhas copiadas da seção "## Achados" do PR, com o texto exato>
 
 ### Casos de teste propostos (QA)
 #### Caso 1 — <cenário, em nome de tela> · cobre <ID da tabela>

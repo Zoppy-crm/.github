@@ -75,14 +75,23 @@ The PR is written in Portuguese. Keep these headings and the counted line **verb
 - E9, E11, E14 (comportamento atual; corrija se estiver errado)
 
 ## Achados
-Bugs pegos na criação dos testes: 1
-- E7: <o que era esperado × o que o código fazia> → bug, corrigido neste PR
-- E9: <o que era esperado × o que o código fazia> → regra era outra, teste ajustado (não conta)
+Bugs pegos na criação dos testes: 2
+Perguntas feitas: 5 (viraram bug: 1)
+Suposições corrigidas pelo dev: 1 (viraram bug: 1)
+- E4 (pergunta): <o que era esperado × o que o código fazia> → bug, corrigido neste PR
+- E9 (suposição corrigida): <o que era esperado × o que o código fazia> → bug, corrigido neste PR
+- E12 (regra do card): <o que era esperado × o que o código fazia> → regra era outra, teste ajustado (não conta)
 ```
 
 "Coberto por" is `unit`, `QA` (becomes a QA case through `return-solution`) or `não coberto: <reason>`.
 
-**The line "Bugs pegos na criação dos testes: N" is mandatory**, with that exact text, even when N is 0. It is counted automatically across PRs, and a PR with 0 still counts, as part of the denominator. A bug counts as caught when a test failed against the code, the dev confirmed it was a bug, and the code was fixed. It does not count when the dev decided the rule was different and the test was adjusted; that finding stays listed, marked "não conta".
+**The three counter lines are mandatory**, with that exact text, even when the numbers are 0. They are counted automatically across PRs, and a PR with zeros still counts, as part of the denominator.
+
+- **Bugs pegos na criação dos testes: N.** A bug counts as caught when a test failed against the code, the dev confirmed it was a bug, and the code was fixed. It does not count when the dev decided the rule was different and the test was adjusted; that finding stays listed, marked "não conta".
+- **Perguntas feitas: X (viraram bug: Y).** X is every question asked in step 3. Y is how many of them led to a caught bug: the answer set an expected value, and the test built from it failed against the code.
+- **Suposições corrigidas pelo dev: Z (viraram bug: W).** Z is every assumption the dev corrected. W is how many of those corrections led to a caught bug.
+
+Each finding says where it came from, in parentheses: `pergunta`, `suposição corrigida`, or `regra do card` (the expected value was already in a source, no question needed).
 
 ## Bugfix
 
