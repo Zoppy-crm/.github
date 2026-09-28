@@ -6,7 +6,7 @@ description: Tags de jornada crítica (`@jornada:<id>` e `@happy-path`) que faze
 # Jornadas críticas — tags nos testes E2E
 
 O KPI "Cobertura de teste automatizado das jornadas críticas" sai da run, não de planilha. O coletor do
-`zoppy-eng-metrics` (`scripts/collect_e2e_journeys.py`) lê o `test-results.json` da última run de cada
+`zoppy-eng-metrics` (`scripts/collect_e2e_journeys.py`) lê o `test-results.json` das runs diárias de cada
 suíte e decide o nível de cada jornada pelas tags do próprio teste. Teste sem tag não existe para o KPI,
 por melhor que seja.
 
@@ -28,7 +28,15 @@ por melhor que seja.
     test('salva o segmento com regras e o encontra na listagem', { tag: ['@happy-path'] }, async ({ page }) => { ... });
     ```
 
-4. **Prove o happy path**, conforme o repo:
+4. **Deixe o happy path estável.** Ele roda todo dia contra um ambiente compartilhado, então cada falha
+   solta gasta a folga da jornada. Além das regras da skill de E2E do repo:
+    - cria a própria massa pela API, com sufixo único (`Date.now()`), e apaga o que criou no fim;
+    - afirma sobre o que criou: o registro com aquele sufixo, nunca a contagem ou a lista que já existia
+      no ambiente;
+    - espera o que sai de worker ou fila com `expect.poll` ou `expect(...).toPass`, com timeout
+      explícito;
+    - no FE, registra as rotas dentro do próprio teste. Rota registrada num `beforeAll` escapa do guard.
+5. **Prove o happy path**, conforme o repo:
     - **zoppy-FE:** importe `test` de `shared/fixtures` (`import { test, expect } from '../../shared/fixtures'`).
       O guard dali vigia todo `@happy-path`, grava a annotation `happy-path-guard` e falha o teste que
       responder a API da Zoppy com corpo inventado. Dentro do happy path, deixe a chamada da Zoppy ir para
@@ -36,20 +44,25 @@ por melhor que seja.
       precisar observar a resposta. Mock de terceiro (Meta, gateway, ERP, CDN) continua valendo.
     - **zoppy-e2e-api:** o teste já chama a API direto, então a suíte se declara sem guard no coletor.
       Crie a própria massa pela API e confira o resultado pela API.
-5. **Confira a marcação.** `npx playwright test --list --grep @jornada:<id>` lista o teste com as tags. No
-   FE, `npm run e2e:typecheck` também precisa passar, porque roda antes da suíte e barra a run.
+6. **Confira.** `npx playwright test --list --grep @jornada:<id>` lista o teste com as tags. No FE,
+   `npm run e2e:typecheck` passa, porque roda antes da suíte e barra a run. Termina quando o happy path
+   passa três vezes seguidas contra o mirror:
+   `E2E_ENV=mirror npx playwright test <arquivo> --grep @happy-path --repeat-each=3`.
 
 ## Níveis
 
-| Nível | Quando                                                                                                                 |
-| ----- | ---------------------------------------------------------------------------------------------------------------------- |
-| 0     | nenhum teste da run tem `@jornada:<id>`                                                                                |
-| 1     | existe teste com a jornada, mas nenhum `@happy-path` dela passou vigiado pelo guard                                    |
-| 2     | um teste com `@jornada:<id>` e `@happy-path` passou (retry verde conta) com a annotation do guard. Só este nível conta |
+A coleta do dia é **verde** para a jornada quando um teste com `@jornada:<id>` e `@happy-path` passou
+(retry verde conta), com a annotation do guard no FE. O nível olha as últimas 5 coletas, uma por dia útil:
 
-O nível é revogável: a jornada cai no dia em que o happy path falha, é pulado ou a suíte não roda. O
-ambiente de referência do KPI é o mirror. O KPI é nível 2 dividido por 20, com Canary e Infra/Ops fora
-do denominador.
+| Nível | Quando                                                                 |
+| ----- | ---------------------------------------------------------------------- |
+| 0     | nenhum teste com a jornada hoje e nenhuma coleta verde na janela       |
+| 1     | tem teste com a jornada, ou coletas verdes abaixo de 3                 |
+| 2     | coleta verde em pelo menos 3 das últimas 5. Só este nível conta no KPI |
+
+Uma falha solta ou um dia sem run não derrubam a jornada; três coletas vermelhas derrubam. Jornada nova
+entra no KPI na terceira coleta verde. Os dois números moram em `janela_nivel` do config. O ambiente de
+referência é o mirror, e o KPI é nível 2 dividido por 20, com Canary e Infra/Ops fora do denominador.
 
 ## As jornadas
 
@@ -84,6 +97,7 @@ jornada é PR lá. A coluna "Happy path" diz em qual repo o teste fim a fim deve
 ## Onde ver o resultado
 
 O dashboard [E2E — Jornadas Críticas](https://grafana.zoppy.com.br/d/e2e-jornadas-criticas) mostra o
-nível de cada jornada, o teste que deu o nível e a run lida de cada suíte. O painel "Marcação que não
+nível de cada jornada, se ela foi verde hoje, quantas das últimas 5 coletas foram verdes, o teste que deu
+o resultado e a run lida de cada suíte. Jornada com 3/5 está no limite. O painel "Marcação que não
 conta no KPI" lista tag de jornada inexistente e `@happy-path` que o guard não vigiou: é onde um teste
 marcado que não sobe de nível aparece.
