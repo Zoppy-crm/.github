@@ -247,3 +247,4 @@ import type { Locator, Response } from '@playwright/test';
 -   [ ] Testes podem rodar em qualquer ordem
 -   [ ] Testes podem rodar em paralelo sem interferir um no outro
 -   [ ] Todas as variáveis com tipo explícito (`const x: Locator = ...`)
+-   [ ] Teste que exercita jornada crítica marcado com `@jornada:<id>`, e o fim a fim com `@happy-path` (skill `jornadas-criticas`)

@@ -21,6 +21,10 @@
             "folders": ["shared", "e2e"],
             "repos": ["zoppy-e2e-api"]
         },
+        "e2e-jornadas": {
+            "folders": ["e2e-jornadas"],
+            "repos": ["zoppy-FE", "zoppy-e2e-api"]
+        },
         "observability": {
             "folders": ["shared", "observability"],
             "repos": ["zoppy-eng-metrics"]
