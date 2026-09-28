@@ -240,6 +240,8 @@ ITEM_ID=$(gh project item-add 7 --owner Zoppy-crm --url <issue-url> --format jso
 
 **Imediatamente após adicionar**, setar os campos obrigatórios do board (Priority, Size, Estimate) **e a `Start date`**. Sem Priority/Size/Estimate o item pode ficar **invisível** por filtros ativos no board.
 
+**Em card de bug, setar também `Severity`** — mesmas opções de `Priority` (`CATASTRÓFICO`, `P0`, `P1`, `P2`, `P3`) e, na prática, o mesmo valor. É o único campo que o **Bug Severity Score** lê: bug sem `Severity` pontua zero e some do indicador de qualidade, mesmo com `Priority` preenchido.
+
 ```bash
 PROJECT_ID="PVT_kwDOCAubUc4BQdrV"
 TODAY=$(date +%F)  # data de criação do card — default da Start date
@@ -247,6 +249,11 @@ TODAY=$(date +%F)  # data de criação do card — default da Start date
 # Priority (single select) — usa gh project item-edit
 gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
   --field-id PVTSSF_lADOCAubUc4BQdrVzg-k1Ns --single-select-option-id <priority_id>
+
+# Severity (single select) — SÓ EM CARD DE BUG. Mesmas opções de Priority, mesmo valor.
+# É o campo que o Bug Severity Score lê; sem ele o bug pontua zero no KPI.
+gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
+  --field-id PVTSSF_lADOCAubUc4BQdrVzhhJY54 --single-select-option-id <severity_id>
 
 # Size (single select) — usa gh project item-edit
 gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
@@ -276,6 +283,8 @@ mutation {
 ```
 
 > **Aprendizado:** Issues no board sem Priority/Size/Estimate ficam ocultas quando há filtros ativos. Sempre preencher esses campos ao adicionar.
+
+> **Aprendizado:** `Priority` e `Severity` são campos distintos no board com opções idênticas. Em setembro/2026, 70 bugs nasceram com `Priority` e sem `Severity` — 180 pontos que o Bug Severity Score nunca viu, incluindo um P0 já resolvido. Card de bug preenche os dois.
 
 > **`Start date` por padrão = data de criação do card.** Sempre setar a Start date pra `$(date +%F)` ao criar/adicionar o card no board, a menos que o usuário informe outra data explicitamente. Vale pra epic e sub-issues.
 

@@ -169,7 +169,7 @@ Após criar, **adicionar ao project board** Zoppy Engineering (#7):
 gh project item-add 7 --owner Zoppy-crm --url <URL retornada pelo gh issue create>
 ```
 
-E preencher os campos obrigatórios do board (Priority, Size, Estimate, Status, Team, Start date) — ver `flow-github-issues` seção 7. Sem isso o card fica invisível por filtros do board.
+E preencher os campos obrigatórios do board (Priority, **Severity**, Size, Estimate, Status, Team, Start date) — ver `flow-github-issues` seção 7. Sem Priority/Size/Estimate o card fica invisível por filtros do board; sem `Severity` ele fica invisível para o **Bug Severity Score**, que é o KPI de qualidade e lê só esse campo.
 
 ## Diretrizes
 

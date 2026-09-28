@@ -331,7 +331,7 @@ Apos o commit/push da fase, **sempre perguntar**:
 **C.4.2 — Marcar a issue da fase como concluida no GitHub** (obrigatorio se existir issue):
 
 -   **Invocar a skill `beta-github-issues`** — ela executa a Fase 7 (Mover issue para Done)
--   A skill coleta todos os campos obrigatorios do Project Board com o dev: Priority, Size, Estimate, Horas Gastas, Start date, Target date
+-   A skill coleta todos os campos obrigatorios do Project Board com o dev: Priority, Severity (em bug), Size, Estimate, Horas Gastas, Start date, Target date
 -   **NAO pular este passo** — a issue precisa ser movida para Done e ter os campos preenchidos
 
 **C.4.3 — Verificar impacto em outras fases**:
