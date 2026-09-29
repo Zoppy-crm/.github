@@ -227,7 +227,9 @@ Conforme o stack:
 Carregar as **skills de teste** do stack (conforme plano geral):
 
 -   **frontend/e2e:** invocar `e2e-zoppy` e/ou `playwright-best-practices`
--   **backend:** invocar skills de teste do backend (conforme definido no Stack Skills Map)
+-   **testes unitarios (qualquer stack):** invocar `test-design` antes de escrever qualquer `it()`. Ela monta a tabela de entradas, tira o esperado da regra (a tabela "Exemplos" do card) e pergunta ao dev o que a regra nao diz. Para helper, normalizador ou mapper, somar `property-tests`
+-   **antes de concluir a fase:** invocar `test-audit` nos specs que a fase criou ou alterou; lacuna apontada vira teste ou vira suposicao declarada no PR
+-   **convencoes de setup:** vem do proprio repo (o arquivo de teste que o `CLAUDE.md` indica; no zoppy-api, `rules/testing.md`)
 -   **fullstack:** carregar as skills de teste relevantes para o tipo de teste da fase
 
 ---

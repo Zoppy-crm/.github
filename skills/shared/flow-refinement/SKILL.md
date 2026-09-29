@@ -54,6 +54,12 @@ O card deve ser criado com o seguinte formato no body (GitHub-flavored markdown)
 -   [ ] Critério 2
 -   [ ] Critério 3
 
+**Exemplos:**
+
+| ID | Situação (entrada concreta) | Resultado esperado | Critério |
+| -- | --------------------------- | ------------------ | -------- |
+| C1 |                             |                    | 1        |
+
 ### Layout
 
 <!-- Links do Figma ou imagens. "N/A" se não aplicável. -->
@@ -206,7 +212,7 @@ gh project item-add 7 --owner Zoppy-crm --url "$SUB_URL"
 
 -   **Resumo**: descreva o estado atual, não a solução
 -   **Objetivo**: descreva o estado desejado, não os passos
--   **Critérios de aceite**: mensuráveis e verificáveis, sem ambiguidade
+-   **Critérios de aceite**: mensuráveis e verificáveis, sem ambiguidade. Cada critério ganha **pelo menos um exemplo** na tabela "Exemplos", com uma entrada concreta e o resultado esperado. Ver "Exemplos de aceite — como montar"
 -   **Detalhamento técnico**: inclua paths reais de arquivos que serão modificados — explore o código antes de preencher. Sempre avalie a modularização em camadas (ver "Modularização em camadas — sempre considerar" + skill `module-architecture`)
 -   **Serviços afetados**: liste todos os repos/packages que precisam de mudança
 -   **Migrations**: se houver, especifique o tipo (create table, add column, etc.)
@@ -340,6 +346,22 @@ Público: cliente / CSM / produto. É texto **não-técnico**, em alto nível, q
     ```bash
     gh api graphql -f query='query { node(id:"<ITEM_ID>"){ ... on ProjectV2Item { fieldValueByName(name:"Retorno de Solução"){ ... on ProjectV2ItemFieldTextValue { text } } } } }'
     ```
+
+## Exemplos de aceite — como montar
+
+A tabela "Exemplos" é o que diz qual é a resposta certa. Sem ela, quem escreve o teste tira o esperado da leitura do próprio código, e o teste passa a confirmar o que o código faz, inclusive o bug. Um terço dos bugs que escaparam com teste foi isso: o teste afirmava "cupom de R$1 é inválido" e o nó do workflow aceitava R$1.
+
+Monte com o dev e, quando a regra for de produto, com o PO e o QA:
+
+1. **Um exemplo por critério, no mínimo.** Entrada concreta ("cupom de R$1", "empresa com 2 lojas, gerente vinculado a uma"), não categoria ("valores válidos").
+2. **Os limites da regra.** Se o critério tem número, data ou quantidade, um exemplo exatamente no limite e um de cada lado.
+3. **As variantes que chegam ao mesmo lugar.** Cada método de pagamento, cada provedor, cada role, cada status. A regra vale para todas, ou só para uma?
+4. **O que acontece quando falta algo.** Campo opcional ausente, lista vazia, segunda execução da mesma ação.
+5. **Resposta que ninguém sabe.** Pergunte agora e escreva a resposta. Se ninguém souber, escreva "a decidir" na linha: é pergunta de produto, e melhor aparecer no refinamento que em produção.
+
+A tabela é consumida depois:
+- a skill `test-design` usa cada linha como fonte do esperado (coluna "De onde veio" = `card #<N> C<ID>`);
+- a `return-solution` usa as linhas que o teste unitário não cobre para montar os casos de QA.
 
 ## Estratégia de testes — como decidir
 

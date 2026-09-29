@@ -27,6 +27,7 @@ Mapa de referencia que associa cada stack ao kit de skills que o dev-guide-v2 de
 
 **Skills de teste:**
 
+-   `test-design` — testes unitarios: tabela de entradas, esperado vindo da regra, pergunta ao dev quando a regra nao diz
 -   `e2e-zoppy` — regras e padroes para testes E2E Playwright
 -   `playwright-best-practices` — boas praticas Playwright
 
@@ -49,8 +50,8 @@ Mapa de referencia que associa cada stack ao kit de skills que o dev-guide-v2 de
 
 **Skills de teste:**
 
--   `tdd` — TDD workflow Red-Green-Refactor com in-memory SQLite
--   `testing` — regras gerais de testes no zoppy-api (nunca mockar domains, boilerplate)
+-   `test-design` — escrever testes: tabela de entradas, esperado vindo da regra, pergunta ao dev quando a regra não diz (inclui as convenções do backend)
+-   `property-tests` — testes por propriedade para helper, normalizador, mapper e cálculo
 
 **Validacoes especificas:**
 
@@ -565,8 +566,8 @@ Para **fullstack**, separar por stack quando relevante:
 
 **Skills a carregar por stack:**
 
--   **frontend:** `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular` (carregar as que forem relevantes para a fase, nao todas sempre)
--   **backend:** `nestjs-best-practices`, `controller`, `application-service`, `tdd`, `testing` (sempre carregar as skills de teste junto com as de implementacao)
+-   **frontend:** `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular`, `test-design` (carregar as que forem relevantes para a fase, nao todas sempre; `test-design` sempre que a fase tiver teste unitario)
+-   **backend:** `nestjs-best-practices`, `controller`, `application-service`, `test-design` (sempre carregar a skill de teste junto com as de implementacao)
 -   **fullstack:** combinar frontend + backend conforme a fase
 -   **e2e:** `e2e-zoppy`, `playwright-best-practices`
 

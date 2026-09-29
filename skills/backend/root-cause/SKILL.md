@@ -143,3 +143,7 @@ After completing the trace, report:
 ## Prevention
 [What test or lint rule would have caught this earlier.]
 ```
+
+## Before writing the fix
+
+Once the root cause is confirmed, **invoke the `test-design` skill in bugfix mode before changing the code**. Row E1 of its table is the input that broke, and its test must **fail against the current code**. Run it and confirm the failure, then fix, then run it again. The "Prevention" section above becomes that test, not a suggestion.
