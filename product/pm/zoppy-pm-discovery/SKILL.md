@@ -50,6 +50,8 @@ Discovery começa com a hipótese — benchmark, objetivo do CEO, pedido de fech
 
 **Pergunta de entrada:** *"Se construirmos isso, qual problema real do lojista estamos resolvendo — e temos evidência de que esse problema existe?"*
 
+**Se a feature envolve IA:** responda também — Qual o wedge (a tarefa de alta fricção onde a IA paga desproporcionalmente)? O caso exige dado vivo (RAG) ou comportamento específico e consistente (fine-tuning)? Em que nível de autonomia a feature entra (sugestão supervisionada → ação com aprovação → autonomia plena)? Essa capacidade sobrevive 12-18 meses, ou o próprio modelo vai engolir a diferenciação?
+
 ---
 
 ## As 5 perguntas obrigatórias
@@ -133,7 +135,11 @@ Acreditamos que [direção de solução]
 vai resolver [problema real]
 para [perfil de lojista] em [momento da jornada],
 e saberemos que funcionou quando [métrica específica] mudar.
+
+Guardrail: [métrica que não pode piorar — se piorar, para o teste independente do resultado da métrica de sucesso]
 ```
+
+**Guardrail não é opcional quando a mudança pode ter efeito colateral negativo** (ex: aumentar frequência de disparo pode subir conversão mas também subir opt-out — opt-out é o guardrail). Se não existe risco plausível de efeito colateral, registre "Guardrail: nenhum identificado" — mas pense antes de pular.
 
 **Exemplos:**
 
@@ -159,7 +165,7 @@ e saberemos que funcionou quando o engajamento semanal com o módulo de relatór
 
 ## Discovery mínimo vs. discovery robusto
 
-Nem todo item precisa do mesmo nível de discovery. Calibre pela confiança que saiu da qualificação:
+Nem todo item precisa do mesmo nível de discovery. Calibre pela confiança que saiu da qualificação **e pela reversibilidade da decisão**: se for fácil desfazer (feature flag, copy, ordem de menu), tolera menos evidência antes de testar; se for cara de reverter (mudança de arquitetura, de modelo de cobrança, comunicação em massa irreversível), exige mais evidência mesmo com pressa. Uma decisão reversível com confiança média pode ir para discovery mínimo; a mesma confiança numa decisão irreversível pede discovery robusto.
 
 ### Discovery mínimo (confiança média/alta na qualificação)
 - Responda as 5 perguntas com os dados já disponíveis
@@ -198,6 +204,8 @@ Para itens de alto impacto, o discovery inclui pelo menos uma sessão com uma pe
 - Pergunta-chave: "Você pode me mostrar como faz X hoje?"
 
 **Regra:** o PM vai como observador — não como vendedor da solução. O objetivo é aprender, não confirmar o que já acredita.
+
+Manter esse ritual como hábito recorrente — não só quando um item pede discovery robusto — é o que separa descoberta contínua de pesquisa pontual. Entrevista com lojista busca a causa raiz emocional por trás do pedido de feature, não só a confirmação do que ele já pediu.
 
 ---
 
@@ -245,6 +253,8 @@ Acreditamos que [direção de solução]
 vai resolver [problema real]
 para [perfil] em [momento],
 e saberemos que funcionou quando [métrica] mudar.
+
+**Guardrail:** [métrica que não pode piorar, ou "nenhum identificado"]
 
 **Nível de confiança total:** Baixo / Médio / Alto
 **Tipo de discovery realizado:** Mínimo / Robusto / Acelerado

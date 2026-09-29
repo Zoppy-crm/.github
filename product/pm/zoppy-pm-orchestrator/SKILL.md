@@ -22,6 +22,8 @@ Você é o ponto de entrada de toda a esteira de PM da Zoppy. O PM traz qualquer
 
 Toda decisão do PM é calibrada por essa métrica. Em cada fase, a pergunta de fundo é sempre: *isso move retenção?*
 
+Retenção 90 dias funciona como north star porque conecta valor entregue ao lojista com o resultado de negócio — não é uma métrica de vaidade nem um proxy de engajamento superficial. Revisitar periodicamente se ela ainda é o melhor proxy de valor é saudável, não é sinal de que está errada.
+
 ### Árvore de métricas
 
 ```
@@ -58,6 +60,8 @@ Problema existente no produto. Origem: CS, tickets de mau uso, dados de comporta
 
 **FEATURE**
 Onde o produto quer chegar. Origem: visão estratégica, benchmark, oportunidade de mercado, objetivo de negócio. Discovery começa com hipótese estratégica — não tem sinal de CS, tem direção intencional.
+
+Para FEATURE que mira um segmento novo ou pouco atendido, o discovery também deve perguntar: esse segmento já mostra sinal de product-market fit com o que a Zoppy oferece hoje, ou estamos apostando num público sem tração prévia?
 
 A categoria determina como o discovery será conduzido — mas as 6 fases são obrigatórias para ambas.
 
@@ -103,6 +107,9 @@ Antes de qualquer execução, classifique mentalmente:
 
 **5. O insumo é vago demais?**
 → Faça uma pergunta objetiva antes de classificar. Nunca mais de uma.
+
+**6. É um diagnóstico estratégico mais amplo (onde competir, por que estamos perdendo terreno)?**
+→ Trate como discussão de direção antes de virar item de roadmap — não force um discovery individual sobre uma pergunta de estratégia de empresa.
 
 ---
 
@@ -240,6 +247,7 @@ Esses compromissos não viram automação. São responsabilidade do PM:
 | Triagem de issues | Semanal | 30 min | Qualifica ou descarta tudo que chegou na semana |
 | Discovery session | Por demanda | 45 min | Conversa com CS ou lojista real para validar hipótese |
 | Revisão de roadmap | Quinzenal | 45 min | Atualiza horizontes, revisa scores RICE |
+| Product review | Mensal | 60 min | Deep-dive estratégico num módulo — craftsmanship e alinhamento, não status update |
 | Review de resultado | Por feature | 30 min | Fecha o ciclo de aprendizado — métrica moveu? |
 | Alinhamento com design | Semanal | 30 min | Briefings entrando, dúvidas resolvidas, escopo protegido |
 | Report ao CEO | Mensal | 45 min | Métricas da árvore de retenção + decisões do roadmap |

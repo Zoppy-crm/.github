@@ -196,6 +196,11 @@ Categorias:
 - O que está explicitamente fora do escopo desta entrega
 - O que pode ser feito numa fase 2
 
+**De IA (quando a feature envolve IA):**
+- Nível de autonomia esperado nesta entrega (sugestão / ação com aprovação / autônomo)
+- A interface assume que a saída pode ser imperfeita (squishy output) — não pode pressupor 100% de acerto
+- Se a feature depende de scaffolding que um upgrade de modelo pode absorver em 12-18 meses, documentar esse risco
+
 **Exemplo:**
 ```
 Técnicas: o módulo de relatórios usa a API v1 que não suporta filtros em tempo real.
@@ -372,5 +377,7 @@ O design vai explorar como resolver a partir da hipótese acima.*
 **Solução prescrita = briefing rejeitado.** Se o PM incluiu wireframe, referência de componente, ou fluxo específico sem marcação explícita de "inspiração", a intake vai sinalizar ancoragem. Melhor corrigir antes.
 
 **Mudança de escopo reinicia.** Depois do briefing aprovado pela intake, qualquer mudança — por menor que pareça — cria um novo briefing. Não existe ajuste informal pós-aprovação.
+
+**Julgamento de qualidade antes do dado é válido — se marcado como tal.** Quando ainda não há evidência quantitativa, o PM pode se apoiar em critério de qualidade e experiência para orientar a hipótese — desde que documente explicitamente que é julgamento (product taste), não dado.
 
 **PM para no critério de aceitação.** Depois que o briefing entra na esteira de design, o PM é ouvinte na ideação e aprovador nos critérios de aceitação definidos no Bloco 5. Não é aprovador de wireframe, não é validador de componente, não é decisor de layout.

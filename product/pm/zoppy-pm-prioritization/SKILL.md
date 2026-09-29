@@ -104,6 +104,8 @@ Use a base de lojistas ativos como referência. Estime com base nos dados dispon
 
 **Quem define o esforço:** engenharia. O PM não estima esforço técnico sozinho. Se engenharia não foi consultada, o campo fica como "estimativa sem validação técnica" e o item não entra em AGORA antes de revalidar.
 
+**Para features de IA:** Effort inclui o ciclo de avaliação (eval), não só construção — não dá para estimar como feature determinística. Confidence considera também se a feature gera dado proprietário que aumenta defensibilidade (data flywheel) — isso pesa a favor mesmo com Reach menor no curto prazo.
+
 ---
 
 ## Os três horizontes do roadmap
@@ -361,6 +363,10 @@ Qualquer mudança de prioridade precisa de atualização de score documentada �
 **Trade-off sempre visível.** Toda decisão de priorizar X é também uma decisão de não priorizar Y agora. Isso precisa estar registrado — especialmente quando Y foi pedido por alguém do time.
 
 **Score não é ditadura.** O RICE é um critério, não um oráculo. O PM pode sobrepor o score com julgamento — desde que documente o motivo. Transparência é o que protege a credibilidade do processo.
+
+**Trade-off explícito além do RICE.** Decisões como build-vs-buy ou investir em redução de dívida técnica não têm score RICE direto — exigem comparar valor de longo prazo contra custo de oportunidade, e comunicar esse racional para a liderança, não só o número.
+
+**A árvore de retenção é o critério de Impact — não um enfeite.** Todo item de Engajamento/Expansão precisa mostrar mecanismo real de como sustenta ou acelera retenção, não só associação nominal com o nó da árvore.
 
 **Roadmap sem capacidade definida não é roadmap.** Se o PM não sabe quantos itens cabem no sprint, o primeiro passo é alinhar capacidade com design e engenharia — antes de priorizar qualquer item.
 

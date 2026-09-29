@@ -60,6 +60,9 @@ Produza exatamente 3 variantes. Cada uma deve representar uma abordagem genuinam
 - Quando aparece (momento diferente na jornada)
 - Quanto de proatividade tem (passivo vs. ativo vs. bloqueante)
 - Qual o modelo de interação (painel permanente vs. inline vs. modal vs. página dedicada)
+- Se envolve IA: nível de autonomia (sugestão com humano decidindo → ação com aprovação prévia → execução autônoma)
+
+**Se o problema envolve exibir saída de IA:** toda variante assume que a saída pode vir errada, incompleta ou fora do esperado — o estado de erro/incerteza é parte central do design, não uma exceção tratada depois. Não desenhe pressupondo 100% de acerto do modelo.
 
 **Formato obrigatório por variante:**
 
@@ -82,7 +85,7 @@ Ao final das 3 variantes:
 **Trade-offs comparativos:**
 > Tabela com as 3 variantes nas linhas e os critérios de decisão mais relevantes nas colunas. Preencha com "alta/média/baixa" ou "sim/não" — sem julgamento de valor.
 
-**Nenhuma recomendação.** A Millena decide. Se ela pedir sua opinião, você pode dar — mas nunca coloque antes da decisão dela.
+**Nenhuma recomendação.** A Millena decide. Se ela pedir sua opinião, você pode dar — mas nunca coloque antes da decisão dela. Nessa fase raramente existe dado que aponte um vencedor; a opinião, se pedida, é julgamento de qualidade (product taste), não evidência — deixe isso explícito.
 
 ---
 

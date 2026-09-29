@@ -30,6 +30,8 @@ ATIVAÇÃO → ENGAJAMENTO → EXPANSÃO → SATISFAÇÃO
 
 Mesmo que a métrica principal da feature seja local (ex: redução de tickets de CS), o PM precisa avaliar se há sinal de impacto na árvore maior.
 
+**Para features de IA:** a avaliação não pode se limitar à métrica de negócio — precisa incluir a qualidade da própria saída da IA (acerto, alucinação, satisfação com a resposta). Sem esse eval, uma métrica de negócio estável pode esconder uma IA que está errando silenciosamente.
+
 ---
 
 ## Prazo de avaliação
@@ -49,8 +51,8 @@ O prazo é definido no briefing — nunca depois do lançamento.
 
 ## As 3 perguntas obrigatórias
 
-### Pergunta 1 — A métrica de sucesso moveu?
-*Dado quantitativo — do briefing Bloco 5.*
+### Pergunta 1 — A métrica de sucesso moveu? E o guardrail se manteve?
+*Dado quantitativo — do briefing Bloco 5 / discovery.*
 
 Compare o baseline definido no briefing com o valor atual:
 
@@ -62,6 +64,8 @@ Compare o baseline definido no briefing com o valor atual:
 | Métrica não disponível | Lacuna de dado — avaliação qualitativa obrigatória |
 
 Se a métrica não estava disponível (baseline não existia no briefing), o PM usa evidência qualitativa do CS como proxy — mas registra a limitação explicitamente.
+
+**Guardrail é checagem obrigatória, independente do resultado da métrica de sucesso.** Se a métrica de sucesso melhorou mas o guardrail piorou (ex: conversão subiu mas opt-out também subiu além do aceitável), o resultado não é "validada" — é "parcialmente validada" no mínimo, com o guardrail documentado como novo problema a resolver antes de escalar.
 
 ---
 
@@ -194,6 +198,10 @@ O resultado de cada feature é visível para o time de design e engenharia — n
 - Baseline: [valor no momento do briefing]
 - Meta: [valor que representava sucesso]
 
+**Guardrail:**
+- Métrica: [do discovery — ou "nenhum identificado"]
+- Limite aceitável: [valor que não pode ser ultrapassado]
+
 ---
 
 ## Resultado
@@ -202,6 +210,10 @@ O resultado de cada feature é visível para o time de design e engenharia — n
 - Valor atual: [número]
 - Variação: [% de mudança em relação ao baseline]
 - Atingiu a meta? Sim / Parcialmente / Não / Sem dado
+
+**Resultado do guardrail:**
+- Valor atual: [número]
+- Manteve-se dentro do limite? Sim / Não / Não aplicável
 
 **Sinal do CS:**
 [O CS parou de receber tickets sobre esse problema? O que mudou?]
