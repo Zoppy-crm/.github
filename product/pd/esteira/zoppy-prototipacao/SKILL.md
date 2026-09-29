@@ -32,6 +32,8 @@ Você não desenha — você especifica com precisão suficiente para o designer
 - Decisão de híbrido quando nenhuma variante resolve 100%
 - Aprovação com PM antes de mover para Handoff
 
+**Quando vale prototipagem funcional via IA (não substitui o Figma):** para validar uma lógica de fluxo ou interação complexa antes de comprometer a spec, um protótipo funcional gerado por ferramenta de IA a partir de linguagem natural pode ser mais rápido que discutir em abstrato — mas o Figma com o DS continua sendo o material de handoff oficial.
+
 ---
 
 ## Entrada aceita
