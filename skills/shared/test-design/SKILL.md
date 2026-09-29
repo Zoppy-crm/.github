@@ -53,11 +53,28 @@ One `it()` per row covered by a unit test, with the ID at the start of the name:
 
 **Setup and mechanics come from the repo, not from this skill.** Read the test conventions the repo documents: the file its `CLAUDE.md` points to (in zoppy-api, `rules/testing.md`) or the "Testing" section of the `CLAUDE.md` itself. That file also lists the repo's own history of escaped bugs; add those classes to the catalog when the code under test is in that area. If the repo documents nothing, follow the patterns of the existing specs next to the file.
 
-Run only the file's spec. When a test fails:
+Run only the file's spec. What a failing test means depends on the mode (see **Modes** below):
+
+- **New code:** a failing test is the normal RED. Implement the minimum to make it pass.
+- **Existing code** (covering code already written, or any row other than E1 in a bugfix): a failing test is a **finding**. Stop and show it to the dev:
 
 > **E4 falhou.** Esperado (dev, 26/09): cupom de R$1 válido. O código recusa em `create-provider-coupon.helper.ts:88`. É bug no código, ou a regra é outra?
 
-**Stop and show it to the dev.** Do not change the expected value or the code without their decision.
+Do not change the expected value or the code without the dev's decision.
+
+## Modes
+
+Steps 1 to 3 (rule, input table, questions) always come first, **before any code and any test**. What changes is the order after that:
+
+| Mode | Order after step 3 | A failing test means |
+|---|---|---|
+| **New code** (feature, new method) | RED → GREEN one row at a time: write the test for one row, run it, watch it fail; implement the minimum to pass; next row. Refactor only with everything green | the expected RED; implement |
+| **Bugfix** | E1 first: write it, run it, it must fail on the current code. Fix. E1 passes. Then the neighboring rows | E1: confirms the bug. Other rows: a finding |
+| **Existing code** (adding tests without changing behavior) | write all the rows, run | a finding; stop and show the dev |
+
+In **new code**, work in vertical slices: one row, one test, the minimum implementation, then the next row. Do not write every test first and every implementation after. And watch for the opposite signal: **a test that passes the first time on new code** is not testing anything you are about to implement. Check the row or the test before moving on.
+
+Only findings in code that already existed count as "bugs pegos". A RED on new code is not a bug caught.
 
 ## Output in the PR
 
@@ -97,10 +114,20 @@ Each finding says where it came from, in parentheses: `pergunta`, `suposição c
 
 Row E1 is the input that broke, and its test **fails before the fix**. Run it before fixing and confirm. Then go through the neighboring classes of the same dimension, because bugs tend to have siblings.
 
+Record whether the card's bug is reproduced by a unit test, as one more fixed line in `## Achados`:
+
+```markdown
+Bug do card reproduzido por teste unitário: sim (E1 `it('E1 ...')`, falha sem o fix e passa com ele)
+```
+
+Use `não (<motivo>)` when no unit test can reproduce it: it needs the real world (third party, dirty client data, volume, timing), several services running together, or it was not a code defect. This line is the evidence behind the `alavanca` the `return-solution` proposes: `sim` points to `alavanca:api` or `alavanca:front`; `não` points to `monitoramento`, `e2e` or `nada`.
+
 ## Signs you are making the test pass
 
 | Thought | What to do |
 |---|---|
+| "It's new code, the test failed, I'll show the dev" | On new code that is the RED. Implement the minimum |
+| "It's new code and the test passed right away" | The test is not covering what you will implement. Check the row |
 | "The code does X, so the expected value is X" | Where does X come from besides the code? If nowhere, ask |
 | "The card doesn't mention it, but it's obvious" | If the code handles it silently or contradicts someone, ask. Otherwise, declare it as an assumption |
 | "I'll ask about everything I don't know" | Up to 5 questions, the suspicious ones. The rest becomes declared assumptions |

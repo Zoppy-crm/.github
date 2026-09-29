@@ -128,7 +128,8 @@ gh issue comment <N> --repo <ORG>/<REPO> --body "$(cat <<'EOF'
 Bugs pegos na criação dos testes: <N>
 Perguntas feitas: <X> (viraram bug: <Y>)
 Suposições corrigidas pelo dev: <Z> (viraram bug: <W>)
-<as três linhas copiadas da seção "## Achados" do PR, com o texto exato>
+Bug do card reproduzido por teste unitário: <sim (E1 ...) | não (motivo)>
+<as linhas copiadas da seção "## Achados" do PR, com o texto exato>
 
 ### Casos de teste propostos (QA)
 #### Caso 1 — <cenário, em nome de tela> · cobre <ID da tabela>
@@ -194,6 +195,8 @@ sem reler nada. **Não é formulário e não bloqueia merge**: uma pergunta, uma
 jogo.
 
 ### A árvore, na ordem
+
+**Antes da árvore, olhe a linha `Bug do card reproduzido por teste unitário` no PR do fix.** Se é `sim`, o teste existe e prova que entrada conhecida e banco bastam: proponha `alavanca:api` (ou `front`) direto, citando o teste. Se é `não`, o motivo dela já responde a pergunta 1 da árvore.
 
 Não ofereça as cinco opções de uma vez — quem escolhe de uma lista escolhe
 `monitoramento` por hábito. Pergunte na ordem:
