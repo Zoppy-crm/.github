@@ -37,6 +37,10 @@ Um revisor que escreve "considere adicionar testes" é ignorado em duas semanas.
 Um comentário vazio de conteúdo ("LGTM", elogio, resumo do PR) não conta como nenhum dos dois. Um
 achado inventado custa mais que um achado perdido: ele ensina o time a ignorar a próxima revisão.
 
+O inverso também vale: achado verificado que fica de fora para o comentário sair curto ensina o time
+a confiar numa cobertura que não existe. O filtro é a verificação do passo 5, nunca a quantidade — se
+dez achados sobrevivem à verificação, os dez entram no comentário.
+
 ## Como revisar
 
 O argumento é o **número do PR**. Use-o em todo comando `gh` — num checkout de CI o `gh` não detecta o
@@ -51,7 +55,8 @@ Comece pelo PR: `gh pr view <número> --json headRefName,baseRefName,title,body`
 
 -   **Issues citadas.** O body costuma trazer `Closes #n` / `Fixes #n`, e branches `task/`, `bugfix/` e
     `hotfix/` carregam o número da issue no nome. Abra cada uma com `gh issue view <n>` e leia contexto
-    e critérios de aceite — isso é o contrato.
+    e critérios de aceite — isso é o contrato. **Extraia a lista de critérios de aceite literalmente**:
+    ela vira a seção "Critérios de aceite" do comentário, verificada critério por critério.
 -   **PR de `milestone/*`** carrega um épico inteiro. Além das issues citadas, liste as da feature com
     `gh issue list --search "<slug da milestone>" --state all --limit 50 --json number,title,body` e
     leia o PRD/refinamento se houver.
@@ -98,7 +103,10 @@ correto pode ser defeito.
 
 -   **Código que contradiz uma decisão fechada é achado.** Uma regra escrita no concept ou no
     refinamento não é sugestão.
--   **Critério de aceite sem código e sem teste é achado.** Nomeie a issue e o critério.
+-   **Cada critério de aceite é verificado um a um.** Para cada critério da issue, aponte o código que
+    o implementa (arquivo e linha) e o teste que o exercita. Critério sem código é achado; critério
+    implementado sem teste que o exercite é achado. "Parece coberto" não é veredito — sem evidência
+    apontável, o critério conta como não entregue. Nomeie a issue e o critério.
 -   **Comportamento que nenhuma issue descreve é achado.** Chegou sem ninguém ter combinado.
 -   **Número que discorda do combinado** — limite, janela, preço, retry, percentual — vai no topo.
 
@@ -117,6 +125,27 @@ Não é achado: algo que o PR adiou **de propósito e diz isso** no body. Leia o
     `@ExceptionInterceptor()`; resposta sem DTO tipado.
 -   Exceção errada para o caso (`NotFound` vs `UnprocessableEntity` vs `BadRequest`) — ver
     `code-conventions`.
+
+### Arquitetura e clean code
+
+As skills carregadas no passo 3 são **critério de reprovação, não leitura de fundo**: regra objetiva
+que o diff viola é achado mesmo quando o código funciona — "funciona" não anistia padrão. Em
+particular, percorra `clean-code-backend`, `code-conventions` e `module-architecture` contra cada
+arquivo tocado:
+
+-   **Lógica na camada errada.** Query com filtro de regra de negócio montada na Application em vez de
+    virar método do Domain; regra de negócio em controller ou processor; Domain injetando Domain de
+    outro contexto (orquestração cross-context é serviço de Application).
+-   **Método que acumula responsabilidades** ou mistura níveis de abstração onde `clean-code-backend`
+    manda extrair; aninhamento onde early return resolve; nome que mente sobre o que o método faz.
+-   **Duplicação do que o repo já tem.** Antes de aceitar helper, mapper ou validação nova, procure o
+    equivalente existente — reimplementar o que já existe é achado.
+-   **Convenções objetivas de `code-conventions`**: log fora do `LogService` ou fora do inglês,
+    import de model fora de `@Zoppy-crm/models`, validação que pertence a uma
+    `ApplicationValidationBase`/`DomainValidation` escrita inline.
+
+Esses achados entram com severidade menor que dinheiro, PII e multi-tenant — mas entram. Omiti-los é o
+que transforma o padrão do repo em letra morta.
 
 ### Dados pessoais e segredos
 
@@ -153,6 +182,19 @@ sentido para quem leu o diff inteiro — quem lê o comentário não acompanhou 
 
 Comece sempre com o título `## Revisão automática (Claude)`.
 
+### Critérios de aceite — sempre que houver issue
+
+Logo depois do título — haja achados ou não — uma linha por critério de aceite extraído no passo 1,
+com a evidência:
+
+-   ✅ critério — atendido (`arquivo.ts:123`, teste em `arquivo.spec.ts`)
+-   ⚠️ critério — implementado (`arquivo.ts:123`), sem teste que o exercite
+-   ❌ critério — não encontrado no diff
+
+Critério ⚠️ ou ❌ também aparece no bloco de achados, com o detalhe. Se o body do PR declara que o
+critério ficou para outra fatia, marque-o como "fora desta fatia" em vez de ❌ — fatia declarada não é
+defeito.
+
 ### Quando há achados
 
 Uma linha com quantos são e a severidade mais alta. Depois um bloco por achado, ordenado por
@@ -169,7 +211,7 @@ merge. Se algum for intencional, responda neste comentário explicando o motivo.
 
 ### Quando não há achados
 
-Uma linha, e só ela, depois do título:
+Depois do título e da seção de critérios de aceite (quando houver issue), uma linha e só ela:
 
 "Revisei o diff contra as issues citadas e as skills do repositório. **Nenhuma alteração necessária.**"
 
