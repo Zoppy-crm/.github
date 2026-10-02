@@ -1,6 +1,6 @@
 ---
 name: retorno-solucao
-description: Registra o retorno de solução de um card (issue) do Zoppy em dois lugares — field "Retorno de Solução" do Project v2 "Zoppy Engineering" (#7) com texto alto-nível (cliente/CSM), e um comentário técnico no issue (time). Use sempre que o usuário pedir "dá o retorno no card", "retorno de solução", "retorno técnico do card", "/retorno-solucao <issue>", "dá esse retorno", "gera retorno de solução", "retorno pro cliente", ou qualquer variação para fechar/comunicar a resolução de um bug/card. Também acionado automaticamente via hook post-commit em branches `bugfix/*` e `hotfix/*` — nesse caso, o nº da issue vem do nome da branch. Também classifica a alavanca do bug ("o que teria pego isso antes?") numa label `alavanca:*`, e daí encaminha para `/flow-monitorar` ou abre o card do teste que faltou. Convenção firme: NUNCA editar o body do issue (a seção `### Retorno de Solução` do template é ignorada pelo time).
+description: Registra o retorno de solução de um card (issue) do Zoppy em dois lugares — field "Retorno de Solução" do Project v2 "Zoppy Engineering" (#7) com texto alto-nível (cliente/CSM), e um comentário técnico no issue (time). Use sempre que o usuário pedir "dá o retorno no card", "retorno de solução", "retorno técnico do card", "/retorno-solucao <issue>", "dá esse retorno", "gera retorno de solução", "retorno pro cliente", ou qualquer variação para fechar/comunicar a resolução de um bug/card. Também acionado automaticamente via hook post-commit em branches `bugfix/*` e `hotfix/*` — nesse caso, o nº da issue vem do nome da branch. Também classifica a alavanca do bug ("o que teria pego isso antes?") numa label `alavanca:*`, e daí encaminha para `/flow-monitorar` ou abre o card do teste que faltou. Quando a tratativa tem ação depois do deploy (backfill, correção de dados), aplica a label `post-action` e escreve no comentário técnico o que é a ação, quantas empresas atinge e como executar e conferir. Convenção firme: NUNCA editar o body do issue (a seção `### Retorno de Solução` do template é ignorada pelo time).
 ---
 
 # Retorno de Solução
@@ -14,6 +14,10 @@ E, quando o card é um bug, sai daqui **uma terceira coisa**: a classificação 
 _o que teria pego este bug antes?_ — gravada como label. Ver **A pergunta que fecha o loop**,
 mais abaixo. É o único momento em que alguém sabe a causa raiz, e por isso o único momento
 barato de responder.
+
+E, quando a correção sozinha não conserta o que já ficou errado — falta backfill, correção de
+dados, reprocessamento —, a label `post-action` e a seção **Ação pós-deploy** do comentário
+técnico. Ver **Ação pós-deploy**, mais abaixo.
 
 ## O que NÃO fazer
 
@@ -121,6 +125,9 @@ gh issue comment <N> --repo <ORG>/<REPO> --body "$(cat <<'EOF'
 ### Tratativa
 - **Casos pontuais:** <como estão sendo tratados>
 - **Solução definitiva:** <plano estrutural / refactor / PR>
+
+### Ação pós-deploy
+<só quando há ação depois do deploy — ver a seção "Ação pós-deploy" da skill; senão, omita>
 
 ### Entradas testadas
 <tabela da seção "## Entradas testadas" do PR, ou o link para ela>
@@ -276,6 +283,78 @@ O sinal que falta pode ser no `zoppy-api` enquanto o bug foi corrigido num front
 card **no repo que emite o sinal** — outro revisor, outro prazo. Quem sabe qual repo é o
 `/flow-monitorar`, que consulta o catálogo; não decida isto de cabeça.
 
+## Ação pós-deploy
+
+O deploy conserta o que acontece **daqui pra frente**. O que já ficou errado no banco — pedido
+sem loja, cupom órfão, cliente duplicado, campo zerado — continua errado até alguém rodar
+alguma coisa. Essa coisa é a ação pós-deploy, e ela tem dono, escopo e prazo como o resto do
+card.
+
+### Quando há ação
+
+Há ação quando a **Tratativa** precisa de alguma destas depois que o código estiver em
+produção:
+
+-   **backfill** — recalcular ou preencher dado histórico (rota de backfill, command, script);
+-   **correção de dados** — `UPDATE`/`DELETE` pontual, deduplicação, reprocessar registro com erro;
+-   **reprocessamento** — reenfileirar job, re-sync com o provedor, refazer envio que falhou;
+-   **ação no provedor** — apagar desconto órfão, recriar webhook, reativar integração.
+
+Não há ação quando o fix sozinho resolve: nada histórico ficou errado, ou o próprio fluxo
+normal (o próximo sync, o próximo cron) conserta sozinho — e aí diga isso na Tratativa, com o
+prazo em que o fluxo normal passa.
+
+**Padrão: se a Tratativa fala em backfill, correção de dados ou reprocessar, proponha a
+`post-action`.** Como a alavanca, é proposta com o motivo em uma linha, e o dev confirma. Não
+aplique calado.
+
+### Gravar
+
+```bash
+gh issue edit <N> --repo <ORG>/<REPO> --add-label "post-action"
+```
+
+Junto com a `alavanca:*`, no mesmo momento. A label é lida pelo `promote_deploying` do
+`zoppy-eng-metrics`: no deploy em produção, o card com `post-action` vai para a coluna
+**Ação Pós-Deploy** em vez de Done, e o `SLA` do card anda **1 dia útil**. Diga isso ao dev ao
+aplicar — é ele quem tira o card de lá.
+
+Se a label não existir no repo, ela vem do `zoppy-eng-metrics` (`config/epic-labels.yml`, grupo
+`processo`). Avise em vez de criar à mão.
+
+### A seção no comentário técnico
+
+Vai entre **Tratativa** e **Entradas testadas**. Quem lê é quem vai executar, talvez outra
+pessoa, talvez dias depois: precisa dar para rodar sem reler o card.
+
+```markdown
+### Ação pós-deploy
+
+- **O que é:** <backfill de X / correção de Y — em uma frase, o dado que fica certo>
+- **Escopo:** <N empresas, M registros> — `<query read-only usada para contar>`
+- **Quais empresas:** <lista de companyId, ou "todas com <critério>" quando passa de ~20>
+- **Como executar:** <rota, command ou script, com os parâmetros; dry-run primeiro se existir>
+- **Como conferir:** <query ou tela, e o número esperado depois — ex.: "0 pedidos com storeId nulo">
+- **Depende de:** <o deploy do PR #X em produção; outra ação antes; janela de baixo tráfego>
+- **Reversível:** <sim (como) | não — e por isso o dry-run>
+```
+
+Regras:
+
+-   **Escopo é número medido, não estimado.** Rode a contagem (read-only) antes de escrever e
+    cole a query junto. "Algumas empresas" não deixa ninguém dimensionar o trabalho nem
+    conferir depois.
+-   **Como conferir** traz o número esperado depois da ação. É o que diz se dá para mover o
+    card para Done.
+-   **Não execute a ação por conta própria** — escrever o plano não autoriza rodar backfill
+    ou alterar dado de cliente. Isso é decisão do dev, depois do deploy.
+
+### Depois de executar
+
+Quando o dev disser que rodou, poste um comentário curto no card com o resultado — quantas
+empresas e registros foram afetados, o número da conferência e qualquer divergência do
+escopo previsto — e lembre de mover o card de **Ação Pós-Deploy** para **Done**.
+
 ## Checklist antes de postar
 
 Como são ações visíveis (impactam shared state), **sempre confirme o texto com o usuário antes de executar** — principalmente o alto-nível do campo, que aparece em views de management.
@@ -290,6 +369,7 @@ Como são ações visíveis (impactam shared state), **sempre confirme o texto c
 -   [ ] Se é bug: label `alavanca:*` aplicada, e o desdobramento dela feito (bastão para
         `/flow-monitorar`, ou card do teste que faltou, ou nada no caso de `alavanca:nada`)
 -   [ ] Se a alavanca é `api` ou `front`: linha `Escape: ...` proposta, confirmada e escrita no comentário técnico
+-   [ ] Se a Tratativa tem backfill, correção de dados ou reprocessamento: `post-action` proposta e aplicada, e a seção **Ação pós-deploy** escrita com escopo medido (query junto), como executar e como conferir
 
 ## Exemplo preenchido
 
@@ -382,6 +462,7 @@ Formato (markdown):
 ### O que aconteceu — sequência do incidente
 ### Causa raiz — componente, fluxo, por que aconteceu
 ### Tratativa — casos pontuais + solução definitiva
+### Ação pós-deploy — só se houver backfill/correção de dados: o que é, escopo (N empresas, M registros, com a query), quais empresas, como executar, como conferir, depende de, reversível
 ### Entradas testadas — a tabela do PR, se existir
 ### Casos de teste propostos (QA) — 3 a 5, cobrindo happy path + regressão adjacente + edge case se aplicável. Cada caso com: Ambiente (features, role nunca MASTER, estado da empresa) · Dado e como criar · Passos · Esperado · É bug se · Não é bug se · Cobre <ID da tabela>
 
