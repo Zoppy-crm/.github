@@ -1,5 +1,5 @@
 {
-    "description": "Mapeamento de repos para grupos de skills. Cada repo recebe as skills das pastas listadas em 'folders', sincronizadas para .claude/skills/<nome>/SKILL.md",
+    "description": "Mapeamento de repos para grupos de skills. Cada repo recebe as skills das pastas listadas em 'folders', sincronizadas para .claude/skills/<nome>/SKILL.md. Os repos de frontend ficam separados por stack: 'frontend-angular' recebe a pasta angular e 'frontend-react' recebe a pasta react. 'exclusiveFolders' lista pastas que nunca chegam juntas ao mesmo repo; o sync falha antes de copiar se algum repo receberia mais de uma pasta do mesmo conjunto.",
     "groups": {
         "backend": {
             "folders": ["shared", "backend"],
@@ -13,9 +13,13 @@
             "folders": ["shared"],
             "repos": ["zoppy-whatsapp-commerce-FE"]
         },
-        "frontend": {
-            "folders": ["shared", "frontend"],
+        "frontend-angular": {
+            "folders": ["shared", "angular"],
             "repos": ["zoppy-FE", "ui-components", "zoppy-partners-fe", "zoppy-admin-fe"]
+        },
+        "frontend-react": {
+            "folders": ["shared", "react"],
+            "repos": ["zoppy-ai-agent-fe"]
         },
         "e2e": {
             "folders": ["shared", "e2e"],
@@ -29,5 +33,6 @@
             "folders": ["shared", "observability"],
             "repos": ["zoppy-eng-metrics"]
         }
-    }
+    },
+    "exclusiveFolders": [["angular", "react"]]
 }

@@ -95,8 +95,16 @@ skills/
 ├── backend/                              # Repos NestJS
 │   ├── api-development/SKILL.md          # Arquitetura, padrões, logging, queues
 │   └── testing/SKILL.md                  # Testes unitários e integração (Jest)
-├── frontend/                             # Repos Angular
+├── angular/                              # Só repos Angular
 │   └── frontend-angular/SKILL.md         # Componentes, signals, Tailwind, design system
+├── react/                                # Só repos React
+│   ├── frontend-architecture/SKILL.md    # Camadas, fronteiras, rotas, dono de cada estado
+│   ├── conventions-fe/SKILL.md           # TypeScript, lint e regras locais, git e PR
+│   ├── data-fetching/SKILL.md            # Cliente gerado, hooks, query keys, erros da API
+│   ├── forms/SKILL.md                    # react-hook-form + zod, mappers, campos sensíveis
+│   ├── ui-and-styling/SKILL.md           # Tokens, shared/ui, quatro estados, i18n
+│   ├── testing/SKILL.md                  # Vitest + Testing Library + MSW, cobertura de 85%
+│   └── pr-review/SKILL.md                # Review do Claude Review para repos React
 └── e2e/                                  # Repos de teste E2E
     └── e2e-testing/SKILL.md              # Playwright, fixtures, padrões E2E
 ```
@@ -108,11 +116,17 @@ skills/
 | **backend**         | `shared` + `backend`      | zoppy-api, zoppy-workflow, zoppy-pixel-lambda, zoppy-event-bridge |
 | **wpp-commerce**    | `shared` + `wpp-commerce` | zoppy-whatsapp-commerce                                         |
 | **wpp-commerce-fe** | `shared`                  | zoppy-whatsapp-commerce-FE (React — recebe só as skills shared) |
-| **frontend**        | `shared` + `frontend`     | zoppy-FE, ui-components, zoppy-partners-fe, zoppy-admin-fe       |
+| **frontend-angular**| `shared` + `angular`      | zoppy-FE, ui-components, zoppy-partners-fe, zoppy-admin-fe       |
+| **frontend-react**  | `shared` + `react`        | zoppy-ai-agent-fe                                                |
 | **e2e**             | `shared` + `e2e`          | zoppy-e2e-api                                                    |
 | **e2e-jornadas**    | `e2e-jornadas`            | zoppy-FE, zoppy-e2e-api                                          |
 
 Para adicionar repos ou grupos, edite `skills/sync-config.json`.
+
+**Angular e React nunca se misturam.** Repo Angular entra no grupo `frontend-angular`; repo React, no
+`frontend-react`. O `exclusiveFolders` do `sync-config.json` declara que as pastas `angular` e `react`
+não chegam juntas ao mesmo repo: se algum repo for listado nos dois grupos, o sync falha antes de copiar
+qualquer coisa e diz qual repo está errado.
 
 ### O que acontece no repo destino
 
@@ -126,7 +140,7 @@ Skills são copiadas para `.claude/skills/` no formato nativo do Claude Code. Ex
     ├── review-pr/
     │   └── SKILL.md           # de shared/
     ├── frontend-angular/
-    │   └── SKILL.md           # de frontend/
+    │   └── SKILL.md           # de angular/
     └── .synced-from-org       # marker de rastreamento
 ```
 

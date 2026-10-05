@@ -49,6 +49,25 @@ jobs:
                     exit 1
                   fi
 
+                  # Angular (pasta angular) e React (pasta react) nunca chegam ao mesmo repo
+                  EXCLUSIVE_VIOLATIONS=$(jq -r '
+                    (.exclusiveFolders // []) as $exclusive
+                    | [.groups[] as $group | $group.repos[] | {repo: ., folders: $group.folders}]
+                    | group_by(.repo)
+                    | map({repo: .[0].repo, folders: (map(.folders[]) | unique)})
+                    | .[] as $entry
+                    | $exclusive[] as $set
+                    | ($entry.folders - ($entry.folders - $set)) as $hit
+                    | select(($hit | length) > 1)
+                    | "\($entry.repo): \($hit | join(" + "))"
+                  ' "$CONFIG_FILE")
+
+                  if [ -n "$EXCLUSIVE_VIOLATIONS" ]; then
+                    echo "❌ Repos recebendo pastas mutuamente exclusivas (exclusiveFolders):"
+                    echo "$EXCLUSIVE_VIOLATIONS"
+                    exit 1
+                  fi
+
                   # Parse config and build repo -> folders mapping
                   declare -A REPO_FOLDERS
 
