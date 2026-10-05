@@ -76,6 +76,15 @@ inferida) e `main.tsx` (registro do router). O resto anota. A chamada de um hook
 `const agent: UseQueryResult<Agent> = useAgent();`. `cva(...)` também não: escreva o tipo das
 variantes e anote.
 
+O mesmo critério estende a isenção a duas regras vizinhas, e só nesses arquivos:
+
+-   **`*.schema(s).ts` sem tipo de retorno explícito.** O schema é uma factory que recebe `t`
+    (`(t) => z.object(...)`), e o tipo do formulário sai do `z.infer` do retorno; anotar o retorno
+    destruiria a derivação. Fora de arquivo de schema, anote como `z.ZodType<Saída, Entrada>`.
+-   **`routes/**/*.tsx` sem `typedef` nos parâmetros dos callbacks** (`beforeLoad({ context, location })`),
+    que o router infere. Ali também `only-throw-error` fica desligado, porque `throw redirect(...)` é o
+    padrão do TanStack Router.
+
 ### Specs
 
 Tamanho, profundidade, complexidade, `no-else`, `no-search-in-loop`, `no-magic-string-compare` e texto

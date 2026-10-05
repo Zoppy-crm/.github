@@ -37,8 +37,10 @@ regras de lint em `tools/`).
         (pointer capture, `scrollIntoView`, `scrollTo`, `IntersectionObserver`, `ResizeObserver`,
         `matchMedia`);
     -   `render.tsx`: `renderWithProviders(ui, { viewport? })`, com um `QueryClient` novo sem retry;
-    -   `router.tsx`: `renderRouterAt(path)`, que monta a árvore de rotas real em memória e devolve o
-        router para conferir `router.state.location`;
+    -   `router.tsx`: `renderRouterAt(path, { session?, viewport? })`, que monta a árvore de rotas real
+        em memória com os providers e devolve o router para conferir `router.state.location`. Como ele
+        devolve o router e não um resultado de render, a regra `render-result-naming-convention` do
+        `testing-library` fica desligada: chame o retorno de `router`;
     -   `msw/server.ts` e `msw/handlers.ts`: respostas padrão, num arquivo só, só do que quase toda tela
         chama;
     -   `fixtures/`: dados de exemplo tipados com os tipos da feature; `build(base, overrides)`;
