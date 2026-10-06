@@ -19,7 +19,7 @@
         },
         "frontend-angular": {
             "folders": ["shared", "angular"],
-            "repos": ["zoppy-FE", "ui-components", "zoppy-partners-fe", "zoppy-admin-fe"]
+            "repos": ["zoppy-FE", "ui-components", "zoppy-partners-fe", "zoppy-admin-fe", "zoppy-auth-fe"]
         },
         "frontend-react": {
             "folders": ["shared", "react"],
