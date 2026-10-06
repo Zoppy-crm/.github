@@ -17,7 +17,7 @@ allowed-tools:
     - Bash(gh pr comment:*)
     - Bash(gh issue view:*)
     - Bash(gh issue list:*)
-    - Bash(GH_TOKEN=$GH_ISSUES_TOKEN gh issue view:*)
+    - Bash(bash .claude/skills/pr-review/scripts/org-issue.sh:*)
 effort: high
 ---
 
@@ -59,9 +59,9 @@ Comece pelo PR: `gh pr view <número> --json headRefName,baseRefName,title,body`
     e critérios de aceite — isso é o contrato. **Extraia a lista de critérios de aceite literalmente**:
     ela vira a seção "Critérios de aceite" do comentário, verificada critério por critério.
 -   **Issue de outro repositório.** Referência como `Zoppy-crm/<repo>#n` ou link de issue de outro repo
-    não abre com o token padrão da action. Use o token de leitura da org:
-    `GH_TOKEN=$GH_ISSUES_TOKEN gh issue view <n> -R Zoppy-crm/<repo>`. Se ainda assim falhar, diga no
-    comentário qual issue não abriu.
+    não abre com o token padrão da action. Abra pelo script da skill, que usa o token de leitura da org:
+    `bash .claude/skills/pr-review/scripts/org-issue.sh <repo> <n>` (ex.: `... org-issue.sh
+    zoppy-whatsapp-commerce-FE 142`). Se ainda assim falhar, diga no comentário qual issue não abriu.
 -   **PR de `milestone/*`** carrega um épico inteiro. Além das issues citadas, liste as da feature com
     `gh issue list --search "<slug da milestone>" --state all --limit 50 --json number,title,body` e
     leia o PRD/refinamento se houver.
