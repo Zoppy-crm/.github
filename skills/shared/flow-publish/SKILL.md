@@ -65,6 +65,17 @@ If the reflog command returns empty (e.g., branch created outside this clone), f
 gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
 ```
 
+### Step 4.5: Journey map
+
+If the repo has a `jornadas.yml` at the root, check that every new file under `src/` in this branch has a journey before opening the PR:
+
+```bash
+curl -sf https://raw.githubusercontent.com/Zoppy-crm/.github/development/scripts/jornadas/jornadas_check.py -o /tmp/jornadas_check.py
+python3 /tmp/jornadas_check.py origin/<base-branch> HEAD jornadas.yml
+```
+
+It prints the new files without a journey. For each folder listed, add the path to the right journey in `jornadas.yml` and commit it in this branch. If the right journey is not obvious, ask the user. Do not guess. The `Jornadas` check on the PR runs the same script.
+
 ### Step 5: Create or Update PR
 
 Check if a PR already exists:
