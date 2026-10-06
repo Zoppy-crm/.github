@@ -63,9 +63,7 @@ from src.api.dependencies import get_company_service
 from src.api.schemas.request import ChatRequest
 from src.api.schemas.response import ChatResponse
 from src.application.company.company_service import CompanyService
-from src.utils.logger import get_logger
-
-logger = get_logger(__name__)
+from src.utils.logger import LogParams, LogService
 
 router = APIRouter()
 
@@ -79,11 +77,16 @@ async def chat(
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
 
-    logger.info(
-        "chat.request",
-        company_id=request.company_id,
-        customer_phone=request.customer_phone,
-        message_count=len(request.messages),
+    LogService.info(
+        LogParams(
+            message="Chat request",
+            identifier="chat.request",
+            extra_structured_metadata={
+                "company_id": request.company_id,
+                "customer_phone": request.customer_phone,
+                "message_count": len(request.messages),
+            },
+        )
     )
 
     result = await run_conversation(...)
@@ -233,7 +236,8 @@ Rules:
 -   **Never raise `HTTPException` from `application/` or `domain/`.** Those
     layers don't know about HTTP. Endpoints translate.
 -   **Don't swallow exceptions.** If you can't translate, let it bubble —
-    FastAPI returns 500 and the structured logger captures the trace.
+    FastAPI returns 500 and `src/api/exception_handlers.py` logs it as
+    `api.unhandled_exception` (route, method, error, stack).
 -   For idiomatic FastAPI handling, `HTTPException(status_code=..., detail=...)`
     is enough — no custom exception classes for the basics.
 
@@ -334,20 +338,24 @@ schemas: `src/domain/<feature>/webhook_schemas.py`. See the
 
 One log line per request, at the entry, with the structured fields
 relevant to the operation. The orchestrator (called by `chat`) binds
-`company_id`/`customer_phone`/`thread_id` so downstream logs carry the
-context automatically. For non-chat endpoints, pass `company_id`
-explicitly:
+`company_id`/`thread_id` so downstream logs carry the context
+automatically. For non-chat endpoints, pass `company_id` explicitly:
 
 ```python
-logger.info(
-    "knowledge.ingest.requested",
-    company_id=company_id,
-    filename=file.filename,
-    file_size=file.size,
+LogService.info(
+    LogParams(
+        message="Knowledge ingestion requested",
+        identifier="knowledge.ingest.requested",
+        extra_structured_metadata={
+            "company_id": company_id,
+            "filename": file.filename,
+            "file_size": file.size,
+        },
+    )
 )
 ```
 
-Event names follow the `code-conventions` skill:
+Identifiers follow the `code-conventions` skill:
 `<area>.<action>` or `<area>.<action>.<state>` in `dot.case`.
 
 ## Testing endpoints

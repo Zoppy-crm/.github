@@ -72,9 +72,7 @@ from sqlalchemy.orm import selectinload
 
 from src.domain.<feature>.model import <Feature>
 from src.domain.<feature>.schemas import <FeatureConfig>
-from src.utils.logger import get_logger
-
-logger = get_logger(__name__)
+from src.utils.logger import LogParams, LogService
 
 
 class <Feature>Repository:
@@ -335,15 +333,20 @@ so the Application Service never sees an ORM instance.
 Repositories log **state-changing** events, not every read:
 
 ```python
-logger.info(
-    "knowledge_document.created",
-    document_id=str(document.id),
-    company_id=document.company_id,
-    filename=document.filename,
+LogService.info(
+    LogParams(
+        message="Knowledge document created",
+        identifier="knowledge_document.created",
+        extra_structured_metadata={
+            "document_id": str(document.id),
+            "company_id": document.company_id,
+            "filename": document.filename,
+        },
+    )
 )
 ```
 
-Event names follow `<feature>.<state>` (`knowledge_document.created`,
+Identifiers follow `<feature>.<state>` (`knowledge_document.created`,
 `company.synced`, `handoff_event.persisted`). Reads with cache misses
 are logged at the Application Service level, not here.
 

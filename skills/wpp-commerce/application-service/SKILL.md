@@ -220,7 +220,7 @@ the `_to_schema(...)` mapper.
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Input validation problem (file too big, unsupported format) | `raise ValueError("...")` — endpoints translate to 400/404                                        |
 | Resource not found                                          | Return `None` from the read method; let endpoints translate to 404                                |
-| Infra failure that is recoverable in this method            | `try/except`, `logger.error(...)` with structured context, return a sensible fallback (or `None`) |
+| Infra failure that is recoverable in this method            | `try/except`, `LogService.error(...)` with structured context, return a sensible fallback (or `None`) |
 | Infra failure that should bubble                            | Don't catch — let it propagate. The endpoint sees 500                                             |
 
 Real example from `HandoffEventService.save`:
@@ -233,7 +233,13 @@ async def save(self, ...) -> str | None:
             event = await repo.save(...)
             return str(event.id)
     except Exception as e:
-        logger.error("handoff.persist_failed", error=str(e))
+        LogService.error(
+            LogParams(
+                message="Handoff event persistence failed",
+                identifier="handoff.persist_failed",
+                extra_structured_metadata={"error": str(e)},
+            )
+        )
         return None
 ```
 
@@ -246,18 +252,22 @@ Every public method that does meaningful work emits at least one
 structured log line — see `code-conventions` skill. Convention:
 
 ```python
-logger.info(
-    "knowledge.ingest.queued",
-    document_id=str(doc_id),
-    company_id=company_id,
-    filename=filename,
+LogService.info(
+    LogParams(
+        message="Knowledge document queued for ingestion",
+        identifier="knowledge.ingest.queued",
+        extra_structured_metadata={
+            "document_id": str(doc_id),
+            "filename": filename,
+        },
+    )
 )
 ```
 
-If the orchestrator already bound `company_id` / `customer_phone` /
-`thread_id` to the structlog context, you don't need to repeat them —
-they appear automatically. For Celery tasks and CLI flows that don't
-go through the orchestrator, pass `company_id=` explicitly.
+Inside a turn the orchestrator already bound `company_id` / `thread_id`
+to the request context, so `LogService` adds them automatically; don't
+repeat them. For Celery tasks and CLI flows that don't go through the
+orchestrator, pass `company_id` in `extra_structured_metadata`.
 
 ## Static helpers on the service class
 
@@ -318,8 +328,8 @@ Patch the **consumer module path**, not the source module. See the
     call site has it.** Multi-tenant leak — see `multi-tenant-context`
     skill.
 -   **Don't enqueue Celery tasks via raw `delay()` without `company_id`
-    in the kwargs.** The worker re-binds the structlog context using these
-    fields.
+    in the kwargs.** The worker logs them explicitly, since no turn context
+    is bound there.
 
 ## Pre-PR checklist
 

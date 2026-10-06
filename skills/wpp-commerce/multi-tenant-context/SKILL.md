@@ -36,10 +36,9 @@ invariant.
     - `handoff_cooldown:<company_id>:<customer_phone>` — handoff cooldown
     - `cart:<thread_id>` — cart, where `thread_id = "<company_id>:<customer_phone>"`
     - LangGraph checkpoint keys derived from `thread_id`, same shape
-3. **Logs — `company_id` is bound to the structlog context for the whole
-   request lifecycle** (plus `customer_phone` and `thread_id` when relevant).
-   Once `bind_context(...)` runs, every `logger.info(...)` carries those
-   fields automatically.
+3. **Logs — `company_id` is bound to the request context for the whole
+   turn** (plus `thread_id` and `request_id`). Once `bind_context(...)` runs,
+   every `LogService` call carries those fields automatically.
 4. **Agent state — the `AgentManager` cache key is `<company_id>:<agent_config_id>`,**
    and the conversation `thread_id` is `<company_id>:<customer_phone>`.
    Tenant separation in conversation state falls out of these two keys.
@@ -176,10 +175,11 @@ Rules:
 
 ## Request lifecycle — binding the tenant context
 
-At the start of every chat request, `src/ai/orchestrator.py:run_conversation`
-binds the tenant context to structlog's contextvars. From that point on,
-**every `logger.info(...)` call inside the same async task carries
-`company_id`, `customer_phone`, `thread_id` automatically.**
+At the start of every chat turn, `src/ai/orchestrator.py:_run_turn` binds
+the tenant context to the contextvars in `src/utils/request_context.py`.
+From that point on, **every `LogService` call inside the same async task
+carries `company_id`, `thread_id` and `request_id` automatically**
+(`customer_phone` is bound but not logged).
 
 ```python
 from src.utils.request_context import bind_context, clear_context
@@ -197,9 +197,8 @@ finally:
 
 For background work (Celery tasks, scheduled jobs) that doesn't run inside
 a chat request, bind the context manually at the top of the task using the
-inputs (`company_id`, `document_id`, etc.). For helpers that need extra
-fields not yet bound, use `get_contextualized_logger(...)` from
-`src/utils/logger.py`.
+inputs (`company_id`, `document_id`, etc.), or pass `company_id` /
+`thread_id` explicitly in `extra_structured_metadata`.
 
 ## Agent state — the two keys you need to know
 
@@ -241,9 +240,9 @@ compiled agent. Existing threads keep their snapshot — by design.
     global (model pricing, feature flag definitions, etc.).
 -   **Never cache a Pydantic model with shared mutable references** — always
     serialize via `model_dump_json` so the cached state is independent.
--   **Never log raw `customer_phone` outside the bound context.** Phones are
-    PII; the structured logger is configured to handle them, but ad-hoc
-    `logger.info(f"phone is {phone}")` strings escape redaction.
+-   **Never interpolate `customer_phone` into a log message.** Phones are
+    PII; if a log needs one, put it in a named field of
+    `extra_structured_metadata`, never in `message`.
 -   **Never write a webhook handler that updates a cached entity without
     invalidating the cache.** The next chat request will run with stale
     config and the bug is hard to spot in production.
@@ -251,8 +250,8 @@ compiled agent. Existing threads keep their snapshot — by design.
     task or a background `asyncio.create_task`, the contextvars don't
     propagate. Re-bind at the top of the new task.
 -   **Never omit `company_id` from a fresh log call.** If `bind_context`
-    hasn't run (a CLI script, a Celery task, a fixture), pass it explicitly
-    as a kwarg: `logger.info("event", company_id=company_id, ...)`.
+    hasn't run (a CLI script, a Celery task, a fixture), pass it explicitly:
+    `extra_structured_metadata={"company_id": company_id, ...}`.
 
 ## Pre-PR checklist
 

@@ -148,8 +148,8 @@ Anatomy:
 5. **Args / Returns sections** in the docstring are how the LLM learns
    the tool's contract. Keep them concrete and short.
 6. **`_context_customer_phone.get()`** pulls tenant context from the
-   structlog contextvar that the orchestrator bound at the start of
-   the request — see `multi-tenant-context` skill.
+   `src/utils/request_context.py` contextvar that the orchestrator bound
+   at the start of the turn — see `multi-tenant-context` skill.
 7. **Async context manager** for the HTTP client
    (`async with ClientClass(...) as client:`) so connections close
    deterministically.
@@ -346,7 +346,7 @@ def create_tools_for_company(company_config: CompanyConfig) -> dict[str, list]:
     if provider == "nuvemshop" and company_config.integrations.key:
         tools["catalog"].extend(create_nuvemshop_tools(...))
     elif provider == "nuvemshop" and not company_config.integrations.key:
-        logger.warning("tools_registry.nuvemshop_missing_key", ...)
+        LogService.warning(LogParams(message="Nuvemshop key missing", identifier="tools_registry.nuvemshop_missing_key", ...))
     elif company_config.integrations.url:
         tools["catalog"].extend(create_shopify_tools(...))
         tools["cart"].extend(create_cart_tools(...))
@@ -432,8 +432,9 @@ deactivatable for debugging.
 5. **Use the project HTTP client conventions.** `httpx.AsyncClient`
    inside an `async with Client(...) as client:` context manager.
    Set `timeout=15.0`/`30.0` based on upstream SLA.
-6. **Log structured events.** `logger.info("<provider>.<action>.started", ...)`
-   then `.completed` / `.failed` with relevant fields.
+6. **Log structured events** through a dedicated `<provider>_logger.py`
+   (e.g. `ShopifyUcpLogger`): identifiers `<provider>.<action>.started`
+   then `.completed` / `.failed`, fields in `extra_structured_metadata`.
 7. **Register**:
     - For supervisor tools: extend `_get_sales_tools` in
       `src/ai/agents/registry.py` with the gating condition that

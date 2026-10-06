@@ -137,7 +137,7 @@ class ShopifyStorefrontClient:
 
     async def search_products(self, query: str, intent: str = "") -> str:
         # 1. Build provider-specific payload
-        # 2. POST with logger.info("<provider>.search.started", ...)
+        # 2. POST with <Provider>ToolLogger.search_started(...) (identifier "<provider>.search.started")
         # 3. Map upstream errors to friendly strings
         # 4. Return either a JSON string or a friendly message
         ...
@@ -277,7 +277,7 @@ if provider == "nuvemshop" and company_config.integrations.key:
         )
     )
 elif provider == "nuvemshop" and not company_config.integrations.key:
-    logger.warning("tools_registry.nuvemshop_missing_key", company_id=...)
+    LogService.warning(LogParams(message="Nuvemshop key missing", identifier="tools_registry.nuvemshop_missing_key", extra_structured_metadata={"company_id": ...}))
 elif company_config.integrations.url:
     tools["catalog"].extend(create_shopify_tools(...))
     tools["cart"].extend(create_cart_tools(...))
@@ -285,7 +285,7 @@ elif company_config.integrations.url:
 tools["support"].extend(create_knowledge_tools())
 ```
 
-Always add a `logger.warning("tools_registry.<provider>_missing_<credential>", ...)`
+Always add a `LogService.warning` with identifier `tools_registry.<provider>_missing_<credential>`
 branch — it's how production debugging starts when a company is
 half-onboarded.
 

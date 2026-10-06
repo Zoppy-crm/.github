@@ -46,8 +46,9 @@ identifier. The LangGraph checkpointer keys state under
 `checkpoint:{thread_id}:*`; the cart and any session-scoped Valkey
 data follow the same pattern.
 
-`bind_context` writes the tenant fields onto structlog's contextvars
-so every `logger.info(...)` downstream picks them up automatically —
+`bind_context` writes the tenant fields onto the contextvars in
+`src/utils/request_context.py`, so every `LogService` call downstream
+picks up `company_id`, `thread_id` and `request_id` automatically —
 see the `multi-tenant-context` skill.
 
 ## Step 1 — Resolve AgentConfig + snapshot
