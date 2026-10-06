@@ -13,6 +13,10 @@
             "folders": ["shared"],
             "repos": ["zoppy-whatsapp-commerce-FE"]
         },
+        "copy-ai": {
+            "folders": ["shared", "copy-ai"],
+            "repos": ["zoppy-copy-ai"]
+        },
         "frontend-angular": {
             "folders": ["shared", "angular"],
             "repos": ["zoppy-FE", "ui-components", "zoppy-partners-fe", "zoppy-admin-fe"]
