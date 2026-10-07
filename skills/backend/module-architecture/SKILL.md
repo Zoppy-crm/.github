@@ -77,6 +77,16 @@ Wire the feature module into the composition through dedicated bounded-context m
 -   **HTTP**: register the controller in a dedicated `*HttpModule` (e.g. `FeatureHttpModule`) and import that into the root `HttpModule` — alongside `PaymentHttpModule`, `BillingHttpModule`, etc. Do **not** add the controller to the root `HttpModule` `controllers` array.
 -   **Application**: import your feature application module where it's consumed. During migration, the god `ApplicationModule` may temporarily re-export it (list it in `imports` + `exports`) as a compat bridge so existing consumers keep working — but the target is for consumers to import the feature module directly and the god module to shrink to nothing.
 
+### Map the new folders to a journey
+
+Every new file or folder under `src/` needs a journey in the repo's `jornadas.yml` (at the repo root). The KPI of unit test coverage per journey reads that file, and a path with no journey is counted as "Nao classificado".
+
+1. Look for the closest parent path of the new file in `jornadas.yml`. If a parent already covers it (the longest matching prefix wins), nothing to do.
+2. If not, add the new folder (or the file, inside folders that mix journeys, such as `access/queues/*`, `access/http/controllers`, `cross-cutting/helpers`) to the right journey, **in the same PR**.
+3. If the right journey is not obvious, ask the dev. Do not guess.
+
+The `Jornadas` check on the PR lists any new file still without a journey.
+
 ### When NOT to create a module
 
 Default to a dedicated module — it's the unit the god modules are being broken into. Even a small feature is better as its own module than as a flat provider in the god `ApplicationModule` (which we are trying to delete). Reach for a module especially when:

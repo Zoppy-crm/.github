@@ -179,6 +179,17 @@ CreateProductComponent (container — injeta serviços HTTP, faz save/navigation
 -   [ ] Styling done exclusively with Tailwind — no inline SCSS unless strictly necessary
 -   [ ] `ChangeDetectionStrategy.OnPush` on all components
 -   [ ] `@Zoppy-crm/*` design system components used instead of custom HTML when available
+-   [ ] New folders under `src/` mapped to a journey in `jornadas.yml` (see below)
+
+## Map the new folders to a journey
+
+Every new file or folder under `src/` needs a journey in the repo's `jornadas.yml` (at the repo root). The KPI of unit test coverage per journey reads that file, and a path with no journey is counted as "Nao classificado".
+
+1. Look for the closest parent path of the new file in `jornadas.yml`. If a parent already covers it (the longest matching prefix wins), nothing to do.
+2. If not, add the new folder (or the file, inside folders that mix journeys, such as `access/queues/*`, `access/http/controllers`, `cross-cutting/helpers`) to the right journey, **in the same PR**.
+3. If the right journey is not obvious, ask the dev. Do not guess.
+
+The `Jornadas` check on the PR lists any new file still without a journey.
 
 ## What NOT to do
 

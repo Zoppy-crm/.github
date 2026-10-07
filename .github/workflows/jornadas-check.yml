@@ -1,0 +1,29 @@
+name: Jornadas (reutilizável)
+
+on:
+    workflow_call: {}
+
+jobs:
+    arquivos-sem-jornada:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - uses: actions/checkout@v4
+              with:
+                  repository: Zoppy-crm/.github
+                  ref: development
+                  path: .zoppy-org
+                  sparse-checkout: scripts/jornadas
+
+            - name: PyYAML
+              run: python3 -c "import yaml" || pip install --quiet pyyaml
+
+            - name: Arquivos novos sem jornada no jornadas.yml
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  PR_NUMBER: ${{ github.event.pull_request.number }}
+              run: python3 .zoppy-org/scripts/jornadas/jornadas_check.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" jornadas.yml
