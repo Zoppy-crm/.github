@@ -293,7 +293,7 @@ Carry over from `tests/TESTING.md`:
 -   [ ] `@pytest.mark.unit` or `@pytest.mark.integration` present
 -   [ ] Mocks patch the consumer import path, not the source
 -   [ ] No assertions on error message strings — use exception class
--   [ ] No `print()` calls or `import logging` — structlog is on
+-   [ ] No `print()` calls or `import logging` — log through `LogService`
 -   [ ] If a new SQLAlchemy model was added, it's registered in
         `src/domain/__init__.py` so integration fixtures see the table
 -   [ ] `uv run pytest tests/unit/ tests/integration/ -q` is green

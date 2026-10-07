@@ -75,7 +75,7 @@ When a chat request lands at `POST /chat`:
 
 1. **`api/endpoints/chat.py`** validates, fetches `CompanyConfig`,
    delegates to `ai/orchestrator.py:run_conversation()`.
-2. **`run_conversation`** binds the structlog context
+2. **`run_conversation` -> `_run_turn`** binds the request context
    (`company_id`, `customer_phone`, `thread_id`) and resolves the
    `AgentConfig` for the receiving business phone.
 3. **`AgentManager.snapshot_config(thread_id, current_config)`** freezes
@@ -202,10 +202,7 @@ from src.ai.middlewares import ToolCallErrorHandlerMiddleware
 from src.domain.agent_config.schemas import AgentConfigData
 from src.domain.company.schemas import CompanyConfig
 from src.infra.config import settings
-from src.utils.logger import get_logger
 from .prompt import get_sales_prompt
-
-logger = get_logger(__name__)
 
 
 @observe(name="create_sales_agent", as_type="span")

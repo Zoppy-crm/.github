@@ -2,13 +2,13 @@
 name: code-conventions
 description: >
     Coding conventions for zoppy-whatsapp-commerce (Python 3.13 / FastAPI / async
-    SQLAlchemy / structlog). Covers ruff/mypy rules, the uv package manager,
+    SQLAlchemy / zoppy-logs). Covers ruff/mypy rules, the uv package manager,
     import order, async/await usage, the WHATSAPP_COMMERCE_ env prefix,
     structured logging with bound context, exception handling, and Pydantic v2
     conventions. Use this skill whenever writing new code, choosing how to log
     something, deciding which exception to raise, configuring a setting, or
     reviewing whether code follows the project's style. Triggers on: "how to log",
-    "structlog", "request_context", "ruff", "mypy", "uv", "pyproject.toml",
+    "LogService", "LogParams", "request_context", "ruff", "mypy", "uv", "pyproject.toml",
     "WHATSAPP_COMMERCE_", "settings", "env var", "exception", "raise",
     "Pydantic", "model_dump", "model_validate", "async def", "logging", "logger",
     "convenções", "convention", "estilo", "code style".
@@ -112,43 +112,50 @@ All settings live in `src/infra/config.py` as a `pydantic-settings`
 
 ## Logging
 
-Use the project's structlog wrapper, never `print` or stdlib `logging`
-directly.
+Every log goes through the app `LogService` (wraps `zoppy-logs`, same shape
+as zoppy-api). Never use `print` or stdlib `logging` directly.
 
 ```python
-from src.utils.logger import get_logger
+from src.utils.logger import LogParams, LogService
 
-logger = get_logger(__name__)
-
-logger.info(
-    "knowledge.ingest.queued",
-    document_id=str(doc_id),
-    company_id=company_id,
-    filename=filename,
-    file_type=extension,
+LogService.info(
+    LogParams(
+        message="Knowledge document queued for ingestion",
+        identifier="knowledge.ingest.queued",
+        extra_structured_metadata={
+            "document_id": str(doc_id),
+            "filename": filename,
+            "file_type": extension,
+        },
+    )
 )
 ```
 
 Conventions:
 
--   **Event name** is the first positional arg. Use `dot.case` namespaces
+-   **`identifier`** is the event name, in `dot.case`
     (`<area>.<action>` or `<area>.<action>.<state>`):
-    `knowledge.ingest.queued`, `worker.process_document.completed`,
-    `agent_manager.cache_hit`, `shopify_parser.parse_success`.
--   **Structured fields** as kwargs. Don't interpolate into the message —
-    pass values as named keys so logs are queryable.
--   **Severity**:
-    -   `info` for normal lifecycle events worth keeping
-    -   `debug` for fine-grained tracing
-    -   `warning` for recoverable / unexpected-but-not-fatal
-    -   `error` for failures (always include `error=str(e)` and
-        `error_type=type(e).__name__`)
--   **Tenant context comes for free.** At request entry the orchestrator calls
-    `bind_context(company_id=..., customer_phone=..., thread_id=...)` from
-    `src.utils.request_context`. Every subsequent `logger.info(...)` inside the
-    same async task automatically carries those fields.
--   For helpers that need extra context not yet bound, use
-    `get_contextualized_logger(...)` from `src.utils.logger`.
+    `knowledge.ingest.queued`, `worker.process_document.completed`.
+    **`message`** is a short readable English sentence.
+-   **Fields go only in `extra_structured_metadata`** (never `extra=`). They
+    become Loki structured metadata, queryable without `| json`. Don't
+    interpolate values into the message.
+-   **Levels**: `info` for lifecycle events worth keeping, `warning` for
+    recoverable or unexpected-but-not-fatal, `error` for failures (include
+    `error=str(e)` and `error_type=type(e).__name__`). There is no `debug`:
+    if an event isn't worth an `info`, don't log it.
+-   **Modules with many logs get a dedicated `<module>_logger.py`** next to
+    them (a class of `@classmethod`s, one per event, identifiers as
+    constants), like `cart_shopify_logger.py`.
+-   **Default fields come for free.** `LogService` adds `company_id`,
+    `thread_id` and `request_id` from `src.utils.request_context` (bound by
+    the orchestrator for the whole turn), `task` (ECS TaskARN) and
+    `langfuse_trace_id` (when a Langfuse trace is active). An explicit value
+    wins. Outside a turn, pass `company_id`/`thread_id` explicitly.
+-   **Never log secrets.** Mask URLs with `mask_url_credentials` /
+    `mask_urls_in_text` from `src.utils.url`.
+-   Unhandled errors are already logged: `api.unhandled_exception` (HTTP 500)
+    and `worker.task_failed` (Celery). Don't add another catch-all.
 
 ## Exceptions
 
@@ -160,7 +167,7 @@ Conventions:
     the right status code) inside `api/endpoints/`. Don't raise `HTTPException`
     from inside `application/` or `domain/`.
 -   Never swallow exceptions silently. Either re-raise (often `from e` to
-    preserve chain) or `logger.error(...)` with structured context, then
+    preserve chain) or `LogService.error(...)` with structured context, then
     decide what to return.
 
 Pattern in Celery tasks (see `src/worker/tasks/document_processing.py`):
@@ -169,14 +176,17 @@ Pattern in Celery tasks (see `src/worker/tasks/document_processing.py`):
 try:
     ...
 except ValueError as e:
-    logger.error("worker.process_document.validation_error", error=str(e))
-    _update_document_status(doc_uuid, DocumentStatus.FAILED, error_message=str(e))
+    DocumentProcessingLogger.validation_error(
+        document_id=document_id, company_id=company_id,
+        error=str(e), error_type=type(e).__name__,
+    )
+    _mark_failed(doc_uuid, document_id, e)
     return {...}
 except Exception as e:
-    logger.error(
-        "worker.process_document.error",
-        error=str(e),
-        error_type=type(e).__name__,
+    DocumentProcessingLogger.error(
+        document_id=document_id, company_id=company_id,
+        error=str(e), error_type=type(e).__name__,
+        retry_count=self.request.retries,
     )
     if self.request.retries < self.max_retries:
         raise self.retry(exc=e)
