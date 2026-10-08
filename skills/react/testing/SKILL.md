@@ -32,17 +32,19 @@ regras de lint em `tools/`).
 -   **Spec ao lado do código:** `agent-card.tsx` → `agent-card.spec.tsx`. Só `*.spec.ts(x)` é coletado.
 -   **Specs de rota** em `src/routes/-specs/` (o `-` deixa a pasta fora da árvore de rotas).
 -   `test/`, na raiz, é infraestrutura compartilhada:
-    -   `setup.ts`: jest-dom, `asyncUtilTimeout: 5000`, MSW com `onUnhandledRequest: 'error'`, `cleanup`
-        e `resetHandlers` depois de cada teste, viewport de volta para desktop e os shims do jsdom
-        (pointer capture, `scrollIntoView`, `scrollTo`, `IntersectionObserver`, `ResizeObserver`,
-        `matchMedia`);
+    -   `setup.ts`: jest-dom, `asyncUtilTimeout: 10_000` (abaixo do `testTimeout` de 30 s do projeto `app`),
+        MSW com `onUnhandledRequest: 'error'`, `cleanup` e `resetHandlers` depois de cada teste, viewport de
+        volta para desktop e os shims do jsdom (pointer capture, `scrollIntoView`, `scrollTo`,
+        `IntersectionObserver`, `ResizeObserver`, `matchMedia`);
     -   `render.tsx`: `renderWithProviders(ui, { viewport? })`, com um `QueryClient` novo sem retry;
     -   `router.tsx`: `renderRouterAt(path, { session?, viewport? })`, que monta a árvore de rotas real
         em memória com os providers e devolve o router para conferir `router.state.location`. Como ele
         devolve o router e não um resultado de render, a regra `render-result-naming-convention` do
         `testing-library` fica desligada: chame o retorno de `router`;
-    -   `msw/server.ts` e `msw/handlers.ts`: respostas padrão, num arquivo só, só do que quase toda tela
-        chama;
+    -   `msw/server.ts`: o servidor com as respostas padrão de `src/app/mocks/handlers`, só do que quase
+        toda tela chama;
+    -   `msw/gate.ts`: `createGate()` devolve `{ opened, open }`; o handler faz `await gate.opened` e segura
+        a resposta até o teste chamar `gate.open()`;
     -   `fixtures/`: dados de exemplo tipados com os tipos da feature; `build(base, overrides)`;
     -   `viewport.ts`: `setViewport('mobile' | 'desktop')` (390 e 1280 px);
     -   `a11y.ts`: `expectNoA11yViolations(container)`, que roda o axe no DOM renderizado.
@@ -79,7 +81,10 @@ regras de lint em `tools/`).
    formulário, uma falha de validação e uma de submit. Mais: a tela renderiza em **celular e desktop**
    e passa no `expectNoA11yViolations`.
 6. **Assíncrono com `await screen.findBy…`**; interação com `userEvent.setup()`, sempre com `await`. Sem
-   timeout arbitrário; timer falso só de propósito, restaurado no fim.
+   timeout arbitrário; timer falso só de propósito, restaurado no fim. **Estado intermediário** (bolha
+   pendente, botão `aria-busy`, esqueleto) se testa com o portão: o handler espera `gate.opened`, o teste
+   confere o estado e só então chama `gate.open()`. Nunca com `delay(ms)` do MSW: em máquina lenta a
+   resposta chega antes da asserção. Requisição que nunca responde usa `delay('infinite')`.
 7. Tipagem estrita nos specs (`typedef` vale para eles).
 8. Os limites de tamanho e complexidade não valem para specs, mas `describe` gigante é sinal de spec
    testando coisa demais: empurre setup para helpers nomeados e fixtures.
