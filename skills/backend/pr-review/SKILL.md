@@ -170,6 +170,10 @@ que transforma o padrão do repo em letra morta.
     usado, linhas lidas e tempo (ver a seção "Performance de consulta nova" da skill `domain`). Sem
     isso é achado. Também é achado quando o plano informado mostra full scan, ou um índice que não cobre
     os filtros principais numa tabela grande, sem migration de índice no PR.
+-   **Update ou delete por lista de ids sem teto de tamanho.** `deleteMany`/`updateAll`/`destroy` com
+    `id: lista` em que a lista cresce com o volume do lote (página, migração, backfill) e não é dividida
+    em lotes de até 500 é achado: acima de ~2.600 ids o plano vira varredura da tabela inteira e trava a
+    frota (ver "Escrita por lista de ids" na skill `domain`).
 
 ### Filas e integrações
 
