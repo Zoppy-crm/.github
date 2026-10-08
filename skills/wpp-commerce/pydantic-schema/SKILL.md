@@ -110,7 +110,7 @@ Anatomy:
    `= []` or `= {}` directly.
 5. **`@property` for derived values** — read-only convenience accessors
    that don't change serialization. For computed values that should
-   appear in `model_dump()`, use `@computed_field`.
+   appear in `model_dump()`, use `computed_field` (see the `computed_field` section for the form mypy accepts).
 
 ## Webhook schema
 
@@ -268,16 +268,25 @@ When you want a derived value to appear in `model_dump()` (clients see
 it), use `@computed_field` instead of plain `@property`:
 
 ```python
+from typing import cast
+
 from pydantic import computed_field
 
 class Order(BaseModel):
     items: list[Item]
 
-    @computed_field
-    @property
-    def total(self) -> Decimal:
+    def _total(self) -> Decimal:
         return sum(i.price for i in self.items)
+
+    total = cast(Decimal, computed_field(property(_total)))
 ```
+
+Do not stack `@computed_field` on `@property`: mypy rejects decorators on top of
+`@property` (`prop-decorator`), and the CI type-check job fails. Wrapping the
+property with `computed_field(...)` keeps Pydantic's behavior (the field still
+appears in `model_dump()` and in the JSON schema), and the `cast` gives mypy the
+real type instead of `Any`. Example in the repo:
+`src/ai/agents/subagents/catalog/schemas.py` (`CatalogSearchResult`).
 
 ## Where each shape ends up
 
