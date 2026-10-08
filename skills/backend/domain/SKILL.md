@@ -142,6 +142,27 @@ export class WcCouponDomain extends RepositoryAdapter<Coupon> {
 
 The `withTrashed: boolean` parameter controls whether records with `deletedAt != null` are included.
 
+### Performance de consulta nova (obrigatório antes do merge)
+
+Teste local roda em sqlite com meia dúzia de linhas: ele não mostra plano de execução nem volume. Tabelas
+como `DataNotSynced` passam de 12 milhões de linhas e as consultas de sync rodam de hora em hora por
+empresa. Por isso, **toda consulta nova ou com `where`/`order` alterado** (`find`, `findOne`,
+`updateAll`, `rawQuery`) é medida em produção antes do merge:
+
+1. Monte a SQL equivalente, incluindo o que o `RepositoryAdapter` injeta: `companyId` e
+   `deletedAt IS NULL` quando `withTrashed` for falso.
+2. Rode `EXPLAIN FORMAT=TREE <sql>` na réplica de leitura de prod com os parâmetros reais do **maior
+   tenant afetado** (não só o do bug). Confira o índice usado, o tipo de scan e as linhas estimadas.
+3. Rode a SELECT real e anote o tempo e as linhas lidas. Meça também o pior tenant da frota que passa
+   por esse caminho.
+4. Índices existentes: `information_schema.STATISTICS`. Tamanho da tabela: `information_schema.TABLES`.
+5. Registre o resultado no body do PR, por exemplo: "Performance em prod: índice
+   `idx_dns_company_entity_created`, 1.275 linhas lidas, ~1,5 s, maior tenant". Se nenhum índice cobrir
+   os filtros principais, a migration do índice entra antes ou junto com o código.
+
+Ao delegar a implementação a um agente, inclua esse passo no pedido. O revisor automático
+(`pr-review`) cobra essa evidência.
+
 ---
 
 ## Lifecycle hooks
@@ -299,5 +320,6 @@ Keep alphabetical order in the `providers` and `exports` arrays.
 -   [ ] If hooks exist: `logService` passed to `super()` and injected
 -   [ ] Hooks registered in the constructor after `super()`
 -   [ ] Custom queries do not include manual `companyId` in `where` (it's automatic)
+-   [ ] New or changed queries measured in prod with `EXPLAIN` (largest tenant), result in the PR body
 -   [ ] Domain added to `providers` and `exports` in `DomainModule`
 -   [ ] Tests written (see skill-tdd for domain test patterns)

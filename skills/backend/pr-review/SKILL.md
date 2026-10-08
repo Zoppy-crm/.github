@@ -164,6 +164,12 @@ que transforma o padrão do repo em letra morta.
 -   Migration é aditiva: coluna nova chega nullable ou com default; a constraint aperta depois.
 -   Migration já aplicada **nunca é editada** — corrige-se para frente.
 -   Query em loop onde um `include`/`findAll` com `where in` resolveria (N+1).
+-   **Consulta nova ou com `where` alterado sem evidência de performance em prod.** Se o diff cria ou
+    muda `find`/`findOne`/`updateAll`/`rawQuery` em `src/domain` (ou query montada em outro lugar), o
+    body do PR precisa trazer o `EXPLAIN` medido em prod com parâmetros do maior tenant afetado: índice
+    usado, linhas lidas e tempo (ver a seção "Performance de consulta nova" da skill `domain`). Sem
+    isso é achado. Também é achado quando o plano informado mostra full scan, ou um índice que não cobre
+    os filtros principais numa tabela grande, sem migration de índice no PR.
 
 ### Filas e integrações
 
