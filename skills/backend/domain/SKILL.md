@@ -163,6 +163,20 @@ empresa. Por isso, **toda consulta nova ou com `where`/`order` alterado** (`find
 Ao delegar a implementação a um agente, inclua esse passo no pedido. O revisor automático
 (`pr-review`) cobra essa evidência.
 
+#### Escrita por lista de ids: lotes de 500
+
+`deleteMany`, `updateAll` ou `destroy` com `where: { id: lista }` têm teto de tamanho. Acima de ~2.600
+ids, o MySQL de prod estoura o `range_optimizer_max_mem_size` (8 MB), emite `Warning 3170 ... Range
+optimization was not done` e varre a tabela inteira. Em REPEATABLE READ, essa varredura trava toda linha
+lida. Em 08/10/2026, uma exclusão de 2.809 ids em `OrderSummaries` (170 M linhas) levou ~12 min por
+instrução e fez pedidos ao vivo de mais de 30 empresas falharem com `Lock wait timeout exceeded` (hotfix #12651).
+
+-   Divida a lista com `ArrayUtil.splitArrayIntoChunks(lista, 500)` e grave lote a lote. O `CHUNK_SIZE`
+    de 5.000 usado nos inserts não serve para update nem delete.
+-   Meça com `EXPLAIN UPDATE` no **writer**, com o maior tamanho de lista que o código consegue gerar, e
+    confira o `SHOW WARNINGS`. A réplica não aceita `EXPLAIN UPDATE`, e o `EXPLAIN SELECT` equivalente
+    pode usar a PRIMARY com uma lista em que o UPDATE já varre a tabela.
+
 ---
 
 ## Lifecycle hooks
@@ -321,5 +335,6 @@ Keep alphabetical order in the `providers` and `exports` arrays.
 -   [ ] Hooks registered in the constructor after `super()`
 -   [ ] Custom queries do not include manual `companyId` in `where` (it's automatic)
 -   [ ] New or changed queries measured in prod with `EXPLAIN` (largest tenant), result in the PR body
+-   [ ] Update/delete by a list of ids is chunked (≤ 500 ids per statement)
 -   [ ] Domain added to `providers` and `exports` in `DomainModule`
 -   [ ] Tests written (see skill-tdd for domain test patterns)
