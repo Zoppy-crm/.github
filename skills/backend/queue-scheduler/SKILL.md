@@ -54,7 +54,7 @@ export class YourSchedulerCommand extends BaseCommand<YourJobData> {
 `BaseCommand` implements `OnModuleInit`. When the module initializes:
 
 1. If `IS_LOCAL=1` env var is set, the scheduler is **skipped** — local dev doesn't run background jobs
-2. Otherwise, `execute()` calls `queue.upsertJobScheduler(key, repeatOptions, templateOptions)`
+2. Otherwise, `execute()` reads `queue.getJobScheduler(key)` and calls `queue.upsertJobScheduler(key, repeatOptions, templateOptions)` only when the scheduler is missing, its `pattern`/`every`/`tz` drifted from the code, or it has no live next iteration (job `repeat:<key>:<next>` not delayed/waiting/prioritized/active). A failing upsert is logged as a warning and does not abort the boot (zoppy-api #12722). Do not promote a scheduler's delayed job in Bull Board to run it now: it can leave the scheduler without its next iteration; use "Add job" with the same job name instead.
 3. BullMQ deduplicates by `key` — running again won't create duplicates
 
 ## Adding to CommandKeyEnum
