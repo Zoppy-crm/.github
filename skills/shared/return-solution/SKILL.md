@@ -19,6 +19,10 @@ E, quando a correção sozinha não conserta o que já ficou errado — falta ba
 dados, reprocessamento —, a label `post-action` e a seção **Ação pós-deploy** do comentário
 técnico. Ver **Ação pós-deploy**, mais abaixo.
 
+E, quando o bug não vai passar pelo deploy — o PR vai direto para `master`, não houve correção
+de código, ou nem era bug —, a label `HotFix` ou `work: fakeBug`. Sem uma delas o card é
+devolvido de Done. Ver **Caminho até Done**, mais abaixo.
+
 ## O que NÃO fazer
 
 Não editar a seção `### Retorno de Solução` que aparece no **body do issue** (o template de bug tem essa seção com `_No response_`). O time ignora esse campo do body — o retorno formal é o field do Project v2. Mexer no body não registra no fluxo do time.
@@ -355,6 +359,50 @@ Quando o dev disser que rodou, poste um comentário curto no card com o resultad
 empresas e registros foram afetados, o número da conferência e qualquer divergência do
 escopo previsto — e lembre de mover o card de **Ação Pós-Deploy** para **Done**.
 
+## Caminho até Done: `HotFix` ou `work: fakeBug`
+
+O caminho normal de um bug é PR para mirror/staging, **In Mirror**, **Deploying** e Done. O
+`validate_done` do `zoppy-eng-metrics` confere esse caminho: todo `work: bug` que entra em Done
+vindo de outra coluna que não In Mirror, Deploying ou Ação Pós-Deploy precisa de `HotFix` ou
+`work: fakeBug`, senão o card volta. A label é o que diz por que o card pulou o deploy.
+
+### Qual das duas
+
+| Situação do card | Label |
+| --- | --- |
+| Não era bug: comportamento esperado, configuração da loja, erro de uso | `work: fakeBug` |
+| Não teve correção de código, só de dados (UPDATE, reprocessamento, ação no provedor) | `work: fakeBug` |
+| Teve correção de código e o PR do card vai direto para `master` | `HotFix` |
+| Vai para Done sem passar por In Mirror, Deploying ou Ação Pós-Deploy por outro motivo | a das duas que descreve o motivo |
+| PR para mirror/staging, que passa pelo deploy | nenhuma |
+
+**Obrigatória:** se qualquer linha com label se aplica, o card não fecha sem ela. Não é
+opcional como a `post-action`.
+
+Para saber a base do PR do card:
+
+```bash
+gh pr view <PR> --repo <ORG>/<REPO> --json baseRefName --jq .baseRefName
+```
+
+`master` é `HotFix`. Sem PR com diff de código, a pergunta é se era bug: sem correção de
+código, é `work: fakeBug`.
+
+### Gravar
+
+```bash
+gh issue edit <N> --repo <ORG>/<REPO> --add-label "HotFix"
+gh issue edit <N> --repo <ORG>/<REPO> --add-label "work: fakeBug"
+```
+
+Proponha com o motivo em uma linha, e o dev confirma, junto com a `alavanca:*`. Diga ao dev o
+que a `work: fakeBug` muda: o `validate_done` deixa de tratar o card como bug e de exigir o
+field "Retorno de Solução". Por isso ela não serve para correção de código que foi direto para
+`master` — essa é `HotFix`, e o card continua sendo bug.
+
+Se a label não existir no repo, ela vem do `zoppy-eng-metrics` (`config/epic-labels.yml`, grupo
+`processo`). Avise em vez de criar à mão.
+
 ## Checklist antes de postar
 
 Como são ações visíveis (impactam shared state), **sempre confirme o texto com o usuário antes de executar** — principalmente o alto-nível do campo, que aparece em views de management.
@@ -370,6 +418,7 @@ Como são ações visíveis (impactam shared state), **sempre confirme o texto c
         `/flow-monitorar`, ou card do teste que faltou, ou nada no caso de `alavanca:nada`)
 -   [ ] Se a alavanca é `api` ou `front`: linha `Escape: ...` proposta, confirmada e escrita no comentário técnico
 -   [ ] Se a Tratativa tem backfill, correção de dados ou reprocessamento: `post-action` proposta e aplicada, e a seção **Ação pós-deploy** escrita com escopo medido (query junto), como executar e como conferir
+-   [ ] Se o PR vai para `master`, não houve correção de código ou não era bug: `HotFix` ou `work: fakeBug` aplicada
 
 ## Exemplo preenchido
 

@@ -53,6 +53,8 @@ One `it()` per row covered by a unit test, with the ID at the start of the name:
 
 **Setup and mechanics come from the repo, not from this skill.** Read the test conventions the repo documents: the file its `CLAUDE.md` points to (in zoppy-api, `rules/testing.md`) or the "Testing" section of the `CLAUDE.md` itself. That file also lists the repo's own history of escaped bugs; add those classes to the catalog when the code under test is in that area. If the repo documents nothing, follow the patterns of the existing specs next to the file.
 
+**Test at the cheapest level that exercises the rule.** Pure logic (mapper, util, builder, an adapter over an HTTP gateway) is tested by building the class directly, with fakes only at the boundary: no framework container, no database. The database comes in when the behavior **is** the query or the persistence. When a class mixes both, the signal is design: extract the rule into a pure function and test it without the database, instead of mocking the persistence layer. The repo conventions say how each level is set up.
+
 Run only the file's spec. What a failing test means depends on the mode (see **Modes** below):
 
 - **New code:** a failing test is the normal RED. Implement the minimum to make it pass.

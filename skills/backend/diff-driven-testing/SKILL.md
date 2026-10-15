@@ -93,7 +93,10 @@ Flag these to the user before writing tests. Writing tests that lock in a bug is
 
 ### 6. Write tests respecting project conventions
 
-- Minimize mocks: use the in-memory DB via `TestUtils`. Never mock Domain classes.
+- Pick the level by what the code does, not by habit:
+  - **Pure logic** (mapper, util, builder, payload, adapter over an HTTP gateway): `new TheClass(...)` with fakes only at the boundary. No `Test.createTestingModule`, no `TestUtils.getSequelize`.
+  - **Behavior that is the query or the persistence** (Domain, service that writes): the in-memory DB via `TestUtils`, importing only the modules the class uses instead of the whole `RepositoryModule` and `DomainModule`.
+  - **A service mixing both:** extract the rule into a pure function and test it without the DB. Never mock Domain classes to avoid the DB.
 - Match the spec file's existing setup; copy `beforeAll` / `beforeEach` / `afterEach` patterns.
 - One behavior per `it()` block.
 - Assert on status codes / error classes — never on error message strings (flaky).
