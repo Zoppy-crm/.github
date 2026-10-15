@@ -12,6 +12,19 @@
 - A factory that always fills the optional field, so the "missing" class is never exercised.
 - The same literal in every test (the same phone, the same email in the database and in the input).
 - `as unknown as T` building an object that cannot exist in production (for example, a user without the company it belongs to).
+- A list that already comes sorted, so removing the `sort` of the code changes nothing. Feed it out of order when the code picks the first, the oldest or the biggest.
+- Pagination tested with a single page, so the loop that fetches the next ones never runs and stopping at page 1 passes.
+- A filter fed only items that pass it. Every condition of the filter needs one item that fails exactly that condition, or removing it passes.
+
+## Paths never taken
+
+- A `catch` that logs and goes on, with no test where the call inside it fails. Emptying the block passes.
+- A fallback (`?? []`, `?.`, default value) with no test where the value is missing. Sometimes it is dead defense, sometimes it is the provider answering without the field; the test decides which.
+
+## Setup heavier than the code
+
+- Pure logic (mapper, util, builder, payload, an adapter over an HTTP gateway) tested through the framework container and a database. It does not hide a defect, but it costs seconds per file instead of milliseconds, and it makes mutation testing unaffordable: every mutant pays the setup again.
+- The whole repository or domain layer imported to test one class. Import what the class uses.
 
 ## Mocks that hide
 
