@@ -331,6 +331,10 @@ Quando o usuário quer criar sub-issues para um epic que **já existe** (não fo
 
 ### 6.1 Mover issue de status (In Progress, To Do, etc)
 
+> Para **começar** um card (mover pra `In progress` ao pegar o trabalho), use a skill
+> `flow-start-card`: ela já cuida de assignee, Start date, Estimate e do aviso do que vai
+> faltar no Done. Esta seção é o mecanismo genérico de troca de status.
+
 Quando o usuário pedir para mover uma issue de status:
 
 1. **Buscar o Item ID** no project (seção 7.2)
