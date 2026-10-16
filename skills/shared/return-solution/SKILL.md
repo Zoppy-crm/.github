@@ -23,6 +23,10 @@ E, quando o bug não vai passar pelo deploy — o PR vai direto para `master`, n
 de código, ou nem era bug —, a label `HotFix` ou `work: fakeBug`. Sem uma delas o card é
 devolvido de Done. Ver **Caminho até Done**, mais abaixo.
 
+E, quando o card não era bug mas o dev fez a mudança assim mesmo — um pequeno improvement —, ele
+deixa de ser bug: sai `work: bug`, entra `work: demanda`. Ver **Não era bug, mas teve código**,
+mais abaixo.
+
 ## O que NÃO fazer
 
 Não editar a seção `### Retorno de Solução` que aparece no **body do issue** (o template de bug tem essa seção com `_No response_`). O time ignora esse campo do body — o retorno formal é o field do Project v2. Mexer no body não registra no fluxo do time.
@@ -371,6 +375,7 @@ vindo de outra coluna que não In Mirror, Deploying ou Ação Pós-Deploy precis
 | Situação do card | Label |
 | --- | --- |
 | Não era bug: comportamento esperado, configuração da loja, erro de uso | `work: fakeBug` |
+| Não era bug, mas o dev fez a mudança (improvement) | `work: demanda` no lugar de `work: bug` — ver **Não era bug, mas teve código** |
 | Não teve correção de código, só de dados (UPDATE, reprocessamento, ação no provedor) | `work: fakeBug` |
 | Teve correção de código e o PR do card vai direto para `master` | `HotFix` |
 | Vai para Done sem passar por In Mirror, Deploying ou Ação Pós-Deploy por outro motivo | a das duas que descreve o motivo |
@@ -403,6 +408,33 @@ field "Retorno de Solução". Por isso ela não serve para correção de código
 Se a label não existir no repo, ela vem do `zoppy-eng-metrics` (`config/epic-labels.yml`, grupo
 `processo`). Avise em vez de criar à mão.
 
+## Não era bug, mas teve código: `work: demanda`
+
+O Suporte abre como bug o que, na investigação, é comportamento que nunca existiu: o produto não
+fazia aquilo, não fazia errado. Se o dev implementa mesmo assim — um pequeno improvement —, o
+card **não é bug nem `fakeBug`**: é demanda. Exemplo: o card dizia que a integração Bling não
+trazia categorias; nunca tinha trazido, e o dev passou a trazer.
+
+| Situação | Label |
+| --- | --- |
+| Não era bug e **teve** código (improvement feito no card) | `work: demanda` |
+| Não era bug e **não** teve código (comportamento esperado, configuração, erro de uso) | `work: fakeBug` |
+
+```bash
+gh issue edit <N> --repo <ORG>/<REPO> --remove-label "work: bug" --add-label "work: demanda"
+```
+
+Se o card também tiver `work: improvement`, remova junto. O que muda:
+
+-   O card sai das métricas de bug, que casam `work: bug` exata, e o `validate_done` deixa de
+    exigir `HotFix`/`fakeBug`, `origin: *` e o field "Retorno de Solução".
+-   O **SLA** continua o que o Suporte declarou ao abrir o bug: ele não depende da label `work: *`.
+-   Escreva o retorno de solução mesmo assim: o cliente que reportou precisa saber o que mudou.
+-   Não há alavanca: a pergunta "o que teria pego este bug antes?" não se aplica a algo que nunca
+    foi defeito. Não aplique `alavanca:*`.
+
+Proponha com o motivo em uma linha ("nunca existiu; o PR #X passou a fazer"), e o dev confirma.
+
 ## Checklist antes de postar
 
 Como são ações visíveis (impactam shared state), **sempre confirme o texto com o usuário antes de executar** — principalmente o alto-nível do campo, que aparece em views de management.
@@ -419,6 +451,7 @@ Como são ações visíveis (impactam shared state), **sempre confirme o texto c
 -   [ ] Se a alavanca é `api` ou `front`: linha `Escape: ...` proposta, confirmada e escrita no comentário técnico
 -   [ ] Se a Tratativa tem backfill, correção de dados ou reprocessamento: `post-action` proposta e aplicada, e a seção **Ação pós-deploy** escrita com escopo medido (query junto), como executar e como conferir
 -   [ ] Se o PR vai para `master`, não houve correção de código ou não era bug: `HotFix` ou `work: fakeBug` aplicada
+-   [ ] Se não era bug mas teve código (improvement): `work: bug` removida e `work: demanda` aplicada, sem `alavanca:*`
 
 ## Exemplo preenchido
 
