@@ -7,7 +7,7 @@ significa do mesmo submódulo. Tudo o que não está liberado aqui o lint proíb
 |---|---|
 | access | application e api do mesmo; domain/values do mesmo; public |
 | application | domain inteiro do mesmo; api de outro submódulo; portas do platform |
-| domain | só domain do mesmo; núcleo de @Zoppy-crm/exceptions |
+| domain | só domain do mesmo; `@Zoppy-crm/exceptions/core` |
 | repository | domain/ports, model e values do mesmo; portas do platform; models Wpp* |
 | infrastructure | domain/ports e values do mesmo; portas do platform |
 | api | só os próprios tipos |

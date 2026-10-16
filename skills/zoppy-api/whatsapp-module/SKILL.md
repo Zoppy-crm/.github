@@ -62,7 +62,7 @@ src/modules/whatsapp/
 1. **De fora do módulo, só `whatsapp/public`.** Ninguém importa `application/`, `domain/` ou `repository/` de um submódulo.
 2. **Entre submódulos, só o `api/` do irmão**, e só a partir da `application` (o `<sub>.module.ts` importa o módulo irmão para a injeção). O `api/` devolve tipos de leitura, nunca agregados, e expõe operações com nome de negócio (`deactivate`, `block`), nunca CRUD (`update`, `save`).
 3. **Models `Wpp*` só no `repository/` do submódulo dono da tabela.**
-4. **O domain não conhece framework**: sem Nest, Sequelize, logger, config. Só o núcleo de `@Zoppy-crm/exceptions`.
+4. **O domain não conhece framework**: sem Nest, Sequelize, logger, config. Só `@Zoppy-crm/exceptions/core`.
 5. **Migrar é passar a ser o único que grava.** Uma milestone só fecha quando nenhum código legado grava nas tabelas que ela assumiu.
 6. **Schema só aditivo.** Nada de renomear ou apagar coluna; o legado tem que entender o que o código novo grava.
 7. **Comportamento preservado.** Bug encontrado vira card na hora, sub-issue do epic, com o teste que o prova ([migrar.md › Bug encontrado na migração](references/migrar.md)); a migração não corrige no caminho. A única mudança intencional do épico é a mensagem nascer no envio.

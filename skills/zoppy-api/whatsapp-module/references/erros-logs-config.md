@@ -2,10 +2,10 @@
 
 ## Erros
 
-Lib `@Zoppy-crm/exceptions`. O núcleo não depende de Nest; a entrada `./nest` traz a `ZoppyException`.
+Lib `@Zoppy-crm/exceptions`. O núcleo, em `@Zoppy-crm/exceptions/core`, não depende de nada: `ErrorCategory`, `ZoppyBaseError`, `isZoppyError`. A raiz do pacote traz a `ZoppyException`, o `toZoppyException` e o mapa `ERROR_CATEGORY_HTTP_STATUS`, e só o access a importa.
 
 - O domain lança subclasse de `ZoppyBaseError` com `category` e `errorType`.
-- Só o `access/` conhece HTTP: traduz `ZoppyError` em `ZoppyException` pelo mapa de categoria.
+- Só o `access/` conhece HTTP: traduz `ZoppyError` em `ZoppyException` com `toZoppyException`, pelo mapa de categoria.
 - O processor base traduz a categoria em retry ou não (tabela em [filas-e-eventos.md](filas-e-eventos.md)).
 - Meta recusou uma mensagem: é estado do agregado (`markFailed`), não exceção.
 - Os `errorType` que já existem são preservados, porque o front e os alertas dependem deles.
