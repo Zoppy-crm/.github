@@ -441,6 +441,7 @@ Esses campos do board ficam obrigatórios em cenários específicos:
 | Campo                  | Tipo | Obrigatório quando…                                     |
 | ---------------------- | ---- | ------------------------------------------------------- |
 | **Retorno de Solução** | Text | Card é `work: bug` (sempre, independente da data)       |
+| **Restauração do sistema** | Date | Card é `work: bug` ou `work: demanda` que veio de ticket do Suporte — **ver nota abaixo** |
 | **Prazo Dev**          | Date | Card é `roadmap` **E** criado em/depois de `2026-04-25` |
 | **Prazo QA**           | Date | Card é `roadmap` **E** criado em/depois de `2026-04-25` |
 
@@ -457,6 +458,17 @@ gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: {
 # Prazo Dev / Prazo QA (DATE)
 # Field IDs: Prazo Dev = PVTF_lADOCAubUc4BQdrVzg-y-k4, Prazo QA = PVTF_lADOCAubUc4BQdrVzg-y-lA
 ```
+
+> **`Restauração do sistema` não é cobrada pelo `validate_done`**, mas é dela que sai o tempo de restauração (MTTR) do ticket no HubSpot — uma automação copia o valor para a propriedade `restauracao_do_sistema` do ticket. Antes de mover um bug para Done, confira se está preenchida; se não estiver, pergunte ao dev **o dia em que o cliente voltou a ter o sistema funcionando**: o dia do contorno em produção, se houve; senão o dia em que a correção chegou **em produção**; ou o dia da ação pós-deploy, se a correção dependia dela. `work: fakeBug` não leva data. A regra completa está na skill `return-solution` (seção "Restauração do sistema").
+>
+> ```bash
+> # Restauração do sistema (DATE)
+> gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: {
+>   projectId: "PVT_kwDOCAubUc4BQdrV", itemId: "'$ITEM_ID'",
+>   fieldId: "PVTF_lADOCAubUc4BQdrVzhlg2sY",
+>   value: { date: "AAAA-MM-DD" }
+> }) { projectV2Item { id } } }'
+> ```
 
 > **Por que duas datas?** O validate_done aplica as regras estritas (epic/origin/Prazo Dev/Prazo QA) **apenas** a cards criados em/depois de **2026-04-25**. Cards antigos passam direto. Verificar `createdAt` antes de exigir esses campos.
 
@@ -604,6 +616,7 @@ gh project item-edit \
 | Prazo Dev          | `PVTF_lADOCAubUc4BQdrVzg-y-k4`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
 | Prazo QA           | `PVTF_lADOCAubUc4BQdrVzg-y-lA`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
 | Retorno de Solução | `PVTF_lADOCAubUc4BQdrVzg-wo9s`   | Text         | GraphQL `updateProjectV2ItemFieldValue` |
+| Restauração do sistema | `PVTF_lADOCAubUc4BQdrVzhlg2sY` | Date      | GraphQL `updateProjectV2ItemFieldValue` |
 
 > **Regra crítica:** Campos do tipo `NUMBER` e `DATE` **não funcionam com `gh project item-edit`**. Sempre usar a mutation GraphQL `updateProjectV2ItemFieldValue` com `value: { number: X }` ou `value: { date: "YYYY-MM-DD" }` respectivamente.
 

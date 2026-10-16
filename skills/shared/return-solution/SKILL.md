@@ -23,6 +23,10 @@ E, quando o bug não vai passar pelo deploy — o PR vai direto para `master`, n
 de código, ou nem era bug —, a label `HotFix` ou `work: fakeBug`. Sem uma delas o card é
 devolvido de Done. Ver **Caminho até Done**, mais abaixo.
 
+E, quando o cliente volta a ter o sistema funcionando, a data vai no field **Restauração do
+sistema**: é dela que sai o tempo de restauração (MTTR) do ticket no HubSpot. Ver **Restauração
+do sistema**, mais abaixo.
+
 E, quando o card não era bug mas o dev fez a mudança assim mesmo — um pequeno improvement —, ele
 deixa de ser bug: sai `work: bug`, entra `work: demanda`. Ver **Não era bug, mas teve código**,
 mais abaixo.
@@ -50,6 +54,7 @@ Sempre **português (pt-BR)**, tom direto. Evite marketing/desculpas — o retor
 
 -   Project ID: `PVT_kwDOCAubUc4BQdrV`
 -   Field "Retorno de Solução" ID: `PVTF_lADOCAubUc4BQdrVzg-wo9s` (tipo TEXT)
+-   Field "Restauração do sistema" ID: `PVTF_lADOCAubUc4BQdrVzhlg2sY` (tipo DATE)
 
 Outros fields TEXT do mesmo project (caso o usuário peça para preencher junto):
 
@@ -408,6 +413,48 @@ field "Retorno de Solução". Por isso ela não serve para correção de código
 Se a label não existir no repo, ela vem do `zoppy-eng-metrics` (`config/epic-labels.yml`, grupo
 `processo`). Avise em vez de criar à mão.
 
+## Restauração do sistema
+
+O field **Restauração do sistema** (DATE) do Project #7 guarda **o dia em que o cliente voltou a
+ter o sistema funcionando**. Uma automação copia o valor para o ticket do HubSpot (propriedade
+`restauracao_do_sistema`, grupo "Informações do Ticket no GitHub"), e é dele que sai o tempo de
+restauração (MTTR). Campo vazio no fechamento é ticket fora da métrica.
+
+**Qual data** — a primeira em que o impacto acabou para o cliente:
+
+| Situação | Data |
+| --- | --- |
+| Houve contorno em produção (flag, config, reprocessamento manual) antes da correção | o dia do contorno |
+| Sem contorno: a correção resolveu | o dia em que o PR chegou **em produção** (deploy, não merge em mirror/staging) |
+| A correção só vale depois de uma ação pós-deploy (backfill, correção de dados) | o dia em que a ação foi executada |
+| `work: fakeBug` (não era bug, nada foi restaurado) | não preencher |
+
+Data em `AAAA-MM-DD`, no fuso de Brasília. Restauração é o cliente sem impacto, não a causa raiz
+fechada: um contorno que destrava o cliente já conta, mesmo que a correção definitiva venha
+depois.
+
+**Quando preencher:** esta skill costuma rodar no commit da branch `bugfix/*`, antes do deploy.
+
+-   Se a restauração **já aconteceu** (houve contorno, ou o fix já está em produção): proponha a
+    data com o motivo em uma linha ("contorno em 14/10: flag desligada para a empresa X") e,
+    confirmada, grave.
+-   Se **ainda não aconteceu**: não grave data futura nem a de hoje por aproximação. Avise o dev
+    que o field fica pendente até o deploy em produção (ou a ação pós-deploy) e que a
+    `flow-github-issues` cobra a data antes de mover para Done.
+
+```bash
+gh api graphql -f query='
+mutation($project:ID!, $item:ID!, $field:ID!, $value:Date!) {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: $project, itemId: $item, fieldId: $field, value: {date: $value}
+  }) { projectV2Item { id } }
+}' \
+-f project="PVT_kwDOCAubUc4BQdrV" \
+-f item="<ITEM_ID_DO_PASSO_1>" \
+-f field="PVTF_lADOCAubUc4BQdrVzhlg2sY" \
+-f value="<AAAA-MM-DD>"
+```
+
 ## Não era bug, mas teve código: `work: demanda`
 
 O Suporte abre como bug o que, na investigação, é comportamento que nunca existiu: o produto não
@@ -451,6 +498,7 @@ Como são ações visíveis (impactam shared state), **sempre confirme o texto c
 -   [ ] Se a alavanca é `api` ou `front`: linha `Escape: ...` proposta, confirmada e escrita no comentário técnico
 -   [ ] Se a Tratativa tem backfill, correção de dados ou reprocessamento: `post-action` proposta e aplicada, e a seção **Ação pós-deploy** escrita com escopo medido (query junto), como executar e como conferir
 -   [ ] Se o PR vai para `master`, não houve correção de código ou não era bug: `HotFix` ou `work: fakeBug` aplicada
+-   [ ] Se a restauração já aconteceu: field **Restauração do sistema** gravado com a data certa (tabela em **Restauração do sistema**); se não, o dev avisado de que fica pendente até produção
 -   [ ] Se não era bug mas teve código (improvement): `work: bug` removida e `work: demanda` aplicada, sem `alavanca:*`
 
 ## Exemplo preenchido
