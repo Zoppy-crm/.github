@@ -105,8 +105,10 @@ skills/
 │   ├── ui-and-styling/SKILL.md           # Tokens, shared/ui, quatro estados, i18n
 │   ├── testing/SKILL.md                  # Vitest + Testing Library + MSW, cobertura de 85%
 │   └── pr-review/SKILL.md                # Review do Claude Review para repos React
-└── e2e/                                  # Repos de teste E2E
-    └── e2e-testing/SKILL.md              # Playwright, fixtures, padrões E2E
+├── e2e/                                  # Repos de teste E2E
+│   └── e2e-testing/SKILL.md              # Playwright, fixtures, padrões E2E
+└── zoppy-api/                            # Só o zoppy-api
+    └── whatsapp-module/                  # Módulo WhatsApp: camadas, receitas, migração, lint
 ```
 
 ### Mapeamento por grupo
@@ -120,6 +122,7 @@ skills/
 | **frontend-react**  | `shared` + `react`        | zoppy-ai-agent-fe                                                |
 | **e2e**             | `shared` + `e2e`          | zoppy-e2e-api                                                    |
 | **e2e-jornadas**    | `e2e-jornadas`            | zoppy-FE, zoppy-e2e-api                                          |
+| **zoppy-api**       | `zoppy-api`               | zoppy-api (skills só desse repo, ex.: `whatsapp-module`)         |
 
 Para adicionar repos ou grupos, edite `skills/sync-config.json`.
 
@@ -144,7 +147,7 @@ Skills são copiadas para `.claude/skills/` no formato nativo do Claude Code. Ex
     └── .synced-from-org       # marker de rastreamento
 ```
 
-O dev também pode criar skills locais no repo (ex: `.claude/skills/checkout/SKILL.md`) — a sync não sobrescreve skills que não vieram da org.
+A sync espelha: skill em `.claude/skills/` do repo destino que não vem de nenhuma pasta mapeada para ele é apagada. Skill que vale para um repo só fica numa pasta própria (ex.: `skills/zoppy-api/`), com um grupo no `sync-config.json`.
 
 ### Execução manual
 
