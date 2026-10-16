@@ -36,6 +36,10 @@
         "observability": {
             "folders": ["shared", "observability"],
             "repos": ["zoppy-eng-metrics"]
+        },
+        "zoppy-api": {
+            "folders": ["zoppy-api"],
+            "repos": ["zoppy-api"]
         }
     },
     "exclusiveFolders": [["angular", "react"]]
