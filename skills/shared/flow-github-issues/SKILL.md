@@ -240,7 +240,7 @@ ITEM_ID=$(gh project item-add 7 --owner Zoppy-crm --url <issue-url> --format jso
 
 **Imediatamente após adicionar**, setar os campos obrigatórios do board (Priority, Size, Estimate) **e a `Start date`**. Sem Priority/Size/Estimate o item pode ficar **invisível** por filtros ativos no board.
 
-**Em card de bug, setar também `Severity` e `SLA`** — Severity tem os mesmos nomes de opção de `Priority` (`CATASTRÓFICO`, `P0`, `P1`, `P2`, `P3`), mas o valor vem da skill `severidade-bugs` e **pode divergir da Priority** (HighTouch e reincidência sobem só a Priority; IA do WhatsApp Commerce é Severity P2 com Priority P1). A mesma skill calcula a data do `SLA` (card interno tem o dobro do prazo do card de cliente). Severity é o único campo que o **Bug Severity Score** lê: bug sem `Severity` pontua zero e some do indicador de qualidade, mesmo com `Priority` preenchido.
+**Em card de bug, setar também `Severity` e `SLA`** — Severity tem os mesmos nomes de opção de `Priority` (`CATASTRÓFICO`, `P0`, `P1`, `P2`, `P3`), mas o valor vem da skill `severidade-bugs` e **pode divergir da Priority** (HighTouch e reincidência sobem só a Priority; IA do WhatsApp Commerce é Severity P2 com Priority P1). A mesma skill calcula a data do `SLA`, que sai da **Priority** (card interno tem o dobro do prazo do card de cliente). Severity é o único campo que o **Bug Severity Score** lê: bug sem `Severity` pontua zero e some do indicador de qualidade, mesmo com `Priority` preenchido.
 
 ```bash
 PROJECT_ID="PVT_kwDOCAubUc4BQdrV"

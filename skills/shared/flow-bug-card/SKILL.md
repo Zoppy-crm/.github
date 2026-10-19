@@ -38,10 +38,10 @@ O usuário vai descrever o bug. Antes de criar a issue, colete o mínimo necess�
 
 ## Severidade, Priority e SLA
 
-Com as informações coletadas, **antes de criar o card**, carregue a skill `severidade-bugs` e classifique o bug. Ela devolve nível, Severity, Priority sugerida e a data do SLA, que depende do tipo de card:
+Com as informações coletadas, **antes de criar o card**, carregue a skill `severidade-bugs` e classifique o bug. Ela devolve nível, Severity, Priority sugerida e a data do SLA. O SLA sai da **Priority** (não da Severity) e depende do tipo de card:
 
--   **Card interno** ("Relatado por cliente?" desmarcado): prazo dobrado da régua (Médio 6 janelas de deploy, Alto 4, Crítico 4 dias corridos).
--   **Card de cliente** (marcado, label `client:report`): prazo de cliente (Médio 3 janelas, Alto 2, Crítico 2 dias corridos).
+-   **Card interno** ("Relatado por cliente?" desmarcado): prazo dobrado (P2 6 janelas de deploy, P1 4, P0 4 dias corridos).
+-   **Card de cliente** (marcado, label `client:report`): prazo de cliente (P2 3 janelas, P1 2, P0 2 dias corridos).
 
 Mostre o resumo da severidade ao usuário junto com o título e siga para a criação: Baixo, Médio, Alto e Crítico aplicam direto (Crítico destacado no topo). **Catastrófico: não crie o card sozinho**, pare e avise que o Solon precisa ser acionado na hora.
 

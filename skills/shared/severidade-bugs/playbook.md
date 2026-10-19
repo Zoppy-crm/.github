@@ -101,7 +101,7 @@ Se o terceiro falha **e a Zoppy trata mal a falha** (perde o dado, não registra
 | Crítico      | 2 dias corridos                | 4 dias corridos                                |
 | Catastrófico | Imediato, War Room             | Imediato, War Room (não muda)                  |
 
-Janelas contadas a partir do dia seguinte à criação do card. **Se o cliente reclamar do mesmo problema antes da correção**, o card interno passa a seguir o prazo de cliente a partir da data da reclamação (vincular o ticket ao card).
+O prazo (campo SLA do card) é contado pela **Priority** do card, que usa a mesma escala; quando Priority e Severity divergem, vale a Priority. Janelas contadas a partir do dia seguinte à criação do card. **Se o cliente reclamar do mesmo problema antes da correção**, o card interno passa a seguir o prazo de cliente a partir da data da reclamação (vincular o ticket ao card).
 
 ### 5.1 Baixo (P3)
 

@@ -95,7 +95,9 @@ Dúvida: <se houver>
 
 ## Prazo e SLA (seção 5 do playbook)
 
-| Nível | Card de cliente | Card interno (o dobro) |
+**O SLA do card sai da Priority, não da Severity.** As duas usam a mesma escala; quando divergem (HighTouch, reincidência, IA do WhatsApp Commerce), o prazo é o da Priority. Ex.: Severity P2 com Priority P1 num card de cliente dá SLA de 2 janelas.
+
+| Priority | Card de cliente | Card interno (o dobro) |
 |---|---|---|
 | Baixo P3 | sem prazo travado | sem prazo, revisão em 30 dias corridos |
 | Médio P2 | 3 janelas de deploy (ter/qui) | 6 janelas (cerca de 3 semanas) |
@@ -105,23 +107,23 @@ Dúvida: <se houver>
 
 Janelas contam a partir do dia seguinte à criação. Card interno que o cliente reclamar antes da correção passa ao prazo de cliente a partir da reclamação (vincular o ticket ao card e recalcular o SLA).
 
-Cálculo da data (Baixo fica sem SLA; Catastrófico é o próprio dia da criação):
+Cálculo da data (Priority P3 fica sem SLA; CATASTRÓFICO é o próprio dia da criação):
 
 ```bash
 # N-ésima janela de deploy (terça ou quinta) contando a partir do dia seguinte à criação
 sla_janelas() { d="$1"; n=0; while [ "$n" -lt "$2" ]; do d=$(date -d "$d +1 day" +%F); case $(date -d "$d" +%u) in 2|4) n=$((n+1));; esac; done; echo "$d"; }
 
 CRIACAO=$(date +%F)
-sla_janelas "$CRIACAO" 6               # Médio interno
-sla_janelas "$CRIACAO" 4               # Alto interno
-date -d "$CRIACAO +4 day" +%F          # Crítico interno
+sla_janelas "$CRIACAO" 6               # Priority P2, card interno
+sla_janelas "$CRIACAO" 4               # Priority P1, card interno
+date -d "$CRIACAO +4 day" +%F          # Priority P0, card interno
 ```
 
 ## Onde a severidade vai
 
 | Quem chama | Onde grava | Mapeamento |
 |---|---|---|
-| `flow-bug-card` (card criado por dev, QA ou qualquer pessoa no Claude Code) | Project #7: campos **Severity**, **Priority** e **SLA** do card, logo depois de criar. A justificativa vai num **comentário** do card (o body segue o render do form). | Severity: P3, P2, P1, P0, CATASTRÓFICO. SLA: data da tabela acima. |
+| `flow-bug-card` (card criado por dev, QA ou qualquer pessoa no Claude Code) | Project #7: campos **Severity**, **Priority** e **SLA** do card, logo depois de criar. A justificativa vai num **comentário** do card (o body segue o render do form). Label de bug é só `work: bug` (as `bug:low/medium/high/critical` não se usam mais). | Severity: P3, P2, P1, P0, CATASTRÓFICO. SLA: data da tabela acima, pela Priority. |
 | Pipe do suporte (ticket em N3) | HubSpot, campo Prioridade (`prioridade_tech`, um valor só). O n8n leva pra Severity do card quando o ticket entra em Enviado para Tech. Não mexer em Project #7 nem label. | Baixo → Baixa, Médio → Média, Alto → Alta, Crítico → Crítico. Catastrófico não existe no campo: grava Crítico e avisa. |
 | Detetives (card interno de detecção proativa) | Campo Severity e SLA do card no Project #7, depois do ok do Solon pra criar o card. | P3, P2, P1, P0, CATASTRÓFICO |
 | Medição de concordância | Só no log local de medição. Nunca grava no board. | igual ao GitHub |
