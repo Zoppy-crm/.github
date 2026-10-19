@@ -240,7 +240,7 @@ ITEM_ID=$(gh project item-add 7 --owner Zoppy-crm --url <issue-url> --format jso
 
 **Imediatamente após adicionar**, setar os campos obrigatórios do board (Priority, Size, Estimate) **e a `Start date`**. Sem Priority/Size/Estimate o item pode ficar **invisível** por filtros ativos no board.
 
-**Em card de bug, setar também `Severity`** — mesmas opções de `Priority` (`CATASTRÓFICO`, `P0`, `P1`, `P2`, `P3`) e, na prática, o mesmo valor. É o único campo que o **Bug Severity Score** lê: bug sem `Severity` pontua zero e some do indicador de qualidade, mesmo com `Priority` preenchido.
+**Em card de bug, setar também `Severity` e `SLA`** — Severity tem os mesmos nomes de opção de `Priority` (`CATASTRÓFICO`, `P0`, `P1`, `P2`, `P3`), mas o valor vem da skill `severidade-bugs` e **pode divergir da Priority** (HighTouch e reincidência sobem só a Priority; IA do WhatsApp Commerce é Severity P2 com Priority P1). A mesma skill calcula a data do `SLA` (card interno tem o dobro do prazo do card de cliente). Severity é o único campo que o **Bug Severity Score** lê: bug sem `Severity` pontua zero e some do indicador de qualidade, mesmo com `Priority` preenchido.
 
 ```bash
 PROJECT_ID="PVT_kwDOCAubUc4BQdrV"
@@ -250,10 +250,22 @@ TODAY=$(date +%F)  # data de criação do card — default da Start date
 gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
   --field-id PVTSSF_lADOCAubUc4BQdrVzg-k1Ns --single-select-option-id <priority_id>
 
-# Severity (single select) — SÓ EM CARD DE BUG. Mesmas opções de Priority, mesmo valor.
+# Severity (single select) — SÓ EM CARD DE BUG. Valor vem da skill severidade-bugs.
+# Option IDs próprios, não os da Priority: CATASTRÓFICO=35bd739a P0=2ec62f0a P1=4d92058f P2=3d5f60b7 P3=557facf9
 # É o campo que o Bug Severity Score lê; sem ele o bug pontua zero no KPI.
 gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
   --field-id PVTSSF_lADOCAubUc4BQdrVzhhJY54 --single-select-option-id <severity_id>
+
+# SLA (Date) — SÓ EM CARD DE BUG. Data calculada pela skill severidade-bugs. REQUER GraphQL.
+gh api graphql -f query='
+mutation {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: "'$PROJECT_ID'"
+    itemId: "'$ITEM_ID'"
+    fieldId: "PVTF_lADOCAubUc4BQdrVzg-owLg"
+    value: { date: "<sla>" }
+  }) { projectV2Item { id } }
+}'
 
 # Size (single select) — usa gh project item-edit
 gh project item-edit --project-id $PROJECT_ID --id $ITEM_ID \
@@ -493,7 +505,7 @@ for item in data.get('items', []):
 **Priority** (Single Select):
 
 ```bash
-# Opções: P0=79628723, P1=0a877460, P2=da944a9c
+# Opções: CATASTRÓFICO=838ddbc0, P0=79628723, P1=0a877460, P2=da944a9c, P3=56c0a104
 gh project item-edit \
   --project-id PVT_kwDOCAubUc4BQdrV \
   --id $ITEM_ID \
@@ -607,6 +619,8 @@ gh project item-edit \
 | ------------------ | -------------------------------- | ------------ | --------------------------------------- |
 | Status             | `PVTSSF_lADOCAubUc4BQdrVzg-k0-w` | SingleSelect | `gh project item-edit`                  |
 | Priority           | `PVTSSF_lADOCAubUc4BQdrVzg-k1Ns` | SingleSelect | `gh project item-edit`                  |
+| Severity           | `PVTSSF_lADOCAubUc4BQdrVzhhJY54` | SingleSelect | `gh project item-edit`                  |
+| SLA                | `PVTF_lADOCAubUc4BQdrVzg-owLg`   | Date         | GraphQL `updateProjectV2ItemFieldValue` |
 | Size               | `PVTSSF_lADOCAubUc4BQdrVzg-k1Nw` | SingleSelect | `gh project item-edit`                  |
 | Team               | `PVTSSF_lADOCAubUc4BQdrVzg-lLqc` | SingleSelect | `gh project item-edit`                  |
 | Estimate           | `PVTF_lADOCAubUc4BQdrVzg-k1N0`   | Number       | GraphQL `updateProjectV2ItemFieldValue` |

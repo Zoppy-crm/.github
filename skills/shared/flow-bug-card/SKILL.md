@@ -1,6 +1,6 @@
 ---
 name: flow-bug-card
-description: Cria um card de bug no GitHub Issues seguindo o template form-based oficial da organização Zoppy (`bug-report.yml`). Use sempre que o usuário quiser abrir um card de bug, registrar um defeito reportado por cliente, criar uma issue de bug, documentar um problema encontrado em produção. Acione também em frases como "abre um bug", "cria card de bug", "registra esse bug", "abre uma issue de bug", "documenta esse defeito", "cria o card desse bug".
+description: Cria um card de bug no GitHub Issues seguindo o template form-based oficial da organização Zoppy (`bug-report.yml`). Use sempre que o usuário quiser abrir um card de bug, registrar um defeito reportado por cliente, criar uma issue de bug, documentar um problema encontrado em produção. Acione também em frases como "abre um bug", "cria card de bug", "registra esse bug", "abre uma issue de bug", "documenta esse defeito", "cria o card desse bug", "cria um card de bug interno", "abre um bug interno". Antes de criar, passa o bug pela skill `severidade-bugs` para o card já nascer com Severity, Priority e SLA.
 ---
 
 # Bug Card
@@ -35,6 +35,17 @@ O usuário vai descrever o bug. Antes de criar a issue, colete o mínimo necess�
 10. **Evidências** (opcional) — links de screenshot/log/vídeo/ID de registro
 11. **Blocked** (opcional) — o que está bloqueado por causa do bug
 12. **Epic label** (opcional) — se houver epic relacionado (ex: `epic: whatsapp`). Confirme que existe via `gh label list --repo Zoppy-crm/<repo> --search "<termo>"` antes de aplicar
+
+## Severidade, Priority e SLA
+
+Com as informações coletadas, **antes de criar o card**, carregue a skill `severidade-bugs` e classifique o bug. Ela devolve nível, Severity, Priority sugerida e a data do SLA, que depende do tipo de card:
+
+-   **Card interno** ("Relatado por cliente?" desmarcado): prazo dobrado da régua (Médio 6 janelas de deploy, Alto 4, Crítico 4 dias corridos).
+-   **Card de cliente** (marcado, label `client:report`): prazo de cliente (Médio 3 janelas, Alto 2, Crítico 2 dias corridos).
+
+Mostre o resumo da severidade ao usuário junto com o título e siga para a criação: Baixo, Médio, Alto e Crítico aplicam direto (Crítico destacado no topo). **Catastrófico: não crie o card sozinho**, pare e avise que o Solon precisa ser acionado na hora.
+
+Se a skill concluir que **não é bug** (mal uso, melhoria, dúvida, terceiro tratado corretamente, duplicado), avise antes de criar: melhoria vai pra `flow-refinement`, duplicado vira comentário no card que já existe.
 
 ## Título
 
@@ -169,7 +180,23 @@ Após criar, **adicionar ao project board** Zoppy Engineering (#7):
 gh project item-add 7 --owner Zoppy-crm --url <URL retornada pelo gh issue create>
 ```
 
-E preencher os campos obrigatórios do board (Priority, **Severity**, Size, Estimate, Status, Team, Start date) — ver `flow-github-issues` seção 7. Sem Priority/Size/Estimate o card fica invisível por filtros do board; sem `Severity` ele fica invisível para o **Bug Severity Score**, que é o KPI de qualidade e lê só esse campo.
+E preencher os campos obrigatórios do board (Priority, **Severity**, **SLA**, Size, Estimate, Status, Team, Start date) — ver `flow-github-issues` seção 7. Severity, Priority e SLA saem da `severidade-bugs` (IDs na seção "Onde a severidade vai" dela). Sem Priority/Size/Estimate o card fica invisível por filtros do board; sem `Severity` ele fica invisível para o **Bug Severity Score**, que é o KPI de qualidade e lê só esse campo.
+
+Por fim, registre a classificação num **comentário** do card (o body continua sendo só o render do form):
+
+```bash
+gh issue comment <número> --repo Zoppy-crm/<repo> --body "$(cat <<'EOF'
+**Severidade:** Médio (P2) · gravidade G3, alcance A1 · confiança média
+**Priority:** P2
+**SLA interno:** 05/11/2026 (6ª janela de deploy a partir de 19/10)
+**Por quê:** <justificativa de 2 a 4 frases, só fatos deste bug>
+**Exemplo parecido no playbook:** #12010
+**Dúvida:** <se houver, com os dois níveis>
+
+_Classificado pela skill severidade-bugs (playbook v0.7)._
+EOF
+)"
+```
 
 ## Diretrizes
 
@@ -180,6 +207,7 @@ E preencher os campos obrigatórios do board (Priority, **Severity**, Size, Esti
 -   **Antes de criar, cheque duplicata** — `gh issue list --repo Zoppy-crm/<repo> --search "<keywords>" --state all`. Bugs internos óbvios costumam já estar abertos.
 -   Sempre incluir `--assignee @me`.
 -   Sempre adicionar ao project 7 após criar e preencher campos obrigatórios.
+-   **Severity não é Priority.** HighTouch, tamanho do cliente e reincidência mexem só na Priority; a Severity é a da régua.
 
 ## Diferença vs `flow-refinement`
 
