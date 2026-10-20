@@ -5,7 +5,7 @@ on:
 
 jobs:
     arquivos-sem-jornada:
-        runs-on: self-hosted
+        runs-on: zoppy-light
         timeout-minutes: 5
         steps:
             - uses: actions/checkout@v4
