@@ -17,7 +17,6 @@ Mapa de referencia que associa cada stack ao kit de skills que o dev-guide-v2 de
 
 **Skills de implementacao:**
 
--   `design-to-plan` — analise de design Figma e mapeamento para componentes do design system
 -   `angular-component` — padroes de componentes Angular v19+ (standalone, signal inputs/outputs, OnPush)
 -   `angular-signals` — estado reativo com signal(), computed(), linkedSignal(), effect()
 -   `feature-composition` — estrutura de pastas, smart vs sub-components, regra de ~150 linhas
@@ -171,13 +170,13 @@ Se o dev corrigir, ajuste sem questionar.
 
 **Skills de planejamento por stack:** Ao detalhar fases, **sempre carregar as skills do stack** (conforme o Stack Skills Map) para que os planos sigam os padroes corretos. Exemplos:
 
--   **frontend:** carregar `design-to-plan`, `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular` — os exemplos de codigo nos planos devem seguir os padroes dessas skills
+-   **frontend:** carregar `angular-component`, `angular-signals`, `feature-composition`, `feature-state`, `frontend-angular` — os exemplos de codigo nos planos devem seguir os padroes dessas skills
 -   **backend:** carregar `nestjs-best-practices` — exemplos devem seguir padroes NestJS
 -   **fullstack:** carregar todas as skills relevantes
 
 **Design nos planos (quando stack inclui frontend):** Ao detalhar cada fase que envolve frontend, **sempre perguntar ao dev se possui imagens do design (Figma, screenshots) ou informacoes de estilo** para aquela fase antes de escrever o plano:
 
--   **No detalhamento (passo 5a):** Perguntar "Voce tem imagens do design ou informacoes de estilo para esta fase?" antes de escrever o plano. Se o dev fornecer, usar `/design-to-plan` para analisar o design, mapear componentes do design system, e gerar o plano com hierarquia, estado, reuso e template de referencia.
+-   **No detalhamento (passo 5a):** Perguntar "Voce tem imagens do design ou informacoes de estilo para esta fase?" antes de escrever o plano. Se o dev fornecer, analisar o design, mapear os componentes do design system e gerar o plano com hierarquia, estado, reuso e template de referencia.
 -   **Salvar design no plano:** Tentar incorporar a imagem diretamente no markdown do plano via `![descricao](caminho)`. Se nao for possivel, salvar em `docs/plans/assets/<nome-do-plano>/` e referenciar no markdown. O plano deve conter a secao `## Design de Referencia` com: imagem, tokens extraidos, e mapeamento com componentes do design system. Isso serve de fonte de verdade para a implementacao.
 -   Se o dev nao tiver design, registrar `> Design: nao fornecido — implementar estrutura funcional` no plano.
 -   **Se o stack for backend ou e2e**, pular esta etapa.
@@ -529,7 +528,6 @@ Para **fullstack**, separar por stack quando relevante:
 
 **Skills de implementacao (frontend):**
 
--   design-to-plan
 -   angular-component
 -   angular-signals
 -   feature-composition
