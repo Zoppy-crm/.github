@@ -30,7 +30,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
               with:
-                  ref: ${{ github.event.pull_request.head.sha }}
+                  ref: ${{ github.sha }}
                   fetch-depth: 0
 
             - uses: actions/checkout@v4
@@ -51,9 +51,12 @@ jobs:
             - name: Arquivos elegíveis
               id: selecao
               env:
-                  BASE_SHA: ${{ github.event.pull_request.base.sha }}
-                  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+                  MERGE_SHA: ${{ github.sha }}
               run: |
+                  BASE_SHA=$(git rev-parse "$MERGE_SHA^1")
+                  HEAD_SHA=$(git rev-parse "$MERGE_SHA")
+                  echo "base=$BASE_SHA" >> "$GITHUB_OUTPUT"
+                  echo "head=$HEAD_SHA" >> "$GITHUB_OUTPUT"
                   python3 .zoppy-org/scripts/mutation/mutation_check.py --dry-run \
                       --repo . --base "$BASE_SHA" --head "$HEAD_SHA" \
                       --out "$RUNNER_TEMP/mutation" --cache "$RUNNER_TEMP/mutation-cache"
@@ -106,15 +109,16 @@ jobs:
                   TZ: America/Sao_Paulo
                   AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE: '1'
                   NODE_OPTIONS: --max-old-space-size=8192
-                  BASE_SHA: ${{ github.event.pull_request.base.sha }}
-                  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+                  BASE_SHA: ${{ steps.selecao.outputs.base }}
+                  HEAD_SHA: ${{ steps.selecao.outputs.head }}
                   MUTATION_CONCURRENCY: ${{ inputs.concurrency }}
                   MUTATION_BUDGET_MIN: ${{ inputs.budget-min }}
                   MUTATION_MAX_MUTANTS: ${{ inputs.max-mutants }}
               run: |
+                  set -o pipefail
                   python3 .zoppy-org/scripts/mutation/mutation_check.py \
                       --repo . --base "$BASE_SHA" --head "$HEAD_SHA" \
-                      --out "$RUNNER_TEMP/mutation" --cache "$RUNNER_TEMP/mutation-cache"
+                      --out "$RUNNER_TEMP/mutation" --cache "$RUNNER_TEMP/mutation-cache" 2>&1 | tee "$RUNNER_TEMP/mutation/run.log"
 
             - name: Cache tem conteúdo
               id: cache-conteudo
@@ -131,6 +135,16 @@ jobs:
                   path: ${{ runner.temp }}/mutation-cache
                   key: mutation-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
 
+            - name: Artefato com logs e relatórios
+              id: artefato
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mutation-pr${{ github.event.pull_request.number }}-tentativa${{ github.run_attempt }}
+                  path: ${{ runner.temp }}/mutation
+                  retention-days: 1
+                  if-no-files-found: ignore
+
             - name: Comentário no PR
               if: always()
               env:
@@ -138,8 +152,10 @@ jobs:
                   PR_NUMBER: ${{ github.event.pull_request.number }}
                   JOB_STATUS: ${{ job.status }}
                   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+                  ARTIFACT_URL: ${{ steps.artefato.outputs.artifact-url }}
               run: |
                   COMMENT="$RUNNER_TEMP/mutation/comment.md"
+                  RUN_LOG="$RUNNER_TEMP/mutation/run.log"
                   mkdir -p "$RUNNER_TEMP/mutation"
                   if [ ! -s "$COMMENT" ]; then
                       if [ "$JOB_STATUS" = 'cancelled' ]; then
@@ -151,9 +167,23 @@ jobs:
                           echo '<!-- mutation-check -->'
                           echo '## Teste de mutação'
                           echo
-                          echo "$MOTIVO Detalhes no log: $RUN_URL"
+                          echo "$MOTIVO"
+                          if [ -s "$RUN_LOG" ]; then
+                              echo
+                              echo '```text'
+                              grep -v '^\s*$' "$RUN_LOG" | tail -n 6 | cut -c1-220
+                              echo '```'
+                          fi
                       } > "$COMMENT"
                   fi
+                  {
+                      echo
+                      if [ -n "$ARTIFACT_URL" ]; then
+                          echo "<sub>[Execução]($RUN_URL) · [logs e relatórios]($ARTIFACT_URL) (artefato guardado por 1 dia)</sub>"
+                      else
+                          echo "<sub>[Execução]($RUN_URL)</sub>"
+                      fi
+                  } >> "$COMMENT"
                   cat "$COMMENT" >> "$GITHUB_STEP_SUMMARY"
                   python3 .zoppy-org/scripts/mutation/post_comment.py --file "$COMMENT"
 

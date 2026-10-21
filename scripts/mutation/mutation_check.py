@@ -33,6 +33,13 @@ EXCLUDED_SUFFIXES = (
 EXCLUDED_BASENAMES = ('index.ts', 'types.ts')
 IGNORER_PLUGIN = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'log-service-ignorer.mjs')
 HUNK_RE = re.compile(r'^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@')
+ANSI_RE = re.compile(r'\x1b\[[0-9;]*m')
+LOG_LINE_RE = re.compile(r'^\d{2}:\d{2}:\d{2} \(\d+\) [A-Z]+ ')
+LOG_ERROR_RE = re.compile(r'^\d{2}:\d{2}:\d{2} \(\d+\) ERROR ')
+STACK_RE = re.compile(r'^\s*at ')
+SANDBOX_RE = re.compile(r'\.stryker-tmp/sandbox-[^/]+/')
+GENERIC_ERROR = 'Stryker Unexpected error occurred'
+SWITCH_CASE_RE = re.compile(r'^(case\b.*|default\s*):$', re.S)
 
 
 def env_default(name, fallback, cast):
@@ -173,6 +180,18 @@ def stryker_config(item, args, report_path):
     }
 
 
+def source_snippet(source_lines, location):
+    start, end = location['start'], location['end']
+    if not 0 < start['line'] <= end['line'] <= len(source_lines):
+        return ''
+    if start['line'] == end['line']:
+        return source_lines[start['line'] - 1][start['column'] - 1 : end['column'] - 1]
+    parts = [source_lines[start['line'] - 1][start['column'] - 1 :]]
+    parts += source_lines[start['line'] : end['line'] - 1]
+    parts.append(source_lines[end['line'] - 1][: end['column'] - 1])
+    return '\n'.join(parts)
+
+
 def read_report(report_path, source_file):
     with open(report_path) as handle:
         report = json.load(handle)
@@ -184,15 +203,14 @@ def read_report(report_path, source_file):
             counts[mutant['status']] += 1
             if mutant['status'] not in UNDETECTED:
                 continue
-            line = mutant['location']['start']['line']
-            original = source_lines[line - 1] if 0 < line <= len(source_lines) else ''
+            location = mutant['location']
             undetected.append(
                 {
-                    'line': line,
-                    'column': mutant['location']['start']['column'],
+                    'line': location['start']['line'],
+                    'column': location['start']['column'],
                     'status': mutant['status'],
                     'mutator': mutant['mutatorName'],
-                    'original': original.strip(),
+                    'original': source_snippet(source_lines, location),
                     'replacement': mutant.get('replacement', ''),
                 }
             )
@@ -206,6 +224,46 @@ def tail(path, lines=25):
             return ''.join(handle.readlines()[-lines:])
     except OSError:
         return ''
+
+
+def clean_log_line(line, repo):
+    line = SANDBOX_RE.sub('', ANSI_RE.sub('', line).rstrip())
+    return line.replace(repo.rstrip('/') + '/', '')
+
+
+def error_excerpt(path, repo, max_lines=8, width=220):
+    try:
+        with open(path, errors='replace') as handle:
+            lines = [clean_log_line(line, repo) for line in handle]
+    except OSError:
+        return []
+    blocks = []
+    index = 0
+    while index < len(lines):
+        if not LOG_ERROR_RE.match(lines[index]):
+            index += 1
+            continue
+        block = [LOG_ERROR_RE.sub('', lines[index]).strip()]
+        frame_taken = False
+        index += 1
+        while index < len(lines) and lines[index].strip() and not LOG_LINE_RE.match(lines[index]):
+            line = lines[index].strip()
+            index += 1
+            if STACK_RE.match(line):
+                if not frame_taken and 'node_modules' not in line and 'src/' in line:
+                    block.append(line)
+                    frame_taken = True
+                continue
+            block.append(line)
+        blocks.append(block)
+    specific = [b for b in blocks if not b[0].startswith(GENERIC_ERROR)]
+    chosen = specific or blocks
+    if not chosen:
+        chosen = [[line.strip() for line in lines if line.strip()][-5:]]
+    excerpt = [line if len(line) <= width else line[: width - 1] + '…' for block in chosen for line in block]
+    if len(excerpt) > max_lines:
+        excerpt = excerpt[:max_lines] + ['…']
+    return excerpt
 
 
 def run_file(item, args, work_dir, out_dir, timeout):
@@ -242,6 +300,7 @@ def run_file(item, args, work_dir, out_dir, timeout):
         result['error'] = f"stryker saiu com código {result['rc']}"
     if 'error' in result:
         result['logTail'] = tail(log_path)
+        result['errorExcerpt'] = error_excerpt(log_path, args.repo)
     return result
 
 
@@ -318,8 +377,24 @@ def fmt_score(value):
     return '—' if value is None else f'{value:.1f}%'.replace('.', ',')
 
 
+def plural(count, singular, plural_form):
+    return f'{count} {singular if count == 1 else plural_form}'
+
+
+def killed(counts):
+    return counts['Killed'] + counts['Timeout']
+
+
+def error_mutants(counts):
+    return sum(counts[s] for s in ERROR_STATUSES)
+
+
+def collapse(text):
+    return re.sub(r'\s+', ' ', text).strip()
+
+
 def inline_code(text, limit=140):
-    text = re.sub(r'\s+', ' ', text).strip()
+    text = collapse(text)
     if len(text) > limit:
         text = text[: limit - 1] + '…'
     if not text:
@@ -329,12 +404,70 @@ def inline_code(text, limit=140):
     return f'{fence}{pad}{text}{pad}{fence}'
 
 
+def describe_mutation(mutant):
+    original = collapse(mutant['original'])
+    replacement = collapse(mutant['replacement'])
+    if mutant['mutator'] == 'ConditionalExpression' and SWITCH_CASE_RE.match(replacement) and original != replacement:
+        return f'{inline_code(original, 90)} → *case sem corpo*'
+    if original == replacement:
+        return f'{inline_code(original, 90)} → *(sem diferença no texto)*'
+    return f'{inline_code(original, 90)} → {inline_code(replacement, 90)}'
+
+
+def mutant_lines(mutants):
+    by_line = collections.OrderedDict()
+    for m in mutants:
+        by_line.setdefault(m['line'], collections.OrderedDict())
+        key = (m['mutator'], m['status'], describe_mutation(m))
+        by_line[m['line']].setdefault(key, []).append(m['column'])
+    out = []
+    for line, entries in by_line.items():
+        rendered = []
+        for (mutator, status, text), columns in entries.items():
+            kind = 'sobrevivente' if status == 'Survived' else 'sem cobertura'
+            count = f' ×{len(columns)}' if len(columns) > 1 else ''
+            cols = ', '.join(str(c) for c in sorted(set(columns)))
+            rendered.append((cols, f'{mutator} · {kind}: {text}{count}'))
+        if len(rendered) == 1:
+            out.append(f'- linha {line}, col {rendered[0][0]} · {rendered[0][1]}')
+            continue
+        out.append(f'- linha {line}')
+        out += [f'  - col {cols} · {text}' for cols, text in rendered]
+    return out
+
+
+def code_block(lines):
+    text = '\n'.join(lines)
+    fence = '````' if '```' in text else '```'
+    return [fence + 'text', text, fence]
+
+
+def render_failures(failed):
+    groups = collections.OrderedDict()
+    for f in failed:
+        groups.setdefault(tuple(f.get('errorExcerpt') or ()), []).append(f)
+    out = ['### Falharam ao rodar', '']
+    for excerpt, files in groups.items():
+        for f in files:
+            out.append(f"- `{f['file'][4:]}`: {f['error']}")
+        out.append('')
+        if excerpt:
+            out += code_block(excerpt)
+            out.append('')
+    out.append('_O log completo de cada arquivo está no artefato da execução._')
+    out.append('')
+    return out
+
+
 def render_comment(summary, max_listed):
     totals = summary['totals']
     ran = [f for f in summary['files'] if 'counts' in f]
+    with_mutants = [f for f in ran if valid_mutants(f['counts'])]
+    empty = [f for f in ran if not valid_mutants(f['counts'])]
     failed = [f for f in summary['files'] if 'error' in f]
     no_spec = [f for f in summary['files'] if f.get('skipped') == 'sem spec']
     capped = [f for f in summary['files'] if f.get('skipped') == 'fora do teto']
+    with_errors = any(error_mutants(f['counts']) for f in with_mutants)
     out = [MARKER, '## Teste de mutação', '']
     out.append('> Informativo: este check **nunca bloqueia o merge**.')
     out.append('')
@@ -343,32 +476,54 @@ def render_comment(summary, max_listed):
         f"**Tempo:** {fmt_seconds(summary['seconds'])}"
     )
     out.append('')
-    out.append(
-        f"{valid_mutants(totals)} mutantes em {len(ran)} arquivo(s): {totals['Killed'] + totals['Timeout']} mortos, "
-        f"{totals['Survived']} sobreviventes, {totals['NoCoverage']} sem cobertura, {totals['Ignored']} ignorados (chamadas ao LogService, estáticos ou mutadores desligados)."
-    )
-    out.append('')
+    if with_mutants:
+        parts = [
+            plural(killed(totals), 'morto', 'mortos'),
+            plural(totals['Survived'], 'sobrevivente', 'sobreviventes'),
+            f"{totals['NoCoverage']} sem cobertura",
+        ]
+        if error_mutants(totals):
+            parts.append(f'{error_mutants(totals)} com erro (o spec quebrou fora de um teste ou o mutante não compila)')
+        out.append(
+            f"{plural(valid_mutants(totals), 'mutante', 'mutantes')} em {plural(len(with_mutants), 'arquivo', 'arquivos')}: "
+            f"{', '.join(parts)}. Fora da conta, {plural(totals['Ignored'], 'ignorado', 'ignorados')} "
+            '(chamadas ao LogService, estáticos ou mutadores desligados).'
+        )
+        out.append('')
+    elif ran:
+        out.append('Nenhum mutante nas linhas alteradas.')
+        out.append('')
     out.append(
         'Como ler: cada mutante é uma pequena mudança de comportamento nas linhas alteradas pelo PR. '
         'Um mutante **sobrevivente** é uma mudança que nenhum teste do spec irmão pegou; **sem cobertura** '
         'é código que o spec nem executa. Nem todo sobrevivente é bug: pode ser um mutante equivalente '
-        '(mesmo comportamento observável).'
+        '(mesmo comportamento observável). Só o spec irmão roda contra cada arquivo, então um sobrevivente '
+        'pode estar coberto por outro spec (por exemplo, um sobrevivente no domain que o spec do application pega).'
     )
     out.append('')
-    if ran:
-        out.append('| Arquivo | Mutantes | Mortos | Sobreviventes | Sem cobertura | Tempo |')
-        out.append('|---|---:|---:|---:|---:|---:|')
-        for f in ran:
+    if with_mutants:
+        header = '| Arquivo | Mutantes | Mortos | Sobreviventes | Sem cobertura |'
+        align = '|---|---:|---:|---:|---:|'
+        if with_errors:
+            header += ' Erro |'
+            align += '---:|'
+        out.append(header + ' Tempo |')
+        out.append(align + '---:|')
+        for f in with_mutants:
             c = f['counts']
-            out.append(
-                f"| `{f['file'][4:]}` | {valid_mutants(c)} | {c['Killed'] + c['Timeout']} | {c['Survived']} | "
-                f"{c['NoCoverage']} | {fmt_seconds(f['seconds'])} |"
-            )
+            row = f"| `{f['file'][4:]}` | {valid_mutants(c)} | {killed(c)} | {c['Survived']} | {c['NoCoverage']} |"
+            if with_errors:
+                row += f' {error_mutants(c)} |'
+            out.append(row + f" {fmt_seconds(f['seconds'])} |")
+        out.append('')
+    if empty:
+        verb = 'rodou' if len(empty) == 1 else 'rodaram'
+        out.append(f"_{plural(len(empty), 'arquivo', 'arquivos')} {verb} sem mutante nas linhas alteradas e não {'aparece' if len(empty) == 1 else 'aparecem'} na tabela._")
         out.append('')
     listed = 0
     total_undetected = sum(len(f['undetected']) for f in ran)
     blocks = []
-    for f in ran:
+    for f in with_mutants:
         if not f['undetected'] or listed >= max_listed:
             continue
         take = f['undetected'][: max_listed - listed]
@@ -376,12 +531,10 @@ def render_comment(summary, max_listed):
         c = f['counts']
         block = [
             '<details>',
-            f"<summary><code>{f['file'][4:]}</code>: {c['Survived']} sobrevivente(s), {c['NoCoverage']} sem cobertura</summary>",
+            f"<summary><code>{f['file'][4:]}</code>: {plural(c['Survived'], 'sobrevivente', 'sobreviventes')}, {c['NoCoverage']} sem cobertura</summary>",
             '',
         ]
-        for m in take:
-            kind = 'sobrevivente' if m['status'] == 'Survived' else 'sem cobertura'
-            block.append(f"- linha {m['line']} · {m['mutator']} · {kind}: {inline_code(m['original'])} → {inline_code(m['replacement'])}")
+        block += mutant_lines(take)
         if len(take) < len(f['undetected']):
             block.append(f"- … mais {len(f['undetected']) - len(take)} neste arquivo")
         block += ['', '</details>', '']
@@ -392,14 +545,11 @@ def render_comment(summary, max_listed):
         for block in blocks:
             out += block
         if listed < total_undetected:
-            out.append(f'_{total_undetected - listed} mutante(s) omitido(s) da lista; o detalhe completo está no `summary.json`._')
+            omitted = total_undetected - listed
+            out.append(f"_{plural(omitted, 'mutante omitido', 'mutantes omitidos')} da lista; o detalhe completo está no artefato da execução._")
             out.append('')
     if failed:
-        out.append('### Falharam ao rodar')
-        out.append('')
-        for f in failed:
-            out.append(f"- `{f['file'][4:]}`: {f['error']}")
-        out.append('')
+        out += render_failures(failed)
     if no_spec:
         out.append(f'### Sem spec irmão ({len(no_spec)})')
         out.append('')
@@ -428,7 +578,7 @@ def build_comment(summary):
         max_listed //= 2
     if len(comment) > COMMENT_LIMIT:
         cut = comment.rfind('\n', 0, COMMENT_LIMIT - 200)
-        comment = comment[:cut] + '\n\n_Comentário truncado pelo limite do GitHub; o detalhe completo está no `summary.json`._\n'
+        comment = comment[:cut] + '\n\n_Comentário truncado pelo limite do GitHub; o detalhe completo está no artefato da execução._\n'
     return comment
 
 
