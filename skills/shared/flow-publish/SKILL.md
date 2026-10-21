@@ -140,6 +140,34 @@ To detect new routes and pages, look at the diff (`git diff <base>..HEAD`) for:
 -   **Routes:** new endpoint definitions — e.g., `router.get`, `router.post`, `app.use`, route file additions, controller decorators like `@Get()`, `@Post()`, etc.
 -   **Pages:** new page/screen components — e.g., files in `pages/`, `views/`, `screens/`, or route config entries that map paths to components.
 
+### Step 5.5: Teste de mutação (só no zoppy-api)
+
+Só quando o repo é `Zoppy-crm/zoppy-api`. A label `mutation` no PR dispara o check de mutação (Stryker), que comenta o resultado no próprio PR e **nunca bloqueia o merge**.
+
+Veja se o diff tem arquivo elegível com o mesmo script que o check roda:
+
+```bash
+curl -sf https://raw.githubusercontent.com/Zoppy-crm/.github/development/scripts/mutation/mutation_check.py -o /tmp/mutation_check.py
+python3 /tmp/mutation_check.py --dry-run --repo . --base origin/<base-branch> --head HEAD --out /tmp/mutation --cache /tmp/mutation-cache
+```
+
+Ele lista os arquivos de lógica alterados (`.ts` em `src/`, fora `src/db/`, fixtures, `index.ts`, `types.ts` e os `.spec`, `.d`, `.module`, `.dto`, `.enum`, `.interface`, `.model`, `.request`, `.response`, `.types`, `.constants`) e marca `spec=sim` nos que têm `.spec.ts` na mesma pasta. Só esses são mutados.
+
+-   **Algum `spec=sim`:** proponha a label ao dev. **PR de bugfix** (branch `bugfix/*`, `hotfix/*` ou `fix/*`): proponha sempre.
+-   **Nenhum `spec=sim`:** não proponha.
+
+Nunca adicione a label sem o dev confirmar. Confirmado, use a REST (o `gh pr edit` falha nos repos da Zoppy):
+
+```bash
+gh api repos/Zoppy-crm/zoppy-api/issues/<pr-number>/labels -f 'labels[]=mutation'
+```
+
+Ao propor, diga ao dev em uma ou duas linhas:
+
+-   **Tempo:** PR pequeno leva poucos minutos; o teto é ~600 mutantes ou 55 min, e o que passar disso aparece como "Fora do teto". Roda de novo a cada push enquanto a label estiver no PR, e o push novo cancela a execução em andamento.
+-   **Como ler o comentário** (`## Teste de mutação`, atualizado a cada execução): cada mutante é uma mudança pequena nas linhas alteradas pelo PR. **Sobrevivente** é mudança que o spec irmão não pegou; **sem cobertura** é código que o spec nem executa.
+-   **O que fazer com cada sobrevivente:** se é lacuna real, mate com um teste. Se é equivalente (mesmo comportamento observável), código defensivo ou texto de log/mensagem, responda no PR com o motivo em uma linha. No piloto, ~4 em 10 eram lacuna real; 100% não é a meta.
+
 ### Step 6: QA Report
 
 After the PR is created or updated, invoke the `/qa-report` skill to post a QA report comment on the PR.
