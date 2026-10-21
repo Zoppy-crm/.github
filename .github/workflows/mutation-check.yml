@@ -15,12 +15,16 @@ on:
             max-mutants:
                 type: number
                 default: 600
+            scripts-ref:
+                type: string
+                default: development
         secrets:
             NPM_TOKEN:
                 required: true
 
 jobs:
     mutation:
+        if: github.event.action != 'closed'
         runs-on: zoppy-heavy
         timeout-minutes: 70
         steps:
@@ -32,7 +36,7 @@ jobs:
             - uses: actions/checkout@v4
               with:
                   repository: Zoppy-crm/.github
-                  ref: development
+                  ref: ${{ inputs.scripts-ref }}
                   path: .zoppy-org
                   sparse-checkout: scripts/mutation
 
@@ -87,6 +91,14 @@ jobs:
                   npm i --no-save --no-audit --no-fund @stryker-mutator/core@9.6.1 @stryker-mutator/jest-runner@9.6.1
                   rm -f .npmrc
 
+            - name: Cache incremental do PR
+              if: steps.selecao.outputs.elegiveis != '0'
+              uses: actions/cache/restore@v4
+              with:
+                  path: ${{ runner.temp }}/mutation-cache
+                  key: mutation-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+                  restore-keys: mutation-${{ github.event.pull_request.number }}-
+
             - name: Stryker nos arquivos alterados
               if: steps.selecao.outputs.elegiveis != '0'
               continue-on-error: true
@@ -103,6 +115,21 @@ jobs:
                   python3 .zoppy-org/scripts/mutation/mutation_check.py \
                       --repo . --base "$BASE_SHA" --head "$HEAD_SHA" \
                       --out "$RUNNER_TEMP/mutation" --cache "$RUNNER_TEMP/mutation-cache"
+
+            - name: Cache tem conteúdo
+              id: cache-conteudo
+              if: always() && steps.selecao.outputs.elegiveis != '0'
+              run: |
+                  if ls "$RUNNER_TEMP"/mutation-cache/*.json >/dev/null 2>&1; then
+                      echo 'salvar=1' >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Salva o cache incremental
+              if: always() && steps.cache-conteudo.outputs.salvar == '1'
+              uses: actions/cache/save@v4
+              with:
+                  path: ${{ runner.temp }}/mutation-cache
+                  key: mutation-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
 
             - name: Comentário no PR
               if: always()
@@ -129,3 +156,19 @@ jobs:
                   fi
                   cat "$COMMENT" >> "$GITHUB_STEP_SUMMARY"
                   python3 .zoppy-org/scripts/mutation/post_comment.py --file "$COMMENT"
+
+    limpar-cache:
+        if: github.event.action == 'closed'
+        runs-on: zoppy-light
+        steps:
+            - name: Apaga o cache incremental do PR
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  REPO: ${{ github.repository }}
+                  PREFIXO: mutation-${{ github.event.pull_request.number }}-
+              run: |
+                  ids=$(gh api "repos/$REPO/actions/caches?key=$PREFIXO&per_page=100" --paginate --jq '.actions_caches[].id')
+                  for id in $ids; do
+                      gh api -X DELETE "repos/$REPO/actions/caches/$id" >/dev/null
+                  done
+                  echo "caches apagados: $(echo "$ids" | grep -c . || true)"

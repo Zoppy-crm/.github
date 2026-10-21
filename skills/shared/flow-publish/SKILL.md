@@ -84,14 +84,18 @@ Check if a PR already exists:
 gh pr view --json number,title,body 2>/dev/null
 ```
 
-**If PR exists:** analyze commits since base branch and update title/body with `gh pr edit`.
+**If PR exists:** analyze commits since base branch and update title/body through the REST API. `gh pr edit` fails on the Zoppy repos (it queries the deprecated Projects classic), so do not use it:
+
+```
+gh api -X PATCH repos/<owner>/<repo>/pulls/<number> -f title="<title>" -F body=@<body-file>
+```
 
 **If PR does not exist:**
 
 1. Analyze commits: `git log <base>..HEAD --oneline`
 2. Generate title from commits (Conventional Commits style)
 3. Generate description summarizing changes
-4. Create PR: `gh pr create --base <base-branch> --title "<title>" --body "<description>"`
+4. Create PR through the REST API: `gh api repos/<owner>/<repo>/pulls -f base=<base-branch> -f head=<branch> -f title="<title>" -F body=@<body-file>`
 
 ### PR Language
 
