@@ -138,6 +138,7 @@ jobs:
             - name: Artefato com logs e relatórios
               id: artefato
               if: always()
+              continue-on-error: true
               uses: actions/upload-artifact@v4
               with:
                   name: mutation-pr${{ github.event.pull_request.number }}-tentativa${{ github.run_attempt }}
@@ -157,6 +158,14 @@ jobs:
                   COMMENT="$RUNNER_TEMP/mutation/comment.md"
                   RUN_LOG="$RUNNER_TEMP/mutation/run.log"
                   mkdir -p "$RUNNER_TEMP/mutation"
+                  if [ -z "$ARTIFACT_URL" ]; then
+                      for log in "$RUNNER_TEMP"/mutation/logs/*.log; do
+                          [ -f "$log" ] || continue
+                          echo "::group::$(basename "$log")"
+                          cat "$log"
+                          echo '::endgroup::'
+                      done
+                  fi
                   if [ ! -s "$COMMENT" ]; then
                       if [ "$JOB_STATUS" = 'cancelled' ]; then
                           MOTIVO='A execução foi cancelada (novo push no PR ou tempo limite do job) antes de gerar o resultado.'
@@ -181,7 +190,7 @@ jobs:
                       if [ -n "$ARTIFACT_URL" ]; then
                           echo "<sub>[Execução]($RUN_URL) · [logs e relatórios]($ARTIFACT_URL) (artefato guardado por 1 dia)</sub>"
                       else
-                          echo "<sub>[Execução]($RUN_URL)</sub>"
+                          echo "<sub>[Execução]($RUN_URL) (o artefato com logs não subiu; os logs de cada arquivo estão no passo \"Comentário no PR\")</sub>"
                       fi
                   } >> "$COMMENT"
                   cat "$COMMENT" >> "$GITHUB_STEP_SUMMARY"

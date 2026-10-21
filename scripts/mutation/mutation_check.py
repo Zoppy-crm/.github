@@ -38,7 +38,7 @@ LOG_LINE_RE = re.compile(r'^\d{2}:\d{2}:\d{2} \(\d+\) [A-Z]+ ')
 LOG_ERROR_RE = re.compile(r'^\d{2}:\d{2}:\d{2} \(\d+\) ERROR ')
 STACK_RE = re.compile(r'^\s*at ')
 SANDBOX_RE = re.compile(r'\.stryker-tmp/sandbox-[^/]+/')
-GENERIC_ERROR = 'Stryker Unexpected error occurred'
+GENERIC_ERROR = 'Stryker '
 SWITCH_CASE_RE = re.compile(r'^(case\b.*|default\s*):$', re.S)
 
 
@@ -257,7 +257,7 @@ def error_excerpt(path, repo, max_lines=8, width=220):
             block.append(line)
         blocks.append(block)
     specific = [b for b in blocks if not b[0].startswith(GENERIC_ERROR)]
-    chosen = specific or blocks
+    chosen = (specific or blocks)[:1]
     if not chosen:
         chosen = [[line.strip() for line in lines if line.strip()][-5:]]
     excerpt = [line if len(line) <= width else line[: width - 1] + '…' for block in chosen for line in block]
@@ -454,7 +454,7 @@ def render_failures(failed):
         if excerpt:
             out += code_block(excerpt)
             out.append('')
-    out.append('_O log completo de cada arquivo está no artefato da execução._')
+    out.append('_O log completo de cada arquivo está na execução, pelo link no fim do comentário._')
     out.append('')
     return out
 
@@ -546,7 +546,7 @@ def render_comment(summary, max_listed):
             out += block
         if listed < total_undetected:
             omitted = total_undetected - listed
-            out.append(f"_{plural(omitted, 'mutante omitido', 'mutantes omitidos')} da lista; o detalhe completo está no artefato da execução._")
+            out.append(f"_{plural(omitted, 'mutante omitido', 'mutantes omitidos')} da lista; o detalhe completo está na execução, pelo link no fim do comentário._")
             out.append('')
     if failed:
         out += render_failures(failed)
@@ -578,7 +578,7 @@ def build_comment(summary):
         max_listed //= 2
     if len(comment) > COMMENT_LIMIT:
         cut = comment.rfind('\n', 0, COMMENT_LIMIT - 200)
-        comment = comment[:cut] + '\n\n_Comentário truncado pelo limite do GitHub; o detalhe completo está no artefato da execução._\n'
+        comment = comment[:cut] + '\n\n_Comentário truncado pelo limite do GitHub; o detalhe completo está na execução, pelo link no fim do comentário._\n'
     return comment
 
 
