@@ -129,7 +129,7 @@ Exemplos por stack:
 **frontend:**
 
 ```
-Carregando skills: design-to-plan, angular-component, angular-signals,
+Carregando skills: angular-component, angular-signals,
   feature-composition, feature-state, frontend-angular, beta-template-guard
 ```
 
