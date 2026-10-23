@@ -1,0 +1,241 @@
+name: Mutação (reutilizável)
+
+on:
+    workflow_call:
+        inputs:
+            node-version:
+                type: string
+                default: '24.18.0'
+            concurrency:
+                type: number
+                default: 3
+            budget-min:
+                type: number
+                default: 55
+            max-mutants:
+                type: number
+                default: 600
+            scripts-ref:
+                type: string
+                default: development
+        secrets:
+            NPM_TOKEN:
+                required: true
+
+jobs:
+    mutation:
+        if: github.event.action != 'closed'
+        runs-on: zoppy-heavy
+        timeout-minutes: 70
+        env:
+            PR_NUMBER: ${{ github.event.pull_request.number }}
+            PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        steps:
+            - name: Início
+              run: echo "MUTATION_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.sha }}
+                  fetch-depth: 0
+
+            - uses: actions/checkout@v4
+              with:
+                  repository: Zoppy-crm/.github
+                  ref: ${{ inputs.scripts-ref }}
+                  path: .zoppy-org
+                  sparse-checkout: scripts/mutation
+
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: '3.12'
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ inputs.node-version }}
+
+            - name: Arquivos elegíveis
+              id: selecao
+              env:
+                  MERGE_SHA: ${{ github.sha }}
+              run: |
+                  BASE_SHA=$(git rev-parse "$MERGE_SHA^1")
+                  HEAD_SHA=$(git rev-parse "$MERGE_SHA")
+                  echo "base=$BASE_SHA" >> "$GITHUB_OUTPUT"
+                  echo "head=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+                  python3 .zoppy-org/scripts/mutation/mutation_check.py --dry-run \
+                      --repo . --base "$BASE_SHA" --head "$HEAD_SHA" \
+                      --out "$RUNNER_TEMP/mutation" --cache "$RUNNER_TEMP/mutation-cache"
+                  python3 -c "
+                  import json, sys
+                  files = json.load(open(sys.argv[1]))['files']
+                  print('elegiveis=%d' % sum(1 for f in files if f['spec']))
+                  print('sem-spec=%d' % sum(1 for f in files if not f['spec']))
+                  " "$RUNNER_TEMP/mutation/selection.json" >> "$GITHUB_OUTPUT"
+
+            - name: Nada a mutar
+              if: steps.selecao.outputs.elegiveis == '0'
+              env:
+                  SEM_SPEC: ${{ steps.selecao.outputs.sem-spec }}
+              run: |
+                  {
+                      echo '<!-- mutation-check -->'
+                      echo '## Teste de mutação'
+                      echo
+                      echo 'Nenhum arquivo de lógica com spec irmão (`.spec.ts` na mesma pasta) foi alterado neste PR; não há o que mutar.'
+                      if [ "$SEM_SPEC" != '0' ]; then
+                          echo
+                          echo "Arquivos de lógica alterados sem spec irmão: $SEM_SPEC."
+                      fi
+                      echo
+                      python3 .zoppy-org/scripts/mutation/mutation_data.py --status nada-a-mutar \
+                          --selection "$RUNNER_TEMP/mutation/selection.json"
+                  } > "$RUNNER_TEMP/mutation/comment.md"
+
+            - name: Dependências
+              if: steps.selecao.outputs.elegiveis != '0'
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: |
+                  echo "@Zoppy-crm:registry=https://npm.pkg.github.com" > .npmrc
+                  echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> .npmrc
+                  npm ci --force --no-audit --no-fund
+                  npm i --no-save --no-audit --no-fund @stryker-mutator/core@9.6.1 @stryker-mutator/jest-runner@9.6.1
+                  rm -f .npmrc
+
+            - name: Cache incremental do PR
+              if: steps.selecao.outputs.elegiveis != '0'
+              uses: actions/cache/restore@v4
+              with:
+                  path: ${{ runner.temp }}/mutation-cache
+                  key: mutation-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+                  restore-keys: mutation-${{ github.event.pull_request.number }}-
+
+            - name: Stryker nos arquivos alterados
+              if: steps.selecao.outputs.elegiveis != '0'
+              continue-on-error: true
+              env:
+                  TZ: America/Sao_Paulo
+                  AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE: '1'
+                  NODE_OPTIONS: --max-old-space-size=8192
+                  BASE_SHA: ${{ steps.selecao.outputs.base }}
+                  HEAD_SHA: ${{ steps.selecao.outputs.head }}
+                  MUTATION_CONCURRENCY: ${{ inputs.concurrency }}
+                  MUTATION_BUDGET_MIN: ${{ inputs.budget-min }}
+                  MUTATION_MAX_MUTANTS: ${{ inputs.max-mutants }}
+              run: |
+                  set -o pipefail
+                  python3 .zoppy-org/scripts/mutation/mutation_check.py \
+                      --repo . --base "$BASE_SHA" --head "$HEAD_SHA" \
+                      --out "$RUNNER_TEMP/mutation" --cache "$RUNNER_TEMP/mutation-cache" 2>&1 | tee "$RUNNER_TEMP/mutation/run.log"
+
+            - name: Cache tem conteúdo
+              id: cache-conteudo
+              if: always() && steps.selecao.outputs.elegiveis != '0'
+              run: |
+                  if ls "$RUNNER_TEMP"/mutation-cache/*.json >/dev/null 2>&1; then
+                      echo 'salvar=1' >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Salva o cache incremental
+              if: always() && steps.cache-conteudo.outputs.salvar == '1'
+              uses: actions/cache/save@v4
+              with:
+                  path: ${{ runner.temp }}/mutation-cache
+                  key: mutation-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+
+            - name: Artefato com logs e relatórios
+              id: artefato
+              if: always()
+              continue-on-error: true
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mutation-pr${{ github.event.pull_request.number }}-tentativa${{ github.run_attempt }}
+                  path: ${{ runner.temp }}/mutation
+                  retention-days: 1
+                  if-no-files-found: ignore
+
+            - name: Comentário no PR
+              if: always()
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  PR_NUMBER: ${{ github.event.pull_request.number }}
+                  JOB_STATUS: ${{ job.status }}
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+                  ARTIFACT_URL: ${{ steps.artefato.outputs.artifact-url }}
+              run: |
+                  COMMENT="$RUNNER_TEMP/mutation/comment.md"
+                  RUN_LOG="$RUNNER_TEMP/mutation/run.log"
+                  DATA_SCRIPT=.zoppy-org/scripts/mutation/mutation_data.py
+                  mkdir -p "$RUNNER_TEMP/mutation" "$RUNNER_TEMP/mutation-data"
+                  if [ -z "$ARTIFACT_URL" ]; then
+                      for log in "$RUNNER_TEMP"/mutation/logs/*.log; do
+                          [ -f "$log" ] || continue
+                          echo "::group::$(basename "$log")"
+                          cat "$log"
+                          echo '::endgroup::'
+                      done
+                  fi
+                  if [ ! -s "$COMMENT" ]; then
+                      if [ "$JOB_STATUS" = 'cancelled' ]; then
+                          MOTIVO='A execução foi cancelada (novo push no PR ou tempo limite do job) antes de gerar o resultado.'
+                          STATUS=cancelado
+                      else
+                          MOTIVO='A execução falhou antes de gerar o resultado.'
+                          STATUS=falhou
+                      fi
+                      {
+                          echo '<!-- mutation-check -->'
+                          echo '## Teste de mutação'
+                          echo
+                          echo "$MOTIVO"
+                          if [ -s "$RUN_LOG" ]; then
+                              echo
+                              echo '```text'
+                              grep -v '^\s*$' "$RUN_LOG" | tail -n 6 | cut -c1-220
+                              echo '```'
+                          fi
+                          echo
+                          python3 "$DATA_SCRIPT" --status "$STATUS" --summary "$RUNNER_TEMP/mutation/summary.json" \
+                              || echo "<!-- mutation-data-indisponivel status=$STATUS -->"
+                      } > "$COMMENT"
+                  fi
+                  if python3 "$DATA_SCRIPT" --extract "$COMMENT" > "$RUNNER_TEMP/mutation-data.tmp"; then
+                      mv "$RUNNER_TEMP/mutation-data.tmp" "$RUNNER_TEMP/mutation-data/mutation-data.json"
+                  fi
+                  {
+                      echo
+                      if [ -n "$ARTIFACT_URL" ]; then
+                          echo "<sub>[Execução]($RUN_URL) · [logs e relatórios]($ARTIFACT_URL) (artefato guardado por 1 dia)</sub>"
+                      else
+                          echo "<sub>[Execução]($RUN_URL) (o artefato com logs não subiu; os logs de cada arquivo estão no passo \"Comentário no PR\")</sub>"
+                      fi
+                  } >> "$COMMENT"
+                  cat "$COMMENT" >> "$GITHUB_STEP_SUMMARY"
+                  python3 .zoppy-org/scripts/mutation/post_comment.py --file "$COMMENT"
+
+            - name: Dados da execução
+              if: always()
+              continue-on-error: true
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mutation-data-pr${{ github.event.pull_request.number }}-tentativa${{ github.run_attempt }}
+                  path: ${{ runner.temp }}/mutation-data
+                  retention-days: 90
+                  if-no-files-found: ignore
+
+    limpar-cache:
+        if: github.event.action == 'closed'
+        runs-on: zoppy-light
+        steps:
+            - name: Apaga o cache incremental do PR
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  REPO: ${{ github.repository }}
+                  PREFIXO: mutation-${{ github.event.pull_request.number }}-
+              run: |
+                  ids=$(gh api "repos/$REPO/actions/caches?key=$PREFIXO&per_page=100" --paginate --jq '.actions_caches[].id')
+                  for id in $ids; do
+                      gh api -X DELETE "repos/$REPO/actions/caches/$id" >/dev/null
+                  done
+                  echo "caches apagados: $(echo "$ids" | grep -c . || true)"

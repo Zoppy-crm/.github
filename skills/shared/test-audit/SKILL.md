@@ -25,6 +25,8 @@ Read the source file, the spec, and the factories or seed helpers the spec uses.
 - A weak assertion on a computed value: `toBeDefined`, `length > 0`, `toHaveBeenCalled` with no arguments.
 - A test that asserts a rejection, a block, a stub, or "does not do": check whether another source (the caller, the card, the other system) agrees with that expected value.
 - A mock that accepts any argument, or that skips the serialization the real thing does.
+- No zoppy-api, se o PR tem o comentário `## Teste de mutação` (label `mutation`), cada sobrevivente ali já é uma lacuna concreta com linha e valor: comece por eles.
+- Se matar um desses sobreviventes revelou um bug de verdade no código, adicione a label `mutation: achou-bug` ao PR: `gh api repos/Zoppy-crm/zoppy-api/issues/<pr-number>/labels -f 'labels[]=mutation: achou-bug'`.
 
 ## What it does not catch
 
