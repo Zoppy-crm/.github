@@ -10,6 +10,7 @@ on:
             # alguem empurrar uma skill e o hook pegar carona. Foi assim que os repos
             # ficaram meses mandando rodar uma skill que nao existe mais.
             - 'config/hooks-template.json'
+            - 'config/REVIEW.md'
 
     workflow_dispatch:
         inputs:
@@ -216,6 +217,13 @@ jobs:
                         git add -f "$SETTINGS_FILE"
                       fi
 
+                      # REVIEW.md na raiz: instruções do Code Review da Anthropic, que lê só
+                      # CLAUDE.md e REVIEW.md. Ele aponta para a skill pr-review, então só vai
+                      # para os repos que a recebem.
+                      if [ -f ".claude/skills/pr-review/SKILL.md" ]; then
+                        cp "$GITHUB_WORKSPACE/config/REVIEW.md" REVIEW.md
+                      fi
+
                       # Write marker file
                       {
                         echo "# Skills synced from Zoppy-crm/.github"
@@ -256,13 +264,14 @@ jobs:
                       } > ".github/copilot-instructions.md"
 
                       # Check if there are changes
-                      if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude .github/copilot-instructions.md)" ]; then
+                      if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude .github/copilot-instructions.md REVIEW.md)" ]; then
                         echo "  ✅ $BRANCH — já está atualizado"
                         continue
                       fi
 
                       # Commit and push (force-add so gitignored paths like .claude/settings.json still commit)
                       git add -fA .claude/ .github/copilot-instructions.md
+                      [ -f REVIEW.md ] && git add -f REVIEW.md
                       git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
 
                       if git push origin "$BRANCH" 2>&1; then
