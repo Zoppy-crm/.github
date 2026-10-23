@@ -10,7 +10,6 @@ on:
             # alguem empurrar uma skill e o hook pegar carona. Foi assim que os repos
             # ficaram meses mandando rodar uma skill que nao existe mais.
             - 'config/hooks-template.json'
-            - 'config/REVIEW.md'
 
     workflow_dispatch:
         inputs:
@@ -218,10 +217,19 @@ jobs:
                       fi
 
                       # REVIEW.md na raiz: instruções do Code Review da Anthropic, que lê só
-                      # CLAUDE.md e REVIEW.md. Ele aponta para a skill pr-review, então só vai
-                      # para os repos que a recebem.
-                      if [ -f ".claude/skills/pr-review/SKILL.md" ]; then
-                        cp "$GITHUB_WORKSPACE/config/REVIEW.md" REVIEW.md
+                      # CLAUDE.md e REVIEW.md. Cada pasta de stack (skills/<pasta>/REVIEW.md)
+                      # traz o seu, apontando para as skills que aquele repo recebe.
+                      REVIEW_SOURCES=()
+                      for folder in "${FOLDERS[@]}"; do
+                        [ -f "$GITHUB_WORKSPACE/skills/$folder/REVIEW.md" ] && REVIEW_SOURCES+=("$folder")
+                      done
+                      if [ "${#REVIEW_SOURCES[@]}" -gt 1 ]; then
+                        echo "  ❌ $BRANCH — mais de uma pasta com REVIEW.md: ${REVIEW_SOURCES[*]}"
+                        FAILED=$((FAILED + 1))
+                        continue
+                      fi
+                      if [ "${#REVIEW_SOURCES[@]}" -eq 1 ]; then
+                        cp "$GITHUB_WORKSPACE/skills/${REVIEW_SOURCES[0]}/REVIEW.md" REVIEW.md
                       fi
 
                       # Write marker file
