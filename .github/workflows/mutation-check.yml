@@ -27,7 +27,13 @@ jobs:
         if: github.event.action != 'closed'
         runs-on: zoppy-heavy
         timeout-minutes: 70
+        env:
+            PR_NUMBER: ${{ github.event.pull_request.number }}
+            PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         steps:
+            - name: Início
+              run: echo "MUTATION_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
             - uses: actions/checkout@v4
               with:
                   ref: ${{ github.sha }}
@@ -81,6 +87,9 @@ jobs:
                           echo
                           echo "Arquivos de lógica alterados sem spec irmão: $SEM_SPEC."
                       fi
+                      echo
+                      python3 .zoppy-org/scripts/mutation/mutation_data.py --status nada-a-mutar \
+                          --selection "$RUNNER_TEMP/mutation/selection.json"
                   } > "$RUNNER_TEMP/mutation/comment.md"
 
             - name: Dependências
@@ -157,7 +166,8 @@ jobs:
               run: |
                   COMMENT="$RUNNER_TEMP/mutation/comment.md"
                   RUN_LOG="$RUNNER_TEMP/mutation/run.log"
-                  mkdir -p "$RUNNER_TEMP/mutation"
+                  DATA_SCRIPT=.zoppy-org/scripts/mutation/mutation_data.py
+                  mkdir -p "$RUNNER_TEMP/mutation" "$RUNNER_TEMP/mutation-data"
                   if [ -z "$ARTIFACT_URL" ]; then
                       for log in "$RUNNER_TEMP"/mutation/logs/*.log; do
                           [ -f "$log" ] || continue
@@ -169,8 +179,10 @@ jobs:
                   if [ ! -s "$COMMENT" ]; then
                       if [ "$JOB_STATUS" = 'cancelled' ]; then
                           MOTIVO='A execução foi cancelada (novo push no PR ou tempo limite do job) antes de gerar o resultado.'
+                          STATUS=cancelado
                       else
                           MOTIVO='A execução falhou antes de gerar o resultado.'
+                          STATUS=falhou
                       fi
                       {
                           echo '<!-- mutation-check -->'
@@ -183,7 +195,13 @@ jobs:
                               grep -v '^\s*$' "$RUN_LOG" | tail -n 6 | cut -c1-220
                               echo '```'
                           fi
+                          echo
+                          python3 "$DATA_SCRIPT" --status "$STATUS" --summary "$RUNNER_TEMP/mutation/summary.json" \
+                              || echo "<!-- mutation-data-indisponivel status=$STATUS -->"
                       } > "$COMMENT"
+                  fi
+                  if python3 "$DATA_SCRIPT" --extract "$COMMENT" > "$RUNNER_TEMP/mutation-data.tmp"; then
+                      mv "$RUNNER_TEMP/mutation-data.tmp" "$RUNNER_TEMP/mutation-data/mutation-data.json"
                   fi
                   {
                       echo
@@ -195,6 +213,16 @@ jobs:
                   } >> "$COMMENT"
                   cat "$COMMENT" >> "$GITHUB_STEP_SUMMARY"
                   python3 .zoppy-org/scripts/mutation/post_comment.py --file "$COMMENT"
+
+            - name: Dados da execução
+              if: always()
+              continue-on-error: true
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mutation-data-pr${{ github.event.pull_request.number }}-tentativa${{ github.run_attempt }}
+                  path: ${{ runner.temp }}/mutation-data
+                  retention-days: 90
+                  if-no-files-found: ignore
 
     limpar-cache:
         if: github.event.action == 'closed'

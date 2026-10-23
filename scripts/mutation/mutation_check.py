@@ -12,6 +12,7 @@ import time
 MARKER = '<!-- mutation-check -->'
 COMMENT_LIMIT = 65000
 MAX_LISTED = 80
+FOOTER_RESERVE = 600
 DETECTED = ('Killed', 'Timeout')
 UNDETECTED = ('Survived', 'NoCoverage')
 ERROR_STATUSES = ('RuntimeError', 'CompileError')
@@ -64,6 +65,12 @@ def parse_args():
     if not args.cache:
         parser.error('--cache (ou MUTATION_CACHE_DIR) é obrigatório')
     return args
+
+
+def data_module():
+    import mutation_data
+
+    return mutation_data
 
 
 def git(repo, *args):
@@ -195,27 +202,43 @@ def source_snippet(source_lines, location):
 def read_report(report_path, source_file):
     with open(report_path) as handle:
         report = json.load(handle)
+    mutation_data = data_module()
     counts = collections.Counter()
     undetected = []
+    killed_ids = []
     for path, data in report['files'].items():
         source_lines = data.get('source', '').split('\n')
         for mutant in data['mutants']:
             counts[mutant['status']] += 1
-            if mutant['status'] not in UNDETECTED:
+            if mutant['status'] not in UNDETECTED + DETECTED:
                 continue
             location = mutant['location']
+            start, end = location['start'], location['end']
+            replacement = mutant.get('replacement', '')
+            mid = mutation_data.mutant_id(
+                source_file, mutant['mutatorName'], start['line'], start['column'], end['line'], end['column'], replacement
+            )
+            if mutant['status'] in DETECTED:
+                killed_ids.append((start['line'], start['column'], mid))
+                continue
+            original = source_snippet(source_lines, location)
             undetected.append(
                 {
-                    'line': location['start']['line'],
-                    'column': location['start']['column'],
+                    'line': start['line'],
+                    'column': start['column'],
+                    'endLine': end['line'],
+                    'endColumn': end['column'],
                     'status': mutant['status'],
                     'mutator': mutant['mutatorName'],
-                    'original': source_snippet(source_lines, location),
-                    'replacement': mutant.get('replacement', ''),
+                    'original': original,
+                    'replacement': replacement,
+                    'id': mid,
+                    'cid': mutation_data.content_id(source_file, mutant['mutatorName'], original, replacement),
                 }
             )
     undetected.sort(key=lambda m: (m['line'], m['column']))
-    return {status: counts.get(status, 0) for status in STATUSES}, undetected
+    killed_ids.sort()
+    return {status: counts.get(status, 0) for status in STATUSES}, undetected, [mid for _, _, mid in killed_ids]
 
 
 def tail(path, lines=25):
@@ -295,7 +318,7 @@ def run_file(item, args, work_dir, out_dir, timeout):
             result['error'] = 'estourou o tempo restante do orçamento'
     result['seconds'] = round(time.time() - started, 1)
     if result['rc'] == 0 and os.path.exists(report_path):
-        result['counts'], result['undetected'] = read_report(report_path, item['file'])
+        result['counts'], result['undetected'], result['killedIds'] = read_report(report_path, item['file'])
     elif 'error' not in result:
         result['error'] = f"stryker saiu com código {result['rc']}"
     if 'error' in result:
@@ -569,16 +592,19 @@ def render_comment(summary, max_listed):
     return '\n'.join(out)
 
 
-def build_comment(summary):
+def build_comment(summary, data_block=''):
+    limit = COMMENT_LIMIT - len(data_block) - (FOOTER_RESERVE if data_block else 0)
     max_listed = MAX_LISTED
     while True:
         comment = render_comment(summary, max_listed)
-        if len(comment) <= COMMENT_LIMIT or max_listed == 0:
+        if len(comment) <= limit or max_listed == 0:
             break
         max_listed //= 2
-    if len(comment) > COMMENT_LIMIT:
-        cut = comment.rfind('\n', 0, COMMENT_LIMIT - 200)
+    if len(comment) > limit:
+        cut = comment.rfind('\n', 0, limit - 200)
         comment = comment[:cut] + '\n\n_Comentário truncado pelo limite do GitHub; o detalhe completo está na execução, pelo link no fim do comentário._\n'
+    if data_block:
+        comment = comment.rstrip('\n') + '\n\n' + data_block + '\n'
     return comment
 
 
@@ -606,14 +632,19 @@ def main():
         with open(os.path.join(args.out, 'selection.json'), 'w') as handle:
             json.dump({'base': merge_base, 'head': args.head, 'files': selection}, handle, indent=1, ensure_ascii=False)
         return
+    started_at = data_module().now_iso()
     summary = run_all(args, selection)
     summary['base'] = merge_base
     summary['head'] = args.head
     os.makedirs(args.out, exist_ok=True)
     with open(os.path.join(args.out, 'summary.json'), 'w') as handle:
         json.dump(summary, handle, indent=1, ensure_ascii=False)
+    mutation_data = data_module()
+    meta = mutation_data.meta_from_env()
+    meta['started_at'] = meta['started_at'] or started_at
+    data_block = mutation_data.fit(mutation_data.build('ok', meta, summary))
     with open(os.path.join(args.out, 'comment.md'), 'w') as handle:
-        handle.write(build_comment(summary))
+        handle.write(build_comment(summary, data_block))
     print(f"total {summary['seconds']}s score={summary['score']} coberto={summary['scoreCovered']} {json.dumps(summary['totals'])}")
 
 
