@@ -13,6 +13,11 @@
                         "type": "command",
                         "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); PROTECTED='master|main|development|staging|mirror'; if echo \"$CMD\" | grep -qE '\\bgit[[:space:]]+push\\b'; then if echo \"$CMD\" | grep -qE \"\\bgit[[:space:]]+push\\b[^;|&]*\\b($PROTECTED)\\b\"; then echo '🛑 Hook de segurança: push direto em branch protegida (master/main/development/staging/mirror) bloqueado. Abra um PR.' >&2; exit 2; fi; BRANCH=$(git branch --show-current 2>/dev/null); if echo \"$BRANCH\" | grep -qE \"^($PROTECTED)$\"; then if ! echo \"$CMD\" | grep -qE '\\bgit[[:space:]]+push\\b[^;|&]+:[a-zA-Z0-9/_.-]+'; then echo \"🛑 Hook de segurança: você está em '$BRANCH' (branch protegida). Push bloqueado — crie uma feature/bugfix branch.\" >&2; exit 2; fi; fi; fi; true",
                         "statusMessage": "Verificando push em branch protegida..."
+                    },
+                    {
+                        "type": "command",
+                        "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '\\bgh[[:space:]]+pr[[:space:]]+create\\b'; then TARGET_BASE=$(echo \"$CMD\" | sed -nE 's/.*(--base|-B)[[:space:]=]+\"?([a-zA-Z0-9/_.-]+)\"?.*/\\2/p'); if [ -z \"$TARGET_BASE\" ]; then TARGET_BASE=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name' 2>/dev/null); fi; if echo \"$TARGET_BASE\" | grep -qE '^(master|main|staging|mirror)$'; then if ! echo \"$CMD\" | grep -qiE '##[[:space:]]*Documenta(ç|c)(ã|a)o'; then echo \"🛑 Hook de documentação: PR apontando para '$TARGET_BASE' sem a seção '## Documentação'. Execute a skill /flow-feature-docs em um subagent antes de abrir o PR para verificar o OKF Knowledge Bundle e gerar/atualizar o rascunho da Central de Ajuda.\" >&2; exit 2; fi; fi; fi; true",
+                        "statusMessage": "Verificando documentação de feature no PR..."
                     }
                 ]
             }

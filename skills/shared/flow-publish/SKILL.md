@@ -76,6 +76,15 @@ python3 /tmp/jornadas_check.py origin/<base-branch> HEAD jornadas.yml
 
 It prints the new files without a journey. For each folder listed, add the path to the right journey in `jornadas.yml` and commit it in this branch. If the right journey is not obvious, ask the user. Do not guess. The `Jornadas` check on the PR runs the same script.
 
+### Step 4.6: Feature Documentation Subagent (for PRs targeting `master`, `main`, `staging`, or `mirror`)
+
+Whenever `<base-branch>` is `master`, `main`, `staging`, or `mirror` (especially in `zoppy-api`, `zoppy-FE`, `zoppy-admin-fe`, `zoppy-whatsapp-commerce`, `zoppy-workflow`, and similar repositories), you **MUST** launch a subagent (`Task` / `invoke_subagent`) to run the `/flow-feature-docs` skill before creating or updating the PR:
+
+1. The subagent inspects `git diff origin/<base-branch>...HEAD`.
+2. It checks whether the internal **OKF Knowledge Bundle** (`/index.md`, `overview.md`, concepts, `log.md`) needs to be created or updated to reflect new business rules or architectural decisions, committing any doc updates to the current branch.
+3. It checks whether the change impacts merchant/user-facing behavior on the **Central de Ajuda (`ajuda.zoppy.com.br`)**. If so, it creates or updates a **draft article (`status: 'rascunho'`)** (saved via `zoppy-api` `/api/help-center/articles/draft` or attached in the PR description) so a human can review, edit, and publish it in `zoppy-admin-fe` (`/dashboard/help-center`).
+4. Include the `## Documentação` section returned by the subagent in the PR body in Step 5.
+
 ### Step 5: Create or Update PR
 
 Check if a PR already exists:
@@ -129,6 +138,13 @@ Use this template. Include the optional sections only when the diff actually add
 [Incluir APENAS se novas páginas/telas de front-end foram adicionadas no diff]
 
 -   **Nome da página** (`/caminho`) — Breve descrição do que a página faz
+
+## Documentação
+
+[Obrigatório quando o PR aponta para `master`, `main`, `staging` ou `mirror` — gerado pelo subagent da skill `/flow-feature-docs`]
+
+-   **OKF Knowledge Bundle:** [Arquivos atualizados ou justificativa de não impacto]
+-   **Central de Ajuda (`ajuda.zoppy.com.br`):** [Rascunho `<topic>/<slug>` (`status: rascunho`) para revisão humana no Zoppy Admin (`/dashboard/help-center`) ou justificativa de não impacto]
 ```
 
 **Test sections (when the PR adds or changes tests).** If the `test-design` skill ran on this branch, its sections go into the PR body, after "Mudanças" and in this order: `## Entradas testadas`, `## Perguntas feitas`, `## Suposições`, `## Achados`. Copy what it produced; do not summarize or rewrite it.
