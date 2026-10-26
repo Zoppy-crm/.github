@@ -1,29 +1,10 @@
 name: Central de Ajuda · rascunho (reutilizável)
 
-# After a PR is merged into master, an agent reads it and, if the merchant notices the change, leaves
-# a draft in the Zoppy Admin's Help Center. It never publishes. The skill (skills/shared/help-center-docs)
-# reaches each repo through the skills sync. Caller, in each product repo:
-#
-#   on:
-#       pull_request:
-#           types: [closed]
-#           branches: [master]
-#   jobs:
-#       rascunho:
-#           if: github.event.pull_request.merged == true
-#           uses: Zoppy-crm/.github/.github/workflows/help-center-docs.yml@development
-#           secrets: inherit
-#           permissions:
-#               contents: read
-#               pull-requests: write
-#               id-token: write
-
 on:
     workflow_call:
         secrets:
             CLAUDE_CODE_OAUTH_TOKEN:
                 required: true
-            # Lets the agent create drafts and nothing else (zoppy-api HelpCenterAgentTokenGuard).
             HELP_CENTER_AGENT_TOKEN:
                 required: true
 
