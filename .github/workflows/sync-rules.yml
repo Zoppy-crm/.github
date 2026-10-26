@@ -216,6 +216,22 @@ jobs:
                         git add -f "$SETTINGS_FILE"
                       fi
 
+                      # REVIEW.md na raiz: instruções do Code Review da Anthropic, que lê só
+                      # CLAUDE.md e REVIEW.md. Cada pasta de stack (skills/<pasta>/REVIEW.md)
+                      # traz o seu, apontando para as skills que aquele repo recebe.
+                      REVIEW_SOURCES=()
+                      for folder in "${FOLDERS[@]}"; do
+                        [ -f "$GITHUB_WORKSPACE/skills/$folder/REVIEW.md" ] && REVIEW_SOURCES+=("$folder")
+                      done
+                      if [ "${#REVIEW_SOURCES[@]}" -gt 1 ]; then
+                        echo "  ❌ $BRANCH — mais de uma pasta com REVIEW.md: ${REVIEW_SOURCES[*]}"
+                        FAILED=$((FAILED + 1))
+                        continue
+                      fi
+                      if [ "${#REVIEW_SOURCES[@]}" -eq 1 ]; then
+                        cp "$GITHUB_WORKSPACE/skills/${REVIEW_SOURCES[0]}/REVIEW.md" REVIEW.md
+                      fi
+
                       # Write marker file
                       {
                         echo "# Skills synced from Zoppy-crm/.github"
@@ -256,13 +272,14 @@ jobs:
                       } > ".github/copilot-instructions.md"
 
                       # Check if there are changes
-                      if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude .github/copilot-instructions.md)" ]; then
+                      if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard .claude .github/copilot-instructions.md REVIEW.md)" ]; then
                         echo "  ✅ $BRANCH — já está atualizado"
                         continue
                       fi
 
                       # Commit and push (force-add so gitignored paths like .claude/settings.json still commit)
                       git add -fA .claude/ .github/copilot-instructions.md
+                      [ -f REVIEW.md ] && git add -f REVIEW.md
                       git commit -m "chore: sync skills from .github [${FOLDERS[*]}]"
 
                       if git push origin "$BRANCH" 2>&1; then
