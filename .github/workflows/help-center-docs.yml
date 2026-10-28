@@ -34,7 +34,7 @@ jobs:
             github.event.pull_request.merged == true &&
             github.event.pull_request.base.ref == 'master' &&
             contains(fromJSON('["prod","staging"]'), inputs.environment)
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         timeout-minutes: 30
         permissions:
             contents: read
@@ -95,7 +95,7 @@ jobs:
 
     enviar:
         needs: agente
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         timeout-minutes: 10
         permissions:
             pull-requests: write
