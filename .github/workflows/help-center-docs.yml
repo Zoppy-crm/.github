@@ -10,7 +10,7 @@ on:
             scripts-ref:
                 description: Ref do Zoppy-crm/.github de onde vem o script da Central de Ajuda
                 type: string
-                default: master
+                default: development
         secrets:
             CLAUDE_CODE_OAUTH_TOKEN:
                 required: true
