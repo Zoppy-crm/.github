@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# Único acesso do agente da Central de Ajuda à rede.
-#   help-center.sh taxonomy           GET da taxonomia do site
-#   help-center.sh export             GET dos artigos publicados
-#   help-center.sh send <arquivo>     POST do rascunho (JSON) em agent-drafts
-# A URL da API vem de HELP_CENTER_API_URL e o token de HELP_CENTER_AGENT_TOKEN, ambos do workflow.
+# Acesso da Central de Ajuda à rede, usado só pelos passos de shell do workflow (nunca pelo agente).
+#   help-center.sh taxonomy                     GET da taxonomia do site (público)
+#   help-center.sh export                       GET dos artigos publicados (público)
+#   help-center.sh validate <arquivo> <pr-url>  confere o draft.json escrito pelo agente
+#   help-center.sh send <arquivo>               POST do rascunho em agent-drafts (precisa do token)
+# O ambiente vem de HELP_CENTER_ENV (prod | staging); a URL da API é fixa por ambiente.
 set -euo pipefail
 
-API_URL="${HELP_CENTER_API_URL:-https://api.zoppy.com.br}"
-API_URL="${API_URL%/}"
+case "${HELP_CENTER_ENV:-prod}" in
+    prod) API_URL="https://api.zoppy.com.br" ;;
+    staging) API_URL="https://api-staging.zoppy.com.br" ;;
+    *) echo "help-center.sh: HELP_CENTER_ENV deve ser prod ou staging" >&2; exit 1 ;;
+esac
 SITE_URL="https://ajuda.zoppy.com.br"
+MAX_BYTES=200000
 
 die() {
     echo "help-center.sh: $*" >&2
@@ -19,16 +24,27 @@ get() {
     curl -fsS --proto '=https' --max-time 60 "$1"
 }
 
+validate() {
+    local file="${1:-}" pr_url="${2:-}"
+    [[ -n "$file" && -f "$file" && ! -L "$file" ]] || die "arquivo do rascunho não encontrado: '$file'"
+    [[ -n "$pr_url" ]] || die "uso: validate <arquivo> <pr-url>"
+    (( $(wc -c <"$file") <= MAX_BYTES )) || die "'$file' passa de $MAX_BYTES bytes"
+    jq -e --arg pr "$pr_url" '
+        type == "object"
+        and (keys - ["content", "todo", "sourceUrl"] | length == 0)
+        and (.content | type == "object")
+        and (.content.slug | type == "string" and test("^[a-z0-9]+(-[a-z0-9]+)*$"))
+        and (.content.title | type == "string")
+        and (.content.body | type == "string")
+        and ((.todo // []) | type == "array" and all(type == "string"))
+        and .sourceUrl == $pr
+    ' "$file" >/dev/null || die "'$file' não tem o formato de rascunho esperado"
+}
+
 send() {
     local file="${1:-}"
     [[ -n "$file" && -f "$file" ]] || die "arquivo do rascunho não encontrado: '$file'"
     [[ -n "${HELP_CENTER_AGENT_TOKEN:-}" ]] || die "HELP_CENTER_AGENT_TOKEN não definido"
-    if command -v jq >/dev/null 2>&1; then
-        jq -e 'type == "object" and has("content")' "$file" >/dev/null || die "'$file' não é um JSON com 'content'"
-    else
-        python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if isinstance(d,dict) and "content" in d else 1)' "$file" \
-            || die "'$file' não é um JSON com 'content'"
-    fi
 
     local body status
     body="$(mktemp)"
@@ -48,6 +64,7 @@ send() {
 case "${1:-}" in
     taxonomy) get "$SITE_URL/data/taxonomy.json" ;;
     export) get "$API_URL/api/help-center/export" ;;
+    validate) validate "${2:-}" "${3:-}" ;;
     send) send "${2:-}" ;;
-    *) die "uso: help-center.sh taxonomy | export | send <arquivo.json>" ;;
+    *) die "uso: help-center.sh taxonomy | export | validate <arquivo> <pr-url> | send <arquivo>" ;;
 esac
