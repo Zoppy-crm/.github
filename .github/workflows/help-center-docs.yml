@@ -2,6 +2,15 @@ name: Central de Ajuda · rascunho (reutilizável)
 
 on:
     workflow_call:
+        inputs:
+            api-url:
+                description: URL base da zoppy-api (troque pela de staging para testar)
+                type: string
+                default: https://api.zoppy.com.br
+            scripts-ref:
+                description: Ref do Zoppy-crm/.github de onde vem o script da Central de Ajuda
+                type: string
+                default: master
         secrets:
             CLAUDE_CODE_OAUTH_TOKEN:
                 required: true
@@ -10,7 +19,10 @@ on:
 
 jobs:
     rascunho:
-        if: github.event.pull_request.merged == true
+        if: >-
+            github.event_name == 'pull_request' &&
+            github.event.pull_request.merged == true &&
+            github.event.pull_request.base.ref == 'master'
         runs-on: self-hosted
         timeout-minutes: 30
         permissions:
@@ -22,9 +34,23 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - uses: actions/checkout@v4
+              with:
+                  repository: Zoppy-crm/.github
+                  ref: ${{ inputs.scripts-ref }}
+                  path: .zoppy-org
+                  sparse-checkout: scripts/help-center
+
+            - name: Script e pasta do rascunho
+              run: |
+                  chmod 0555 .zoppy-org/scripts/help-center/help-center.sh
+                  chmod -R a-w .zoppy-org
+                  mkdir -p .help-center
+
             - uses: anthropics/claude-code-action@v1
               env:
                   GH_TOKEN: ${{ github.token }}
+                  HELP_CENTER_API_URL: ${{ inputs.api-url }}
                   HELP_CENTER_AGENT_TOKEN: ${{ secrets.HELP_CENTER_AGENT_TOKEN }}
               with:
                   claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -32,4 +58,5 @@ jobs:
                   claude_args: |
                       --model claude-opus-5-5
                       --max-turns 60
-                      --allowedTools "Read,Glob,Grep,Write,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(curl:*)"
+                      --allowedTools "Read,Glob,Grep,Write(./.help-center/**),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(.zoppy-org/scripts/help-center/help-center.sh:*)"
+                      --disallowedTools "Bash(curl:*),Bash(wget:*),Edit,WebFetch"
