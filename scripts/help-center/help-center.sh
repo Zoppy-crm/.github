@@ -4,6 +4,7 @@
 #   help-center.sh export                       GET dos artigos publicados (público)
 #   help-center.sh validate <arquivo> <pr-url>  confere o draft.json escrito pelo agente
 #   help-center.sh send <arquivo>               POST do rascunho em agent-drafts (precisa do token)
+#   help-center.sh sanitize <max>               texto do agente (stdin) pronto para comentário do PR
 # O ambiente vem de HELP_CENTER_ENV (prod | staging); a URL da API é fixa por ambiente.
 set -euo pipefail
 
@@ -34,11 +35,18 @@ validate() {
         and (keys - ["content", "todo", "sourceUrl"] | length == 0)
         and (.content | type == "object")
         and (.content.slug | type == "string" and test("^[a-z0-9]+(-[a-z0-9]+)*$"))
-        and (.content.title | type == "string")
+        and (.content.title | type == "string" and length > 0 and length <= 120 and (explode | all(. >= 32 and . != 127)))
         and (.content.body | type == "string")
         and ((.todo // []) | type == "array" and all(type == "string"))
         and .sourceUrl == $pr
     ' "$file" >/dev/null || die "'$file' não tem o formato de rascunho esperado"
+}
+
+# Uma linha, sem markdown que vire link, imagem, HTML ou menção: tira `<>[]()!, desarma @ e esquemas de URL.
+sanitize() {
+    local max="${1:-200}"
+    [[ "$max" =~ ^[0-9]+$ ]] || die "uso: sanitize <max>"
+    head -n1 | tr -d '\r\000-\037\177`<>[]()!' | sed 's/@/＠/g; s#[A-Za-z][A-Za-z0-9+.-]*://##g' | cut -c1-"$max"
 }
 
 send() {
@@ -66,5 +74,6 @@ case "${1:-}" in
     export) get "$API_URL/api/help-center/export" ;;
     validate) validate "${2:-}" "${3:-}" ;;
     send) send "${2:-}" ;;
-    *) die "uso: help-center.sh taxonomy | export | validate <arquivo> <pr-url> | send <arquivo>" ;;
+    sanitize) sanitize "${2:-}" ;;
+    *) die "uso: help-center.sh taxonomy | export | validate <arquivo> <pr-url> | send <arquivo> | sanitize <max>" ;;
 esac
