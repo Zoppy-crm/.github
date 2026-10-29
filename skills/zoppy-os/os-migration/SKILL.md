@@ -113,4 +113,4 @@ Não use teste como dona como prova de runtime. Credencial dona nunca entra no p
 - Grants globais, bootstrap em request/worker ou senha dona para contornar permissão negada.
 - Chamar regeneração de prova de autorização ou declarar migração segura porque compilou.
 
-Consulte [fontes e limites](references/fontes.md) para os comandos e APIs confirmados.
+Consulte [fontes e limites](references/sources.md) para os comandos e APIs confirmados.

@@ -141,4 +141,4 @@ em POST/PUT/PATCH/DELETE, JSON com tipo errado e CORS exata sem curinga.
 - Expor tokens Google/sessão em resposta de negócio ou persistir memberships contraditórias.
 - Usar login Google como consentimento de ferramentas ou tornar pendente ativo automaticamente.
 
-Consulte [fontes e limites](references/fontes.md) ao alterar configuração ou chamadas de sessão.
+Consulte [fontes e limites](references/sources.md) ao alterar configuração ou chamadas de sessão.

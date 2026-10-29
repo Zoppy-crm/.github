@@ -89,4 +89,4 @@ Não instale `organization-best-practices`: pessoa, membership de times, capacid
 owner/admin de organização do Better Auth não vira Master. O OS é ferramenta interna da Zoppy
 com uma organização só. RLS é apenas possibilidade futura dependente do dono.
 
-Consulte [fontes da correção](references/fontes.md) para a conferência de versões e limites.
+Consulte [fontes da correção](references/sources.md) para a conferência de versões e limites.

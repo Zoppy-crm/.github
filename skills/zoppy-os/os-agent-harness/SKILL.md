@@ -70,7 +70,7 @@ transação curta. Aprovação humana não mantém conexão transacional reserva
 Use subclasse de `BaseChatModel` de `@langchain/core/language_models/chat_models`, implementando
 `bindTools`, `_llmType` e `_generate`, como no asset. A ferramenta é local e determinística.
 Com `bun test`, confira duas chamadas, tool recebendo 21, `ToolMessage` com `42` e resposta `result:42`.
-Veja [teste do ciclo](references/teste.md). Bloqueie rede e tracing externo no setup da suíte.
+Veja [teste do ciclo](references/testing.md). Bloqueie rede e tracing externo no setup da suíte.
 
 Esse teste prova integração do harness, não qualidade de modelo, custo real, privacidade da persistência,
 aprovação, cancelamento ou recovery. Acrescente provas específicas das fronteiras implementadas.
@@ -89,4 +89,4 @@ de exemplos de outra linguagem ou versão sem confirmação oficial.
 - Cancelamento apagando custo, tracing como única auditoria ou transação aberta durante modelo.
 - Prometer sandbox, autorização ou exactly-once por recurso do grafo.
 
-Consulte [fontes e limites](references/fontes.md) antes de ampliar a superfície do SDK.
+Consulte [fontes e limites](references/sources.md) antes de ampliar a superfície do SDK.

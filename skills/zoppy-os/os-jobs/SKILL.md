@@ -136,4 +136,4 @@ recuperação de lease ou ausência de duplicação externa.
 - Deixar pg-boss escolher regra temporal, orçamentária ou de autoridade do produto.
 - Tratar cancelamento local/rollback como cancelamento do efeito remoto.
 
-Leia [fontes e limites](references/fontes.md) para a integração validada.
+Leia [fontes e limites](references/sources.md) para a integração validada.

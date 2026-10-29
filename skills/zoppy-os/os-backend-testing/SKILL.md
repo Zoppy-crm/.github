@@ -101,4 +101,4 @@ Postgres da suíte. Rode o typecheck separadamente: `bun test` não substitui TS
 - Snapshot de implementação sem comportamento, sleeps fixos para sincronizar corrida ou modelo pago.
 - Afirmar crash recovery, custo real ou exactly-once a partir dos 13 testes do ensaio.
 
-Leia [evidências e limites do ensaio](references/fontes.md) para não ampliar o que já foi demonstrado.
+Leia [evidências e limites do ensaio](references/sources.md) para não ampliar o que já foi demonstrado.

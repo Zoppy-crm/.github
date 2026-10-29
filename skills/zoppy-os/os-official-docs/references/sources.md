@@ -12,10 +12,10 @@ Documentação oficial atual consultada na web e comparada com o código/tipos f
   [API](https://www.better-auth.com/docs/concepts/api): cotejadas com Better Auth **1.7.14**,
   `dist/api/{dispatch.mjs,routes/session.mjs}`, `dist/oauth2/{utils,link-account}.mjs` e
   `@better-auth/core/dist/types/init-options.d.mts`. A doc genérica não garante cifragem de
-  `idToken` nessa versão. Detalhes e fontes de segurança em `os-auth-session/references/fontes.md`.
+  `idToken` nessa versão. Detalhes e fontes de segurança em `os-auth-session/references/sources.md`.
 - [Utilitários pg-boss](https://pgboss.io/api/utils): planos SQL conferidos na **12.38.0**,
   `dist/index.d.ts`, `dist/contractor.js` e `dist/plans.js`; instalação como dona, flags runtime
-  e limites em `os-jobs/references/fontes.md`.
+  e limites em `os-jobs/references/sources.md`.
 - [Roles Drizzle](https://orm.drizzle.team/docs/rls) e
   [Kit generate](https://orm.drizzle.team/docs/drizzle-kit-generate): ORM **0.45.4**,
   `pg-core/roles.js`, e Kit **0.31.11**, `api.js`/`bin.cjs` (serializer e comando generate).

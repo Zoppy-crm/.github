@@ -124,4 +124,4 @@ Literais de protocolo e fixtures determinísticas de teste não são configuraç
 - Transformar as três entradas em microserviços por causa do desenho de pastas.
 - Editar a cópia sincronizada em `.claude/skills/`; a fonte canônica é o repositório `.github`.
 
-Consulte [fontes e limites](references/fontes.md) ao revisar a origem destas fronteiras.
+Consulte [fontes e limites](references/sources.md) ao revisar a origem destas fronteiras.

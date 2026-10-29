@@ -119,4 +119,4 @@ temporal para preencher uma lacuna durante refactor.
 - Comentário/JSDoc explicando código, identificador em português ou erro de negócio lançado como HTTP.
 - Saldo em `number`, defaults de política pendente ou declarar bibliotecas integralmente verificadas.
 
-Consulte [fontes e limites](references/fontes.md) ao revisar versões e a ressalva de tipos.
+Consulte [fontes e limites](references/sources.md) ao revisar versões e a ressalva de tipos.

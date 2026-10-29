@@ -108,4 +108,4 @@ e overshoot estão pendentes; decimal exato não resolve admissão concorrente n
 - Esperar modelo/aprovação com lock/conexão transacional ocupada.
 - Converter `numeric` para `number` ou duplicar saldo financeiro no checkpoint do grafo.
 
-Leia [fontes e limites](references/fontes.md) antes de mudar driver ou transação de banco.
+Leia [fontes e limites](references/sources.md) antes de mudar driver ou transação de banco.

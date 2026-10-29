@@ -92,4 +92,4 @@ Nomes em inglês snake_case, como `rejects_malformed_json_without_exposing_inter
 - Reutilizar modelo Drizzle/grafo como resposta pública ou deixar SDK escolher erro HTTP.
 - Afirmar backend integrado porque o MSW ou a rota `/proof` passa.
 
-Leia [fontes e limites](references/fontes.md) para as APIs usadas no exemplo.
+Leia [fontes e limites](references/sources.md) para as APIs usadas no exemplo.
