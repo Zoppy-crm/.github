@@ -1,11 +1,12 @@
 # Backend Zoppy OS v2
 
-Skills para implementar o backend Bun/TypeScript. O grupo `zoppy-os` recebe `shared`, `react`
-e `zoppy-os`; as skills React continuam restritas ao frontend. A fonte é este repositório,
+Skills para implementar o backend Bun/TypeScript. O grupo `zoppy-os` recebe `shared`, `react`,
+`zoppy-os` e `zoppy-os-vendor`; as skills React continuam restritas ao frontend. A fonte é este repositório,
 nunca a cópia sincronizada em `.claude/skills/`.
 
 | Skill | Quando usar |
 | --- | --- |
+| [os-official-docs](os-official-docs/SKILL.md) | Antes de usar ou mudar APIs da stack: consultar doc oficial atual na web, conferir versão fixada e escolher a skill oficial/local |
 | [os-backend-architecture](os-backend-architecture/SKILL.md) | Escolher camada, assunto, porta, composição e destino de arquivo |
 | [os-http-route](os-http-route/SKILL.md) | Criar rota Hono/DTO Zod e conferir contrato e erros HTTP |
 | [os-persistence](os-persistence/SKILL.md) | Implementar repositório, UoW, RLS e valores monetários |
@@ -18,3 +19,9 @@ nunca a cópia sincronizada em `.claude/skills/`.
 
 As skills incorporam as fronteiras de arquitetura e as APIs do ensaio validado. Cada uma registra
 suas fontes e limites; política pendente do dono não recebe default implícito.
+
+As nove [skills oficiais vendorizadas](../zoppy-os-vendor/SOURCES.md) cobrem Hono e o ecossistema
+Deep Agents/LangChain/LangGraph. São cópias integrais com licença e commit registrados; veja o mapa
+em `os-official-docs`. Better Auth fica com instalação da origem oficial e documentação, sem cópia
+por ausência de licença no repositório de skills. Bun, Drizzle e pg-boss usam documentação oficial.
+Regras de produto ficam nas `os-*`; uso da API segue a fonte oficial compatível com a versão fixada.

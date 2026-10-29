@@ -26,7 +26,7 @@
             "repos": ["zoppy-ai-agent-fe"]
         },
         "zoppy-os": {
-            "folders": ["shared", "react", "zoppy-os"],
+            "folders": ["shared", "react", "zoppy-os", "zoppy-os-vendor"],
             "repos": ["zoppy-os"]
         },
         "e2e": {
