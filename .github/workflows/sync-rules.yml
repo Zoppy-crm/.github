@@ -124,7 +124,7 @@ jobs:
 
                       # Fetch the specific branch and checkout
                       git fetch origin "$BRANCH" 2>&1 || continue
-                      git checkout "$BRANCH" 2>&1 || git checkout -b "$BRANCH" "origin/$BRANCH" 2>&1 || continue
+                      git checkout -f "$BRANCH" 2>&1 || git checkout -b "$BRANCH" "origin/$BRANCH" 2>&1 || continue
 
                       if ! bash "$GITHUB_WORKSPACE/scripts/sync-skills.sh" "$GITHUB_WORKSPACE" "$SKILLS_PATH" "${FOLDERS[@]}"; then
                         echo "  ❌ $BRANCH — falha no sync de skills"
