@@ -105,6 +105,13 @@ skills/
 │   ├── ui-and-styling/SKILL.md           # Tokens, shared/ui, quatro estados, i18n
 │   ├── testing/SKILL.md                  # Vitest + Testing Library + MSW, cobertura de 85%
 │   └── pr-review/SKILL.md                # Review do Claude Review para repos React
+├── zoppy-os/                             # Backend Bun/TypeScript do Zoppy OS v2
+│   └── os-*/SKILL.md                    # Arquitetura, HTTP, banco, auth, jobs, harness, testes e docs oficiais
+├── zoppy-os-vendor/                      # Skills oficiais sem edição (Hono e LangChain/Deep Agents/LangGraph)
+│   ├── SOURCES.md                       # Origens, commits, licenças e decisão de não copiar Better Auth
+│   ├── update.sh                        # Atualização local e diff, sem sync
+│   ├── licenses/                        # Licenças MIT das origens
+│   └── <nome-oficial>/SKILL.md           # Nove skills com nomes e recursos originais
 └── e2e/                                  # Repos de teste E2E
     └── e2e-testing/SKILL.md              # Playwright, fixtures, padrões E2E
 ```
@@ -118,10 +125,16 @@ skills/
 | **wpp-commerce-fe** | `shared`                  | zoppy-whatsapp-commerce-FE (React — recebe só as skills shared) |
 | **frontend-angular**| `shared` + `angular`      | zoppy-FE, ui-components, zoppy-partners-fe, zoppy-admin-fe       |
 | **frontend-react**  | `shared` + `react`        | zoppy-ai-agent-fe                                                |
+| **zoppy-os**        | `shared` + `react` + `zoppy-os` + `zoppy-os-vendor` | zoppy-os                                 |
 | **e2e**             | `shared` + `e2e`          | zoppy-e2e-api                                                    |
 | **e2e-jornadas**    | `e2e-jornadas`            | zoppy-FE, zoppy-e2e-api                                          |
 
 Para adicionar repos ou grupos, edite `skills/sync-config.json`.
+
+No Zoppy OS, [os-official-docs](skills/zoppy-os/os-official-docs/SKILL.md) exige consultar a documentação
+oficial atual na web antes de usar ou mudar APIs da stack, sempre na versão fixada do projeto.
+As skills oficiais complementam as regras de produto das `os-*`; a proveniência fica em
+[zoppy-os-vendor/SOURCES.md](skills/zoppy-os-vendor/SOURCES.md).
 
 **Angular e React nunca se misturam.** Repo Angular entra no grupo `frontend-angular`; repo React, no
 `frontend-react`. O `exclusiveFolders` do `sync-config.json` declara que as pastas `angular` e `react`
