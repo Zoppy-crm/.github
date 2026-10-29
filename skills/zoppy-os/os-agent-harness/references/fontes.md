@@ -21,6 +21,20 @@
   As APIs do exemplo são confirmadas pelo código do ensaio, sem depender de evolução dessas páginas.
 
 O ciclo com modelo local é real e determinístico. Não mede qualidade/preço de provider, callbacks
-de uso em falha, cancelamento, retomada persistida, RLS ou isolamento de processos. A skill não
+de uso em falha, cancelamento, retomada persistida, privacidade persistida ou isolamento de processos. A skill não
 prescreve API não verificada de saver, interrupção ou instrumentação de provider; confirme e teste
 a chamada oficial da versão fixada quando essa integração entrar na fatia.
+
+## Conferência da correção — 2026-10-29
+
+Documentação oficial atual consultada na web e comparada com o código/tipos fixados em
+`spikes/bun-stack/node_modules/` do worktree `fatia-01-spec` do Zoppy OS.
+
+- [Deep Agents TS: quickstart](https://docs.langchain.com/oss/javascript/deepagents/quickstart):
+  criação/invocação. Conferidos exports e implementação em `deepagents/dist/index.d.ts`,
+  `dist/agent-*.d.ts` e `dist/langsmith-*.js` da 1.16.0; o asset local exporta `createFakeAgent`,
+  não a tool interna. O exemplo agora usa esse export, sem alterar o asset oficial do ensaio.
+- Correção do dono: threads/checkpoints são autorizados pela aplicação por pessoa/escopo na
+  única organização; instruções de produção vêm de configuração validada ou do catálogo.
+
+A conferência de fonte não substitui prova de login real, grants no banco ou operação de produção.

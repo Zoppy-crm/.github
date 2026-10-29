@@ -4,7 +4,7 @@ description: >
     Escreve testes do backend Bun/TypeScript do Zoppy OS v2 com bun test, portas falsas,
     Postgres real como role de aplicação, contrato HTTP e fronteiras de imports. Use ao testar
     uma fatia ou escolher o nível de prova. Triggers: "teste backend OS", "bun test",
-    "integração Postgres OS", "teste RLS", "teste de arquitetura OS", "porta falsa".
+    "integração Postgres OS", "teste de autorização", "teste de arquitetura OS", "porta falsa".
 compatibility: Zoppy OS v2; Bun 1.4.3, TypeScript 7.0.2; PostgreSQL real para integração.
 metadata:
   author: zoppy
@@ -18,9 +18,9 @@ metadata:
 
 | Suíte em `apps/api/tests/` | Prova | Não prova |
 | --- | --- | --- |
-| `unit/` | Invariantes puras e decisões do caso de uso com portas falsas | SQL, RLS, transação ou provider real |
-| `integration/` | Banco real: constraints, RLS, UoW, concorrência, enqueue/rollback | Efeito externo único ou política ainda não definida |
-| `http/` | Middleware, parsing, caso de uso, mapper, status/corpo do contrato com `app.request` | OAuth Google real ou isolamento se banco foi falso |
+| `unit/` | Invariantes puras e decisões do caso de uso com portas falsas | SQL, transação ou provider real |
+| `integration/` | Banco real: constraints, autorização da aplicação, UoW, concorrência, enqueue/rollback | Efeito externo único ou política ainda não definida |
+| `http/` | Middleware, parsing, caso de uso, mapper, status/corpo do contrato com `app.request` | OAuth Google real ou privacidade persistida se banco foi falso |
 | `architecture/` | Imports resolvidos respeitam camadas e assuntos | Correção funcional, autorização em runtime ou ciclo transacional |
 
 Use `bun test` para backend; as regras Vitest/Testing Library/MSW das skills React são do frontend.
@@ -54,10 +54,12 @@ Cubra recusa sem gravar/enfileirar quando acesso/budget não foi admitido.
 1. Use banco descartável próprio, credenciais de teste e limpeza apenas dos recursos criados pela suíte.
    Não rode testes destrutivos em URL genérica ou ambiente compartilhado.
 2. A role dona aplica migrações; reconecte **como role de aplicação** para os testes funcionais.
-   Confira `current_user`, ownership, superuser/BYPASSRLS e grants reais. `SET` de tenant não
-   retira privilégios da dona: teste conectado como dona não prova RLS.
-3. Prepare dois tenants e pessoas distintas; prove leitura e escrita autorizadas, negação cruzada,
-   negação sem contexto e ausência de vazamento após commit/rollback e reuso do pool.
+   Confira `current_user`, ownership e grants reais; `os_app` não faz DDL nem assume `os_owner`.
+   Testes com a dona não provam o runtime com privilégios mínimos.
+3. Prepare pessoas pendentes/ativas, times, capacidades e audiências distintas na única organização.
+   Pelo domínio e casos de uso reais, prove leitura/escrita autorizadas, recusa sem sessão,
+   privacidade e revogação, inclusive no consumo de job e após commit/rollback/reuso do pool.
+   Grants de banco não decidem autorização de pessoas; RLS é apenas possibilidade futura do dono.
 4. Prove a UoW na mesma conexão: escrita invisível fora antes do commit, persistência após commit
    e rollback de linha/job na mesma transação. Enqueue deve receber `fromDrizzle(tx, sql)`.
 5. Para concorrência, use clientes independentes e coordenação determinística. Um fake que devolve
@@ -82,7 +84,7 @@ e proibido, incluindo reexport que poderia esconder uma dependência.
 
 Aplique a matriz de `os-backend-architecture`: domínio sem runtime/SDK/I/O; aplicação sem adapters,
 entrypoints ou SDK; entrypoints sem adapter concreto/`db`; adapters sem entrypoints/composition;
-platform sem negócio. Entre assuntos, negue acesso a tabela/repositório privado do vizinho.
+platform sem negócio nem import de `db/schema`. Entre assuntos, negue acesso a tabela/repositório privado do vizinho.
 A composição monta os concretos. Ao falhar, informe arquivo, import e regra violada.
 
 ## 6. Isole modelo e rede
@@ -94,7 +96,7 @@ Postgres da suíte. Rode o typecheck separadamente: `bun test` não substitui TS
 
 ## Anti-padrões
 
-- Mock de SQL chamado de teste de isolamento, role dona como aplicação ou falso que já embute a resposta esperada.
+- Mock de SQL chamado de prova de autorização persistida, role dona como aplicação ou falso que já embute a resposta esperada.
 - Teste de arquitetura ignorando aliases, reexports e imports de tipo.
 - Snapshot de implementação sem comportamento, sleeps fixos para sincronizar corrida ou modelo pago.
 - Afirmar crash recovery, custo real ou exactly-once a partir dos 13 testes do ensaio.

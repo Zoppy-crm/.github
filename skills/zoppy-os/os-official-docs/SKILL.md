@@ -69,8 +69,8 @@ o `llms.txt`/documentação acima; skills comunitárias não ganham status ofici
 | `langgraph-human-in-the-loop` | Interrupt/resume e tratamento de erros | `os-agent-harness`, `os-jobs` |
 | `hono` | Rotas, contexto, middleware e helpers | `os-http-route`, `os-auth-session`, `os-backend-testing` |
 
-As nossas `os-*` definem arquitetura/imports, contrato OpenAPI e DTOs, identidade e tenant,
-RLS/UoW, dinheiro, migrations, jobs/admissão, limites do harness, testes e convenções TS.
+As nossas `os-*` definem arquitetura/imports, contrato OpenAPI e DTOs, identidade da organização,
+autorização da aplicação/UoW, dinheiro, migrations, jobs/admissão, limites do harness, testes e convenções TS.
 Quando houver conflito, **as nossas mandam nas regras de produto** (inclusive políticas
 pendentes, que não recebem default); **as oficiais mandam no uso da API**, conferido na
 web e na versão fixada. Nenhum exemplo oficial amplia permissões do produto.
@@ -85,5 +85,8 @@ Para instalação a partir da origem oficial: `npx skills add better-auth/skills
 somente `better-auth-best-practices` e `better-auth-security-best-practices`.
 Este comando é uma orientação, não parte do sync.
 Consulte também a [documentação oficial](https://better-auth.com/llms.txt) e aplique `os-auth-session`.
-Não instale `organization-best-practices`: pessoa, tenant, times e Master pertencem à aplicação;
-owner/admin de organização do Better Auth não vira Master.
+Não instale `organization-best-practices`: pessoa, membership de times, capacidades e Master pertencem à aplicação;
+owner/admin de organização do Better Auth não vira Master. O OS é ferramenta interna da Zoppy
+com uma organização só. RLS é apenas possibilidade futura dependente do dono.
+
+Consulte [fontes da correção](references/fontes.md) para a conferência de versões e limites.

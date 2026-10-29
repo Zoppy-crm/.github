@@ -22,7 +22,7 @@ Hono 4.13.14, Zod 4.6.7, Better Auth 1.7.14, drizzle-orm 0.45.4, drizzle-kit 0.3
 pg-boss 12.38.0, deepagents 1.16.0, `@langchain/core` 1.2.14 e `@langchain/langgraph` 1.4.10.
 Não atualize um peer isolado por ver uma versão mais recente em documentação.
 
-Configuração do ensaio, com `include` ajustado aos diretórios reais do backend:
+Configuração derivada do ensaio, removendo DOM para o backend e ajustando `include`:
 
 ```json
 {
@@ -30,7 +30,7 @@ Configuração do ensaio, com `include` ajustado aos diretórios reais do backen
         "target": "ES2023",
         "module": "ESNext",
         "moduleResolution": "Bundler",
-        "lib": ["ES2023", "DOM"],
+        "lib": ["ES2023"],
         "types": ["bun"],
         "strict": true,
         "exactOptionalPropertyTypes": true,
@@ -43,6 +43,9 @@ Configuração do ensaio, com `include` ajustado aos diretórios reais do backen
     "include": ["src/**/*.ts", "db/**/*.ts", "tests/**/*.ts", "drizzle.config.ts"]
 }
 ```
+
+`types: ["bun"]` fornece as APIs do runtime; não adicione `lib DOM` para habilitar `window` ou
+`document` no servidor. O frontend usa seu próprio tsconfig. Verifique a configuração no checker fixado.
 
 **Limite conhecido:** o typecheck do código do ensaio passa. Com `skipLibCheck: false`, há cerca de
 100 erros nas declarações publicadas de LangChain, pg-boss e Drizzle. Por isso a base usa
@@ -94,7 +97,15 @@ Preço, débito, budget e custo usam PostgreSQL `numeric`, decimal.js no cálcul
 nos limites de transporte. Proibidos `Number`, `parseFloat`, coerção unária e `.toNumber()` nesse
 fluxo. Não fixe precisão, reserva concorrente ou overshoot sem decisão aprovada. Veja `os-persistence`.
 
-## 6. Confira o resultado
+## 6. Nada hardcoded
+
+Regra de negócio configurável, texto de instrução de agente, IDs, domínios, listas de pessoas e URLs
+vêm de configuração validada ou de dado do catálogo, nunca de constante no código. Receba esses
+valores por dependências tipadas, valide na composição e recuse configuração ausente/inválida.
+Não esconda decisão pendente em default, prompt inline ou lista fixa de usuários. Literais técnicos
+de protocolo e fixtures determinísticas são permitidos; não os promova a configuração de produção.
+
+## 7. Confira o resultado
 
 Rode o checker TS7 instalado (`tsc --version` e `tsc --noEmit` pelo script real do pacote),
 `bun test` para as suítes pertinentes e verificações de arquitetura. Não declare typecheck verde

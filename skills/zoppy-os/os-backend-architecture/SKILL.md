@@ -14,7 +14,9 @@ metadata:
 
 # Arquitetura do backend OS
 
-Um produto e uma codebase backend, com três entradas: HTTP, worker e scheduler.
+Ferramenta interna da Zoppy, com uma única organização e uma codebase backend, com três entradas: HTTP, worker e scheduler.
+Pessoa ativa/pendente, times, capacidades e audiência são autorização da aplicação, testada no
+domínio e na integração. RLS é apenas possibilidade futura, dependente de decisão do dono.
 O backend é somente Bun/TypeScript. O frontend mantém suas camadas React em `apps/web`.
 
 ## 1. Coloque cada arquivo no seu lugar
@@ -51,8 +53,8 @@ packages/contract/zoppy-os.openapi.yaml
 | Better Auth, pg-boss e Deep Agents | `src/adapters/{auth,jobs,agents}/` |
 | Rota, DTO Zod e erro HTTP | `src/entrypoints/http/<assunto>/{routes.ts,dto.ts}` |
 | Sessão e tradução comum de erros | `src/entrypoints/http/{session-middleware.ts,errors.ts}` |
-| Factories, injeção, fronteira transacional e lifecycle | `src/composition/{container.ts,http-app.ts}` |
-| Env, pool, relógio e logger sem política | `src/platform/` |
+| Factories, injeção de UoW e lifecycle | `src/composition/{container.ts,http-app.ts}` |
+| Env, client SQL, relógio e logger sem política | `src/platform/` |
 | Tabelas e migrações SQL | `db/schema/` e `db/migrations/` |
 
 Crie pastas quando houver arquivo real; não replique uma árvore vazia em cada assunto.
@@ -67,7 +69,7 @@ O workspace tem `apps/*` e `packages/*`; tipos do contrato são gerados, nunca e
 | `adapters` | Portas, domínio, `db/schema` e SDK pertinente; nunca entrypoints/composition |
 | `entrypoints` | Casos de uso injetados, DTOs, contrato e framework da entrada; nunca adaptadores ou `db` |
 | `composition` | Todas as camadas para montar recursos, implementações e entradas |
-| `platform` | Runtime e configuração; nenhuma regra de negócio |
+| `platform` | Runtime e configuração; sem negócio nem import de `db/schema` |
 
 Somente a composição conhece o conjunto de concretos e faz a ligação entre eles.
 Uma porta usa tipos do produto, não `Context`, sessão Better Auth, transação Drizzle ou grafo.
@@ -85,7 +87,7 @@ O caso de uso recebe `AgentCatalog`; a composição injeta o adaptador PostgreSQ
 
 | Assunto | Responsabilidade |
 | --- | --- |
-| `identity` | Pessoa pendente/ativa, tenant, times e capacidades |
+| `identity` | Pessoa pendente/ativa, times e capacidades da organização |
 | `catalog` | Agentes, skills, audiência e versões explícitas |
 | `projects` | Membros, contexto e ACL do projeto; vínculo não abre conversa pessoal |
 | `execution` | Execução, aprovação autenticada de uso único, pausa e retomada com admissão atual |
@@ -93,7 +95,9 @@ O caso de uso recebe `AgentCatalog`; a composição injeta o adaptador PostgreSQ
 | `governance` | Budget, uso, custo e auditoria; agregados autorizados não expõem conteúdo privado |
 
 Um assunto nunca importa repositório ou tabela de outro: solicita a capacidade por porta pública.
-Se a fatia exige consistência conjunta, explicite o limite na composição/UoW, sem vazar ORM ao caso de uso.
+O caso de uso decide a fronteira e abre a transação pela porta de UoW; o adaptador da UoW executa
+`db.transaction`. Repositórios e enqueue só recebem o executor transacional. A composição apenas
+injeta essas dependências; não abre transação por request nem decide a fronteira do caso de uso.
 
 ## 4. Monte e prove a fatia
 
@@ -103,6 +107,14 @@ Se a fatia exige consistência conjunta, explicite o limite na composição/UoW,
 4. Teste regra com portas falsas, comportamento de banco com Postgres real e imports em `tests/architecture`.
 5. Não escolha defaults para reserva/overshoot, atraso/DST/sobreposição, versão fixa versus publicação,
    delegação, retenção ou destino de telemetria. São decisões pendentes do dono; avance na parte independente.
+
+## 5. Nada hardcoded
+
+Regra de negócio configurável, texto de instrução de agente, IDs, domínios, listas de pessoas e URLs
+vêm de configuração validada ou de dado do catálogo, nunca de constante no código. A composição
+valida e injeta configuração por portas; domínio e aplicação não leem env nem catálogos por I/O direto.
+Se faltar um valor ou decisão do dono, mantenha a pendência explícita, sem inventar fallback.
+Literais de protocolo e fixtures determinísticas de teste não são configuração de produto.
 
 ## Anti-padrões
 

@@ -2,9 +2,9 @@
 name: os-persistence
 description: >
     Implementa persistência do Zoppy OS v2 com Drizzle sobre Bun.SQL, repositórios por porta,
-    unidade de trabalho, contexto transacional e RLS, preservando dinheiro decimal. Use ao
-    escrever consulta, repositório, transação ou teste de isolamento. Triggers: "persistência OS",
-    "Bun.SQL", "unidade de trabalho OS", "RLS OS", "repositório Drizzle", "dinheiro OS".
+    unidade de trabalho e autorização da aplicação, preservando dinheiro decimal. Use ao
+    escrever consulta, repositório, transação ou teste de autorização. Triggers: "persistência OS",
+    "Bun.SQL", "unidade de trabalho OS", "transação OS", "repositório Drizzle", "dinheiro OS".
 compatibility: Zoppy OS v2; Bun 1.4.3, TypeScript 7.0.2, Drizzle 0.45.4 e PostgreSQL.
 metadata:
   author: zoppy
@@ -16,21 +16,23 @@ metadata:
 
 ## 1. Abra recursos na composição
 
-`platform/database.ts` cria o recurso técnico; a composição controla lifecycle e injeta a UoW.
+`platform/` cria apenas o client SQL, sem importar `db/schema`.
+`adapters/postgres/database.ts` monta Drizzle e importa os schemas; a composição controla lifecycle
+e injeta a UoW. O exemplo fica nesse adaptador, por isso o import relativo alcança `apps/api/db/`.
 Use o driver validado, não `node-postgres`, outro ORM ou um wrapper SQL inventado.
 
 ```typescript
 import { SQL } from "bun";
 import { drizzle } from "drizzle-orm/bun-sql";
-import * as schema from "../../db/schema/catalog.ts";
+import * as schema from "../../../db/schema/catalog.ts";
 
-export function openDatabase(url: string) {
-    const client = new SQL(url, { max: 4, connectionTimeout: 5 });
+export function openDatabase(url: string, max: number, connectionTimeout: number) {
+    const client = new SQL(url, { max, connectionTimeout });
     return { client, db: drizzle({ client, schema }) };
 }
 ```
 
-O tamanho do pool acima é o do ensaio, não um parâmetro de produção obrigatório.
+URL, tamanho do pool e timeout vêm de configuração validada; não fixe parâmetros de produção no código.
 Componha os exports dos schemas necessários. No shutdown, encerre consumidores antes de
 `await client.close()`. Não feche o pool por request nem deixe conexões reservadas sem liberação.
 
@@ -41,45 +43,42 @@ A interface mora em `application/<assunto>/ports.ts`; o adaptador em
 Recebe o executor da transação e converte linhas em valores internos. Não retorna builders,
 linhas Drizzle ou tipos SQL à aplicação. Não consulta tabela de outro assunto.
 
-## 3. Use a mesma conexão durante a unidade de trabalho
+## 3. O caso de uso abre a unidade de trabalho
 
-1. Entre em `db.transaction(async (tx) => ...)`, que reserva a conexão e faz commit/rollback.
-2. Antes de qualquer consulta de negócio, aplique tenant/pessoa autenticados, parametrizados,
-   com `set_config(..., true)` usando **esse `tx`**.
-3. Construa repositórios e enqueue com o mesmo `tx`. A porta de UoW entrega portas transacionais,
-   não um objeto Drizzle ao caso de uso. Nenhuma operação interna usa o `db` global/pool.
-4. Ao sair do callback, a transação termina e a conexão retorna ao pool inclusive em falha.
-   Não misture `BEGIN` manual no pool nem implemente outra reserva sobre a já gerida pelo Drizzle.
+O caso de uso decide quais operações são atômicas e chama a porta de UoW. A composição só injeta
+a implementação. O adaptador da UoW abre `db.transaction`, constrói repositórios e enqueue com o
+mesmo `tx` e entrega apenas portas transacionais ao callback do caso de uso. Repositórios e
+produtor de jobs recebem esse executor; não abrem outra transação nem usam o pool global.
 
-Trecho dentro da UoW; `principal` é resolvido pelo servidor. Os nomes de configuração são um par
-de exemplo: devem coincidir com as policies versionadas do projeto.
+Trecho interno do adaptador da UoW, acionado pela porta chamada pelo caso de uso:
 
 ```typescript
-import { sql } from "drizzle-orm";
-
-await db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('app.tenant_id', ${principal.tenantId}, true)`);
-    await tx.execute(sql`select set_config('app.person_id', ${principal.personId}, true)`);
-    return work(createRepositories(tx));
+return db.transaction(async (tx) => {
+    return work(createTransactionalPorts(tx));
 });
 ```
 
-`work` e `createRepositories` são funções locais da composição/UoW, não APIs das bibliotecas.
-Uma recusa de negócio retornada como valor **não causa rollback automaticamente**: não escreva antes
-da recusa ou faça a UoW traduzir o resultado de rollback para uma falha interna controlada,
-capturada fora da transação. Nunca confirme alterações parciais porque nenhum `throw` ocorreu.
+`work` e `createTransactionalPorts` são funções locais, não APIs da biblioteca. Drizzle/Bun
+reservam a conexão e fazem commit/rollback ao terminar o callback; não misture `BEGIN` manual
+no pool. Não há configuração de identidade de negócio na conexão. O principal resolvido no
+servidor é entrada do caso de uso, que aplica regras de pessoa, times, capacidades e audiência.
+Uma recusa retornada como valor **não causa rollback automaticamente**: não escreva antes da
+recusa ou faça a UoW traduzir o resultado de rollback para uma falha interna controlada, capturada
+fora da transação. Nunca confirme alterações parciais porque nenhum `throw` ocorreu.
 
-## 4. Separe as duas roles
+## 4. Separe as duas roles por higiene
 
-- **Aplicação:** sujeita a RLS, sem ser dona das tabelas, sem superuser/BYPASSRLS nem possibilidade
-  de assumir a role dona; recebe apenas grants necessários.
-- **Dona:** possui schema/tabelas e roda migrações; nesse modelo ignora RLS. Nunca fornece a
-  credencial de execução HTTP/worker. Nomes concretos das roles dependem da configuração do projeto.
+- **`os_app`:** HTTP e worker, sem DDL, sem ownership, sem superuser, sem criar roles/bancos e
+  sem poder assumir `os_owner`; recebe grants mínimos por objeto e operação.
+- **`os_owner`:** possui os objetos e roda migrações. Sua credencial fica fora de HTTP/worker.
 
-RLS complementa a autorização da aplicação: tenant/pessoa autenticados restringem linhas, mas
-não substituem audiência, projeto, times ou capacidades. Policies usam `USING` e `WITH CHECK`
-conforme leitura/escrita e recusam contexto ausente. Veja `os-migration` para SQL.
-Teste conectado realmente como aplicação: role dona/admin não prova isolamento, mesmo com dois tenants.
+O OS é interno e tem uma organização só. A autorização é regra da aplicação, testada no domínio
+e na integração através dos casos de uso: pessoa ativa/pendente, times, capacidades e audiência.
+Grants protegem objetos, não decidem acesso de pessoas. RLS é apenas possibilidade futura que
+depende do dono; não implante policies ou contexto de sessão SQL como autorização nesta fatia.
+Prefira schema declarado e migrações do Kit; roles externas usam `pgRole(...).existing()` conforme
+`os-migration`. SQL escrito à mão fica restrito ao bootstrap de roles/grants. O SQL interno
+da fila é gerado pelo próprio SDK e versionado em etapa de migração da dona.
 
 ## 5. Termine a transação antes de esperar o mundo externo
 
@@ -104,9 +103,9 @@ e overshoot estão pendentes; decimal exato não resolve admissão concorrente n
 
 ## Anti-padrões
 
-- `set_config(..., false)`, identidade em variável global ou consulta fora do `tx` da UoW.
-- Testar RLS como dona, desligar RLS para corrigir teste ou confundir filtro de app com policy.
+- Identidade em variável global, consulta fora do `tx` da UoW ou repositório abrindo transação própria.
+- Usar a credencial dona em runtime ou tratar grants de banco como autorização de pessoas.
 - Esperar modelo/aprovação com lock/conexão transacional ocupada.
 - Converter `numeric` para `number` ou duplicar saldo financeiro no checkpoint do grafo.
 
-Leia [fontes e limites](references/fontes.md) antes de mudar driver ou contexto de banco.
+Leia [fontes e limites](references/fontes.md) antes de mudar driver ou transação de banco.

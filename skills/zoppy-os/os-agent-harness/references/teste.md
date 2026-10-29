@@ -40,5 +40,5 @@ Object.defineProperty(globalThis, "fetch", {
 
 Execute com `bun --no-env-file test --preload ./tests/offline.ts` após criar esse preload no projeto.
 Bloquear fetch não bloqueia todos os sockets; mantenha adaptadores externos falsos e sem credenciais.
-Não reutilize esse bloqueio na aplicação de produção. O teste não comprova ACL, RLS, custo real,
+Não reutilize esse bloqueio na aplicação de produção. O teste não comprova ACL, privacidade persistida, custo real,
 cancelamento, checkpoint ou aprovação: esses comportamentos precisam de provas específicas.

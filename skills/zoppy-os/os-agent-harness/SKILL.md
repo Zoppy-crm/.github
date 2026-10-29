@@ -21,29 +21,29 @@ A composição injeta modelo, ferramentas autorizadas e persistência pertinente
 grafo, callbacks e saver não atravessam a porta; converta para entrada/resultado internos.
 
 ```typescript
-import { createDeepAgent } from "deepagents";
+import { createFakeAgent } from "../support/deterministic-agent.ts";
 
-const agent = createDeepAgent({
-    model,
-    tools: [doubleInteger],
-    systemPrompt: "Run the deterministic proof tool and return its result.",
-});
+const { agent, model, toolInputs } = createFakeAgent();
 const result = await agent.invoke({
     messages: [{ role: "user", content: "Double 21" }],
 }, { callbacks: [], recursionLimit: 8 });
 ```
 
-`model` e `doubleInteger` vêm do [modelo de teste](assets/deterministic-agent.ts), que reproduz
-o ciclo modelo → ferramenta → modelo validado. Esse exemplo não configura execução governada de produção.
+Copie/adapte o [modelo de teste](assets/deterministic-agent.ts) para
+`tests/support/deterministic-agent.ts`; o import acima parte de `tests/integration/`.
+`createFakeAgent()` é o export real que entrega `agent`, `model` e `toolInputs`; a tool é interna
+à factory. O ciclo modelo → ferramenta → modelo é teste determinístico, com fixtures fixas.
+Em produção, instruções do agente vêm de configuração validada ou do catálogo, nunca prompt inline.
+Esse exemplo não configura execução governada de produção.
 
 ## 2. Preserve a autoridade fora do SDK
 
 1. A aplicação decide identidade, ACL, orçamento e política de escrita. Prompt, tool arguments e
    SDK não concedem capacidade. Use somente principal autenticado ou vínculo persistido de execução.
-2. Gere a thread interna no servidor e vincule a tenant, pessoa e execução autorizada. ID recebido
+2. Gere a thread interna no servidor e vincule a pessoa e execução autorizada. ID recebido
    do cliente nunca concede acesso. Autorize cada get/list/resume/delete na fachada de estado.
-3. Namespace de Store/checkpoint respeita tenant/pessoa/escopo. Saver stock não fornece RLS Zoppy
-   automaticamente; separe schema e privilégios. Não use checkpoint como ledger, ACL, fila ou deduplicador.
+3. Namespace de Store/checkpoint respeita pessoa/escopo. A aplicação autoriza o acesso;
+   separe schema e privilégios de persistência. Não use checkpoint como ledger, ACL, fila ou deduplicador.
 4. Início e retomada passam pela mesma admissão atual. Aprovação é decisão autenticada, específica
    e consumida uma vez; gerir agenda/projeto não empresta credenciais nem abre conversa privada.
 5. Ferramenta de escrita passa por intenção, conta/recurso/destino autorizados, aprovação pertinente
@@ -72,7 +72,7 @@ Use subclasse de `BaseChatModel` de `@langchain/core/language_models/chat_models
 Com `bun test`, confira duas chamadas, tool recebendo 21, `ToolMessage` com `42` e resposta `result:42`.
 Veja [teste do ciclo](references/teste.md). Bloqueie rede e tracing externo no setup da suíte.
 
-Esse teste prova integração do harness, não qualidade de modelo, custo real, persistência multi-tenant,
+Esse teste prova integração do harness, não qualidade de modelo, custo real, privacidade da persistência,
 aprovação, cancelamento ou recovery. Acrescente provas específicas das fronteiras implementadas.
 
 ## 5. Mantenha decisões pendentes explícitas
@@ -87,6 +87,6 @@ de exemplos de outra linguagem ou versão sem confirmação oficial.
 - SDK definindo executor, acesso, saldo ou escrita; thread como token de autorização.
 - Provider pago nos testes ou importar um fake cuja existência não foi confirmada.
 - Cancelamento apagando custo, tracing como única auditoria ou transação aberta durante modelo.
-- Prometer sandbox, RLS ou exactly-once por recurso do grafo.
+- Prometer sandbox, autorização ou exactly-once por recurso do grafo.
 
 Consulte [fontes e limites](references/fontes.md) antes de ampliar a superfície do SDK.

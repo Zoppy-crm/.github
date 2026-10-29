@@ -17,4 +17,20 @@ privacidade, erro de borda e efeitos. A transição de runtime dos rascunhos foi
 o backend é somente Bun/TypeScript.
 
 A skill define organização de código, não implantação, algoritmo financeiro, política de agenda,
-delegação, retenção ou destino de telemetria. Os nomes finais de roles também não são fixados.
+delegação, retenção ou destino de telemetria. As roles são `os_app` e `os_owner`, conforme correção do dono.
+
+## Conferência da correção — 2026-10-29
+
+Documentação oficial atual consultada na web e comparada com o código/tipos fixados em
+`spikes/bun-stack/node_modules/` do worktree `fatia-01-spec` do Zoppy OS.
+
+- [Transações Drizzle](https://orm.drizzle.team/docs/transactions): na 0.45.4,
+  `drizzle-orm/bun-sql/session.js` abre a transação com `client.begin` e fornece `tx` ao callback.
+  O caso de uso chama a porta de UoW; seu adaptador abre a transação; repositórios e enqueue
+  recebem o executor. A composição injeta. `platform` não importa schema; a factory Drizzle
+  com schema fica em `adapters/postgres/database.ts`.
+- Correção do dono: ferramenta interna com uma organização; autorização da aplicação por
+  pessoa, times, capacidades e audiência, testada no domínio/integração. Nada hardcoded:
+  regras configuráveis, instruções, IDs, domínios, pessoas e URLs vêm de configuração/catálogo.
+
+A conferência de fonte não substitui prova de login real, grants no banco ou operação de produção.

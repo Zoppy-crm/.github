@@ -23,3 +23,23 @@
 Nomes ingleses, ausência de comentários/docstrings e erros de negócio como valores são convenções
 do backend OS. `skipLibCheck` apenas omite a checagem interna das declarações; não prova que todas
 as APIs dos SDKs são compatíveis. O schema financeiro e a reserva concorrente não foram medidos.
+
+## Conferência da correção — 2026-10-29
+
+Documentação oficial atual consultada na web e comparada com o código/tipos fixados em
+`spikes/bun-stack/node_modules/` do worktree `fatia-01-spec` do Zoppy OS.
+
+- [Bun: TypeScript](https://bun.com/docs/typescript) e
+  [TS: lib](https://www.typescriptlang.org/tsconfig/lib.html): backend sem `lib DOM`,
+  mantendo `types: ["bun"]`. Conferidos TypeScript 7.0.2 (`lib/lib.dom.d.ts` e configuração do
+  checker) e `@types/bun`/`bun-types` 1.4.3 (`index.d.ts`, `globals.d.ts` e tipos de runtime).
+  A configuração anterior do ensaio incluía DOM; a recomendação foi corrigida, sem alegar
+  que a configuração original já fazia essa restrição.
+- Correção do dono: nada hardcoded para regra configurável, instruções de agente, IDs, domínios,
+  listas de pessoas ou URLs; a composição injeta configuração validada/dados de catálogo.
+
+A conferência de fonte não substitui prova de login real, grants no banco ou operação de produção.
+
+Conferência executada em cópia temporária do ensaio: `tsc --version` → `Version 7.0.2` e
+`tsc --noEmit` → exit 0 com `lib: ["ES2023"]`, `types: ["bun"]` e flags estritas preservadas.
+Incluiu o middleware corrigido e a configuração/chamada de sessão Better Auth, sem tocar o ensaio.

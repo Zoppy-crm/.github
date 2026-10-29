@@ -18,3 +18,22 @@
 
 O ensaio verifica `/proof`, não uma operação do produto. Método, status, erro e dados reais devem
 vir de `packages/contract/zoppy-os.openapi.yaml`; nenhum endpoint do exemplo passa a fazer parte dele.
+
+## Conferência da correção — 2026-10-29
+
+Documentação oficial atual consultada na web e comparada com o código/tipos fixados em
+`spikes/bun-stack/node_modules/` do worktree `fatia-01-spec` do Zoppy OS.
+
+- [CSRF](https://hono.dev/docs/middleware/builtin/csrf),
+  [CORS](https://hono.dev/docs/middleware/builtin/cors),
+  [Request](https://hono.dev/docs/api/request) e
+  [Context](https://hono.dev/docs/api/context): Hono 4.13.14,
+  `dist/middleware/{csrf,cors}/index.js`, `dist/request.js` e `dist/context.js`.
+  `csrf()` não cobre JSON; `req.json()` não impõe media type. A guarda de Origin vale para
+  todo método inseguro e CORS usa origem exata/configurada com credenciais, sem curinga.
+- [Segurança Better Auth](https://www.better-auth.com/docs/reference/security): cobre rotas
+  montadas no handler de auth, sem proteger automaticamente as rotas do produto. Conferidos
+  `better-auth/dist/api/middlewares/origin-check.mjs` e configuração basePath da 1.7.14.
+- Correção do dono: executor e capacidades vêm do principal; autorização é da aplicação.
+
+A conferência de fonte não substitui prova de login real, grants no banco ou operação de produção.
