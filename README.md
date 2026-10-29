@@ -105,6 +105,8 @@ skills/
 │   ├── ui-and-styling/SKILL.md           # Tokens, shared/ui, quatro estados, i18n
 │   ├── testing/SKILL.md                  # Vitest + Testing Library + MSW, cobertura de 85%
 │   └── pr-review/SKILL.md                # Review do Claude Review para repos React
+├── zoppy-os/                             # Backend Bun/TypeScript do Zoppy OS v2
+│   └── os-*/SKILL.md                    # Arquitetura, HTTP, banco, auth, jobs, harness e testes
 └── e2e/                                  # Repos de teste E2E
     └── e2e-testing/SKILL.md              # Playwright, fixtures, padrões E2E
 ```
@@ -118,6 +120,7 @@ skills/
 | **wpp-commerce-fe** | `shared`                  | zoppy-whatsapp-commerce-FE (React — recebe só as skills shared) |
 | **frontend-angular**| `shared` + `angular`      | zoppy-FE, ui-components, zoppy-partners-fe, zoppy-admin-fe       |
 | **frontend-react**  | `shared` + `react`        | zoppy-ai-agent-fe                                                |
+| **zoppy-os**        | `shared` + `react` + `zoppy-os` | zoppy-os                                                   |
 | **e2e**             | `shared` + `e2e`          | zoppy-e2e-api                                                    |
 | **e2e-jornadas**    | `e2e-jornadas`            | zoppy-FE, zoppy-e2e-api                                          |
 

@@ -25,6 +25,10 @@
             "folders": ["shared", "react"],
             "repos": ["zoppy-ai-agent-fe"]
         },
+        "zoppy-os": {
+            "folders": ["shared", "react", "zoppy-os"],
+            "repos": ["zoppy-os"]
+        },
         "e2e": {
             "folders": ["shared", "e2e"],
             "repos": ["zoppy-e2e-api"]
