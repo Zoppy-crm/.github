@@ -160,7 +160,7 @@ Ele lista os arquivos de lógica alterados (`.ts` em `src/`, fora `src/db/`, fix
 -   **Algum `spec=sim`:** proponha a label ao dev.
 -   **Nenhum `spec=sim`:** não proponha.
 
-Nunca adicione a label sem o dev confirmar. Confirmado, use a REST (o `gh pr edit` falha nos repos da Zoppy):
+Nunca adicione a label `mutation` sem o dev confirmar (a exceção é `mutation: achou-bug`, abaixo). Confirmado, use a REST (o `gh pr edit` falha nos repos da Zoppy):
 
 ```bash
 gh api repos/Zoppy-crm/zoppy-api/issues/<pr-number>/labels -f 'labels[]=mutation'
@@ -171,7 +171,7 @@ Ao propor, diga ao dev em uma ou duas linhas:
 -   **Tempo:** PR pequeno leva poucos minutos; o teto é ~600 mutantes ou 55 min, e o que passar disso aparece como "Fora do teto". Roda de novo a cada push enquanto a label estiver no PR, e o push novo cancela a execução em andamento.
 -   **Como ler o comentário** (`## Teste de mutação`, atualizado a cada execução): cada mutante é uma mudança pequena nas linhas alteradas pelo PR. **Sobrevivente** é mudança que o spec irmão não pegou; **sem cobertura** é código que o spec nem executa.
 -   **O que fazer com cada sobrevivente:** se é lacuna real, mate com um teste. Se é equivalente (mesmo comportamento observável), código defensivo ou texto de log/mensagem, responda no PR com o motivo em uma linha. No piloto, ~4 em 10 eram lacuna real; 100% não é a meta.
--   **Se matar um sobrevivente revelou um bug de verdade** no código (não só teste faltando), adicione também a label `mutation: achou-bug` ao PR: `gh api repos/Zoppy-crm/zoppy-api/issues/<pr-number>/labels -f 'labels[]=mutation: achou-bug'`.
+-   **Se matar um sobrevivente revelou um bug de verdade** no código (não só teste faltando), adicione a label `mutation: achou-bug` ao PR na hora, sem pedir confirmação ao dev, e avise que colocou: `gh api repos/Zoppy-crm/zoppy-api/issues/<pr-number>/labels -f 'labels[]=mutation: achou-bug'`.
 
 ### Step 6: QA Report
 
