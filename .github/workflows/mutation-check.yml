@@ -23,8 +23,77 @@ on:
                 required: true
 
 jobs:
-    mutation:
+    selecao:
         if: github.event.action != 'closed'
+        runs-on: zoppy-light
+        timeout-minutes: 10
+        outputs:
+            elegiveis: ${{ steps.selecao.outputs.elegiveis }}
+            base: ${{ steps.selecao.outputs.base }}
+            head: ${{ steps.selecao.outputs.head }}
+        env:
+            PR_NUMBER: ${{ github.event.pull_request.number }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.sha }}
+                  fetch-depth: 0
+
+            - uses: actions/checkout@v4
+              with:
+                  repository: Zoppy-crm/.github
+                  ref: ${{ inputs.scripts-ref }}
+                  path: .zoppy-org
+                  sparse-checkout: scripts/mutation
+
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: '3.12'
+
+            - name: Arquivos elegíveis
+              id: selecao
+              env:
+                  MERGE_SHA: ${{ github.sha }}
+              run: |
+                  BASE_SHA=$(git rev-parse "$MERGE_SHA^1")
+                  HEAD_SHA=$(git rev-parse "$MERGE_SHA")
+                  echo "base=$BASE_SHA" >> "$GITHUB_OUTPUT"
+                  echo "head=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+                  python3 .zoppy-org/scripts/mutation/mutation_check.py --dry-run \
+                      --repo . --base "$BASE_SHA" --head "$HEAD_SHA" \
+                      --out "$RUNNER_TEMP/mutation" --cache "$RUNNER_TEMP/mutation-cache"
+                  python3 -c "
+                  import json, sys
+                  files = json.load(open(sys.argv[1]))['files']
+                  print('elegiveis=%d' % sum(1 for f in files if f['spec']))
+                  print('sem-spec=%d' % sum(1 for f in files if not f['spec']))
+                  " "$RUNNER_TEMP/mutation/selection.json" >> "$GITHUB_OUTPUT"
+
+            - name: Nada a mutar
+              if: steps.selecao.outputs.elegiveis == '0'
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  SEM_SPEC: ${{ steps.selecao.outputs.sem-spec }}
+              run: |
+                  COMMENT="$RUNNER_TEMP/mutation/comment.md"
+                  {
+                      echo '<!-- mutation-check -->'
+                      echo '## Teste de mutação'
+                      echo
+                      echo 'Nenhum arquivo de lógica com spec irmão (`.spec.ts` na mesma pasta) foi alterado neste PR; não há o que mutar.'
+                      if [ "$SEM_SPEC" != '0' ]; then
+                          echo
+                          echo "Arquivos de lógica alterados sem spec irmão: $SEM_SPEC."
+                      fi
+                      echo
+                      python3 .zoppy-org/scripts/mutation/mutation_data.py --status nada-a-mutar \
+                          --selection "$RUNNER_TEMP/mutation/selection.json"
+                  } > "$COMMENT"
+                  python3 .zoppy-org/scripts/mutation/post_comment.py --file "$COMMENT" --only-update
+
+    mutation:
+        needs: selecao
+        if: needs.selecao.outputs.elegiveis != '0'
         runs-on: zoppy-heavy
         timeout-minutes: 70
         env:
@@ -54,46 +123,10 @@ jobs:
               with:
                   node-version: ${{ inputs.node-version }}
 
-            - name: Arquivos elegíveis
-              id: selecao
-              env:
-                  MERGE_SHA: ${{ github.sha }}
-              run: |
-                  BASE_SHA=$(git rev-parse "$MERGE_SHA^1")
-                  HEAD_SHA=$(git rev-parse "$MERGE_SHA")
-                  echo "base=$BASE_SHA" >> "$GITHUB_OUTPUT"
-                  echo "head=$HEAD_SHA" >> "$GITHUB_OUTPUT"
-                  python3 .zoppy-org/scripts/mutation/mutation_check.py --dry-run \
-                      --repo . --base "$BASE_SHA" --head "$HEAD_SHA" \
-                      --out "$RUNNER_TEMP/mutation" --cache "$RUNNER_TEMP/mutation-cache"
-                  python3 -c "
-                  import json, sys
-                  files = json.load(open(sys.argv[1]))['files']
-                  print('elegiveis=%d' % sum(1 for f in files if f['spec']))
-                  print('sem-spec=%d' % sum(1 for f in files if not f['spec']))
-                  " "$RUNNER_TEMP/mutation/selection.json" >> "$GITHUB_OUTPUT"
-
-            - name: Nada a mutar
-              if: steps.selecao.outputs.elegiveis == '0'
-              env:
-                  SEM_SPEC: ${{ steps.selecao.outputs.sem-spec }}
-              run: |
-                  {
-                      echo '<!-- mutation-check -->'
-                      echo '## Teste de mutação'
-                      echo
-                      echo 'Nenhum arquivo de lógica com spec irmão (`.spec.ts` na mesma pasta) foi alterado neste PR; não há o que mutar.'
-                      if [ "$SEM_SPEC" != '0' ]; then
-                          echo
-                          echo "Arquivos de lógica alterados sem spec irmão: $SEM_SPEC."
-                      fi
-                      echo
-                      python3 .zoppy-org/scripts/mutation/mutation_data.py --status nada-a-mutar \
-                          --selection "$RUNNER_TEMP/mutation/selection.json"
-                  } > "$RUNNER_TEMP/mutation/comment.md"
+            - name: Pasta de saída
+              run: mkdir -p "$RUNNER_TEMP/mutation"
 
             - name: Dependências
-              if: steps.selecao.outputs.elegiveis != '0'
               env:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
               run: |
@@ -104,7 +137,6 @@ jobs:
                   rm -f .npmrc
 
             - name: Cache incremental do PR
-              if: steps.selecao.outputs.elegiveis != '0'
               uses: actions/cache/restore@v4
               with:
                   path: ${{ runner.temp }}/mutation-cache
@@ -112,14 +144,13 @@ jobs:
                   restore-keys: mutation-${{ github.event.pull_request.number }}-
 
             - name: Stryker nos arquivos alterados
-              if: steps.selecao.outputs.elegiveis != '0'
               continue-on-error: true
               env:
                   TZ: America/Sao_Paulo
                   AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE: '1'
                   NODE_OPTIONS: --max-old-space-size=8192
-                  BASE_SHA: ${{ steps.selecao.outputs.base }}
-                  HEAD_SHA: ${{ steps.selecao.outputs.head }}
+                  BASE_SHA: ${{ needs.selecao.outputs.base }}
+                  HEAD_SHA: ${{ needs.selecao.outputs.head }}
                   MUTATION_CONCURRENCY: ${{ inputs.concurrency }}
                   MUTATION_BUDGET_MIN: ${{ inputs.budget-min }}
                   MUTATION_MAX_MUTANTS: ${{ inputs.max-mutants }}
@@ -131,7 +162,7 @@ jobs:
 
             - name: Cache tem conteúdo
               id: cache-conteudo
-              if: always() && steps.selecao.outputs.elegiveis != '0'
+              if: always()
               run: |
                   if ls "$RUNNER_TEMP"/mutation-cache/*.json >/dev/null 2>&1; then
                       echo 'salvar=1' >> "$GITHUB_OUTPUT"
