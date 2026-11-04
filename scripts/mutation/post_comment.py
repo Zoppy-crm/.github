@@ -40,13 +40,15 @@ def find_existing(repo, number, token):
     return None
 
 
-def publish(repo, number, token, body):
+def publish(repo, number, token, body, only_update=False):
     if MARKER not in body:
         body = f'{MARKER}\n{body}'
     existing = find_existing(repo, number, token)
     if existing:
         github('PATCH', f'{API}/repos/{repo}/issues/comments/{existing["id"]}', token, {'body': body})
         return 'atualizado', existing['id']
+    if only_update:
+        return 'não criado', None
     created, _ = github('POST', f'{API}/repos/{repo}/issues/{number}/comments', token, {'body': body})
     return 'criado', created['id']
 
@@ -56,12 +58,13 @@ def main():
     parser.add_argument('--file', required=True)
     parser.add_argument('--repo', default=os.environ.get('GITHUB_REPOSITORY'))
     parser.add_argument('--pr', default=os.environ.get('PR_NUMBER'))
+    parser.add_argument('--only-update', action='store_true')
     args = parser.parse_args()
     if not args.repo or not args.pr:
         parser.error('--repo e --pr (ou GITHUB_REPOSITORY e PR_NUMBER) são obrigatórios')
     with open(args.file) as handle:
         body = handle.read()
-    action, comment_id = publish(args.repo, args.pr, os.environ['GITHUB_TOKEN'], body)
+    action, comment_id = publish(args.repo, args.pr, os.environ['GITHUB_TOKEN'], body, args.only_update)
     print(f'comentário {action}: {comment_id}')
 
 
