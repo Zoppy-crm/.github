@@ -76,6 +76,12 @@ python3 /tmp/jornadas_check.py origin/<base-branch> HEAD jornadas.yml
 
 It prints the new files without a journey. For each folder listed, add the path to the right journey in `jornadas.yml` and commit it in this branch. If the right journey is not obvious, ask the user. Do not guess. The `Jornadas` check on the PR runs the same script.
 
+### Step 4.6: Feature docs
+
+If the repo has an `index.md` at the root (the OKF bundle), check the areas this branch touched: when a business rule, a flow or a design decision changed, update the area's concept and add a `log.md` entry, following the repo's CLAUDE.md. Commit it in this branch.
+
+The Help Center (ajuda.zoppy.com.br) needs nothing here: after the merge into `master`, the `help-center-docs` workflow leaves a draft for review in the Zoppy Admin.
+
 ### Step 5: Create or Update PR
 
 Check if a PR already exists:
