@@ -165,7 +165,7 @@ def stryker_config(item, args, report_path):
         'testRunner': 'jest',
         'jest': {
             'enableFindRelatedTests': False,
-            'config': {'testRegex': '/' + re.escape(item['spec'][4:]) + '$'},
+            'config': {'testRegex': '/' + re.escape(item['spec'][4:-8]) + r'(\.[^/]+)?\.spec\.ts$'},
         },
         'coverageAnalysis': 'perTest',
         'mutate': mutate_patterns(item),
@@ -520,8 +520,9 @@ def render_comment(summary, max_listed):
         'Como ler: cada mutante é uma pequena mudança de comportamento nas linhas alteradas pelo PR. '
         'Um mutante **sobrevivente** é uma mudança que nenhum teste do spec irmão pegou; **sem cobertura** '
         'é código que o spec nem executa. Nem todo sobrevivente é bug: pode ser um mutante equivalente '
-        '(mesmo comportamento observável). Só o spec irmão roda contra cada arquivo, então um sobrevivente '
-        'pode estar coberto por outro spec (por exemplo, um sobrevivente no domain que o spec do application pega).'
+        '(mesmo comportamento observável). Só o spec irmão (`<nome>.spec.ts` e `<nome>.*.spec.ts` da mesma pasta) '
+        'roda contra cada arquivo, então um sobrevivente pode estar coberto por outro spec (por exemplo, um '
+        'sobrevivente no domain que o spec do application pega).'
     )
     out.append('')
     if with_mutants:
