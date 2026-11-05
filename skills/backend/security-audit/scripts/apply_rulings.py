@@ -19,7 +19,9 @@ def apply_rulings(bundle, rulings):
             continue
         if ruling["decision"] == "close":
             finding.update(scoreIncluded=False, status="fixed", closureKind="refuted", evidenceState="refuted")
-            finding["notes"] = " ".join(filter(None, [finding.get("notes"), CLOSURE_NOTE.format(date=ruling["date"])]))
+            closure_note = CLOSURE_NOTE.format(date=ruling["date"])
+            if closure_note not in (finding.get("notes") or ""):
+                finding["notes"] = " ".join(filter(None, [finding.get("notes"), closure_note]))
         if ruling["decision"] == "accept":
             finding["status"] = "accepted-risk"
         if ruling.get("severity"):

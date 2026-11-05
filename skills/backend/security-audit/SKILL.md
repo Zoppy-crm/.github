@@ -172,9 +172,10 @@ and source; a ruling recorded only on a finding or in the conversation is lost b
 Ask what this run taught that the next run must not rediscover. Update the single relevant source of
 truth, prune superseded sediment, add deterministic regression tests, and rerun the clean fixture
 suite. Promote the finalized canonical bundle into `baselines/`, append its verified hash and KPI to
-`baselines/manifest.json`, then synchronize the canonical Claude and Codex skill directories
-byte-for-byte. The newest manifest entry is the mandatory basis for the next audit.
+`baselines/manifest.json`, then open a PR with the skill changes against `skills/backend/` in the
+`.github` repository, whose sync distributes them. The newest manifest entry is the mandatory basis
+for the next audit.
 
 **Completion criterion:** May reproduces 265/992, July reproduces 256/840, September 1 reproduces
 265/810 (Security 742 + Privacy 68), the newest audit is the last manifest entry, current tests pass,
-and both installed skill copies have identical file hashes.
+and every skill change is in a `.github` PR.
