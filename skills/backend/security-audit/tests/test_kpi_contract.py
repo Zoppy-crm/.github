@@ -35,6 +35,8 @@ class SecurityAuditKpiContract(unittest.TestCase):
             "scripts/build_manifest.py",
             "scripts/calculate_delta.py",
             "scripts/merge_jsonl.py",
+            "scripts/apply_rulings.py",
+            "scripts/check_report.py",
             "baselines/manifest.json",
             "baselines/2026-05-11.bundle.json",
             "baselines/2026-07-29.bundle.json",

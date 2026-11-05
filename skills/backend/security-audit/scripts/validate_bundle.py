@@ -16,6 +16,29 @@ WEIGHTS = {
     "MEDIA": 2,
     "BAIXA": 1,
 }
+BOARD_PRIORITY = {
+    "CATASTROFICA": "CATASTRÓFICO",
+    "CRITICA": "P0",
+    "ALTA": "P1",
+    "MEDIA": "P2",
+    "BAIXA": "P2",
+}
+PRECONDITION_CEILINGS = {
+    "none": "CATASTROFICA",
+    "tenant-auth": "CATASTROFICA",
+    "staff-auth": "CRITICA",
+    "partner-cred": "CRITICA",
+    "n/a — detection gap": "ALTA",
+    "n/a — lacuna de detecção": "ALTA",
+    "vpc": "MEDIA",
+    "container": "MEDIA",
+    "task-role": "MEDIA",
+    "db-access": "MEDIA",
+    "aws-creds": "MEDIA",
+    "insider": "MEDIA",
+    "dead-code": "BAIXA",
+}
+ORIGINS = {"already-reported", "pre-existing-missed", "introduced-since", "undetermined"}
 SIZES = {"XS", "S", "M", "L", "XL"}
 EVIDENCE_STATES = {"confirmed", "inferred", "refuted", "unknown", "historical"}
 CURRENT_REQUIRED = {
@@ -43,7 +66,8 @@ CURRENT_REQUIRED = {
 }
 
 
-RULINGS_PATH = Path.home() / ".local/share/security-audit/baselines/rulings.json"
+REGISTRY_DIR = Path.home() / ".local/share/security-audit/baselines"
+RULINGS_PATH = REGISTRY_DIR / "rulings.json"
 RULING_DECISIONS = {"close", "keep", "accept", "severity"}
 
 
@@ -81,6 +105,26 @@ def validate_rulings(findings, rulings, generated_at):
             errors.append(f"{label}: accepted by ruling, status must be accepted-risk")
         if ruling.get("severity") and finding.get("severity") != ruling["severity"]:
             errors.append(f"{label}: severity must be {ruling['severity']}")
+    return errors
+
+
+def validate_policy(finding):
+    label = finding.get("findingId")
+    severity = finding["severity"]
+    errors = []
+    if finding.get("origin") not in ORIGINS:
+        errors.append(f"{label}: invalid origin {finding.get('origin')!r}")
+    if finding.get("boardPriority") != BOARD_PRIORITY[severity]:
+        errors.append(f"{label}: boardPriority must be {BOARD_PRIORITY[severity]} for {severity}")
+    if not finding.get("scoreIncluded", True):
+        return errors
+    ceiling = PRECONDITION_CEILINGS.get(finding.get("precondition"))
+    if ceiling is None:
+        errors.append(f"{label}: invalid precondition {finding.get('precondition')!r}")
+    elif WEIGHTS[severity] > WEIGHTS[ceiling]:
+        errors.append(f"{label}: {severity} exceeds the {ceiling} ceiling of precondition {finding['precondition']}")
+    if severity == "CATASTROFICA" and not finding.get("issueUrl"):
+        errors.append(f"{label}: open Catastrófica requires a dedicated issueUrl")
     return errors
 
 
@@ -133,9 +177,14 @@ def validate(bundle, historical=False):
                 errors.append(f"{finding.get('findingId')}: invalid size {finding.get('size')!r}")
             if not finding.get("scoreIncluded", True) and finding.get("closureKind") not in {"remediated", "refuted"}:
                 errors.append(f"{finding.get('findingId')}: excluded finding needs closureKind remediated|refuted")
+            errors.extend(validate_policy(finding))
 
     if not historical:
         errors.extend(validate_rulings(findings, load_rulings(), bundle.get("meta", {}).get("generatedAt", "")))
+
+    delta = bundle.get("meta", {}).get("delta")
+    if not historical and delta is not None and delta.get("toScore") != total:
+        errors.append(f"meta.delta.toScore: {delta.get('toScore')} must equal the section totals {total}")
 
     comparison = bundle.get("meta", {}).get("comparability")
     if comparison is not None:

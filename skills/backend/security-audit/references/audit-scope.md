@@ -13,6 +13,10 @@ Before scanning, verify:
 - clone/read access to every mandatory repository;
 - `cf` CLI identity, accounts, and zones using the cloudflare-cli skill and current `cf --help`.
 
+The AWS profile names (`zoppy-prd`, `zoppy-dev`, `zoppy-main`) and gcx contexts (`zoppy`,
+`zoppy-dev`) used throughout this skill are defaults, not requirements. Use your own names; the
+account IDs returned by `sts get-caller-identity` are what must match.
+
 Access loss quarantines only unfinished checks that depend on that credential. Preserve timestamped
 observations, continue every independent slice, and name the unresolved surface and required access
 in `coverageGaps`. Label reduced coverage explicitly; a partial audit cannot claim complete coverage.
@@ -34,6 +38,16 @@ Clone current default branches into a new scratch root and record full commit ha
 10. `zoppy-shared`
 11. `zoppy-os`
 12. `zoppy-n8n`
+13. `zoppy-ops-infra`
+14. `zoppy-github-runners-infra`
+15. `zoppy-auth-fe`
+16. `zoppy-csm-agent`
+17. `zoppy-fe`
+18. `zoppy-terraform-lakehouse-core`
+
+Default branch is not always what production runs. `zoppy-pixel-lambda` production runs `master`,
+not `development`. Production n8n is upstream n8n on Fargate built by
+`zoppy-ops-infra/lib/n8n-stack.ts`; `zoppy-n8n` is not its production source.
 
 Do not treat libraries as fleet-wide from `package.json`; count current import sites and deployed
 consumer pins. Read both sides of shared datastore relationships.
@@ -43,14 +57,39 @@ deepen or unshallow before `git log -S` / `merge-base` conclusions.
 
 ## Cloud and live-data scope
 
-- Enumerate production, development, and payer/main accounts read-only. The organization has six
-  known accounts; the three without profiles remain quantified coverage gaps unless access changes.
+- Enumerate production, development, and payer/main accounts read-only. The organization has seven
+  accounts; the four without profiles remain quantified coverage gaps unless access changes.
 - Audit Grafana as an attack surface and as a read-only validation surface. MySQL tables are
   PascalCase and require `zoppy.` qualification when the datasource has no default schema.
 - Map ECS/Lambda/EC2/RDS/Redis/OpenSearch/Keyspaces/S3/DMS/Glue/Athena/CloudFront/CI resources to
   source repositories and identities. Unattributed workloads remain named gaps.
 - Never retrieve secret values or broad credential-bearing configuration. Query names, ARNs,
   effective policies, selected non-secret fields, counts, and timestamps only.
+
+## Grafana data sources
+
+Query through `gcx api /api/ds/query -d @query.json`. Known datasource UIDs:
+
+| Datasource | UID | Notes |
+|---|---|---|
+| Loki | `een6csa5t4gzkc` | Queries over windows of about 6h time out; count over longer ranges with ALB logs in Athena or MySQL instead. |
+| MySQL `zoppy` | `een6cmg0t4xkwf` | No default schema: prefix every table, join and variable query with `zoppy.`. |
+| Redis Zoppy | `den98dq5sdfk0e` | Production ElastiCache cluster; no dev Redis datasource exists. |
+| Zoppy-OS Postgres | `ffrzlqi7z7aiof` | |
+| CloudWatch | `eena9byc4tqm8b` | |
+| Athena ALB logs | `ees4kgkh4m2v4c` | Long-range request counts. |
+| Athena `zoppy_silver` | `cengw3mbfj5z4f` | Lake mirror of MySQL. |
+
+Redis: BullMQ keys use the `bull:{zoppy}::` prefix with a double colon; production queue names
+have no environment prefix. Use `type: "cli"` targets (`ZCARD`, `MEMORY USAGE`), because
+`type: "command"` returns empty for them; wrap keys with special characters in escaped double
+quotes. One request holds at most about 5,000 targets.
+
+`zoppy_silver`: tables are `db_<lowercased table>` with lowercased columns, and MySQL booleans are
+integers (`= 1`, never `= true`). Tables can sit at slightly different snapshots, so cross-table
+joins can show false inconsistencies. `db_wppcommercesessions` and `db_wppcommerceagents` are not
+ingested. `db_wppconversations.sessionexpiration` is a millisecond-epoch string:
+`from_unixtime(TRY(CAST(x AS BIGINT)) / 1000)`.
 
 ## Cloudflare scope via cf CLI
 
@@ -62,6 +101,20 @@ as a named gap, including whether a feature is unsupported by the account plan. 
 values, Workers secrets, tunnel credentials, private keys, or broad configuration exports.
 Save the observed controls in `meta.cloudflare` using the report contract. A missing permission
 means unknown control state, not an absent control.
+
+Account `ee03ce5757268c78ccd6103554a2526e` owns `zoppy.com.br` (zone
+`cca669edfe47c3013f690bcfc47e2db3`) and `zpy.vc`; Turnstile widgets are
+`zoppy-giftback-{prod,mirror,staging,dev}`.
+
+- Workers Logs (`cf observability telemetry query`) keep only 2–3 days; `view: events` caps at
+  2,000 rows, and `groupBys` output is unsorted and can silently drop groups, so count one group per
+  query with an `eq` filter.
+- Zone GraphQL (`httpRequestsAdaptiveGroups` at `api.cloudflare.com/client/v4/graphql`) spans at
+  most 4 weeks 2 days per query and is rate-limited. Rows with protocol `UNK`, status 504, origin
+  status 0 and `requestSource: earlyHintsCache` are Cloudflare-internal; `HTTP/1.1` rows that mirror
+  client counts are Worker subrequests.
+- Status 499 is mostly client cancellations; only 499 minus the ALB 460 count for the same hour
+  approximates requests that hung at the edge.
 
 ## Required audit slices
 
@@ -89,7 +142,7 @@ time, not findings.
 The scope step is complete only when every mandatory repo/account/surface is either:
 
 - scanned at a recorded current cutoff;
-- explicitly dismissed by Luis for this run; or
+- explicitly dismissed by Gabriel for this run; or
 - named in `coverageGaps` with the exact access/evidence needed to close it.
 
 Never publish a comparable KPI if current coverage is materially smaller than the baseline without
@@ -99,8 +152,9 @@ showing both the like-for-like score and the expanded/contracted-scope score sep
 
 - **Latest audit = last `baselines/manifest.json` entry**, never the newest `docs/security` filename: report
   files carry the report reference date, so the 2026-10-02 run is named `security-audit-2026-09-30.*`.
-- **Canary green provenance:** image tags `green-master-green-<hash>` are shared by api and workflow and are
-  not application commits. Prove a fix is on the canary by checking it is an ancestor of the last
+- **Canary green provenance:** no canary-green service runs in production now. If one returns, its
+  image tags `green-master-green-<hash>` are shared by api and workflow and are not application
+  commits; prove a fix is on the canary by checking it is an ancestor of the last
   `origin/master-green` commit before the canary task definitions' `registeredAt`.
 - **Search tooling:** in this environment `grep`/`find` may be shell functions; `grep -rl` can silently
   return nothing. Workers use `/usr/bin/grep` (and avoid zsh `--include=*.ts` globbing).

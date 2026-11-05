@@ -62,13 +62,24 @@ fails, stop: the KPI cannot be reproduced.
 Before rendering or publishing:
 
 ```bash
+python3 scripts/apply_rulings.py <canonical.bundle.json>
+python3 scripts/calculate_delta.py <previous.bundle.json> <canonical.bundle.json> <current.bundle.json>
 python3 scripts/validate_bundle.py <current.bundle.json>
 python3 -m unittest discover -s tests -v
 ```
 
-Also assert section totals, precondition ceilings, independent coordinator review of every
-Catastrófica/Crítica, regression checks for prior fixed findings, dedicated issues for current
-Catastróficas, Security + Privacy = Combined, and reconciled coverage.
+`calculate_delta.py` owns the checks that need the previous registry: every prior ID must exist in
+the current one, and every reopened prior closure lands in the itemized delta. `validate_bundle.py`
+owns the rest of the KPI contract on a current bundle: schema, rulings ledger, precondition
+ceilings, valid origin, board priority matching severity, a dedicated issue for every open
+Catastrófica, `meta.delta.toScore` equal to the section totals, and comparability subtotals.
+Security + Privacy = Combined holds by construction. Independent coordinator review of every
+Catastrófica/Crítica and reconciled coverage remain manual gates.
+
+After rendering, `python3 scripts/check_report.py docs/security/<stem>.bundle.json` reads the
+sibling `<stem>.md`, `<stem>.html` and `<stem>-by-actionability.md` and fails on any breach of
+the report hygiene below, English prose, sections out of the Delta-first order, or an external
+asset.
 
 ## Rescaling sweeps four places, not one
 
@@ -101,7 +112,7 @@ rendered value by one column.
 
 ## Deliverables
 
-Write coworker-facing artifacts in PT-BR; speak to Luis in English.
+Write coworker-facing artifacts in PT-BR; speak to Gabriel in English.
 
 The HTML uses the installed **zoppy-deck** visual source: its embedded Inter font, design tokens,
 brand mark, metric cards, severity pills and callouts. `scripts/deck_theme.py` reads that source
@@ -124,6 +135,19 @@ next run; older fixtures remain for regression and long-term trend.
 to the roadmap issue and create/update one issue per actionable finding through `gh`; new Project
 #7 cards start at Status `To Do`. Audit generation itself is read-only and does not implicitly
 authorize GitHub/AWS/Grafana/database writes.
+
+## Report hygiene
+
+Finding `notes` are rendered in the HTML as evaluation context, so every rendered field is
+coworker-facing. Reports never mention how the audit was run or who asked for what: no process
+words (coordinator, slice, expired session, quick pass, projections from a prior report), no tool
+names, no people's names, no secret-shaped strings or personal email addresses. Product decisions
+appear only as a neutral PT-BR note ("decisão de produto em AAAA-MM-DD"); the decision itself
+lives in the unrendered per-finding `ruling` field. Every finding cited in a report table links to
+its card by `#<findingId>`.
+
+`check_report.py` takes people's names from the data: GitHub logins of assignees and authors in
+`meta.githubRemediation`, plus one name per line in the optional `baselines/names.txt`.
 
 ## Executive coverage qualification
 
@@ -175,7 +199,7 @@ Set `meta.reportAmendmentVersion=1` for new audits. Snapshots have these determi
 }
 ```
 
-If Luis specifies an issue set or the issues created in a prior session, verify that exact set
+If Gabriel specifies an issue set or the issues created in a prior session, verify that exact set
 from primary evidence and limit the GitHub report section to it. Record the explicit issue URLs
 and scope provenance in the snapshot; do not expand it into an organization-wide backlog.
 Existing finding links outside that set remain provenance in the registry, not extra report rows.
@@ -191,6 +215,12 @@ inventory means unavailable evidence. A verified deployment requires a current s
 control observation in `deployment.evidence`. GitHub snapshot data is a work queue, never a separate
 source of KPI points. Store the exact read evidence alongside the bundle. Legacy bundles render
 explicit snapshot gaps and remain valid historical fixtures.
+
+## Bússola score
+
+After publication authorization, post the monthly combined score to the Bússola metric
+`mtr-score-vulnerabilidade-de-seguranca` with `lancar_parcial_metrica`. The KPI
+`score-seguranca` is entered manually; the audit role usually cannot post to it.
 
 ## GitHub card taxonomy
 

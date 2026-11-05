@@ -7,9 +7,12 @@ Read this before rating or deduplicating findings.
 - Static analysis and read-only enumeration only. Never exploit a live host, access production
   records, assume a vulnerable role, or retrieve a secret value.
 - Unit/integration tests against controlled local test infrastructure are the strongest allowed
-  reproduction unless Luis separately authorizes more.
+  reproduction unless Gabriel separately authorizes more.
 - Historical evidence is context. Mutable code, AWS, Grafana, database, issue, PR, deployment, and
   traffic claims require a fresh check.
+- Grafana datasources can reach production with write capability; the Redis datasource is the
+  production ElastiCache cluster. Send only read-only, O(1) commands through them and never write
+  back into an observed datastore through Grafana.
 
 ## Evidence continuity and access loss
 
@@ -29,6 +32,13 @@ access failure from manufacturing an improvement. New risk that has never been o
 coverage gap and contributes no invented points. The report distinguishes verified-current
 findings, unverified carry-forwards, and uncovered scope; access loss alone never halts unrelated
 work or invalidates the whole KPI.
+
+Quarantine is a pause, not an outcome. Verify every credential before dispatching slices and have
+slices fail loudly on authentication errors. When access expires mid-run, ask Gabriel to
+re-authenticate and finish every check that waited on it before rendering. A carry-forward is for
+access that cannot be restored during the run; a report whose findings stay unverified only because
+a session expired is incomplete. Before calling the audit done, scan the bundle for `unknown`
+carry-forwards and close each one or name why it cannot be closed.
 
 ## Evidence states
 
@@ -67,8 +77,13 @@ For each service, ingest the previous report's profile, then revalidate drift:
 - current internet/VPC/internal reachability and authentication boundary;
 - containment and recovery shape.
 
-Do not ask Luis to repeat a stable answer already in the baseline. Ask only about missing or changed
+Do not ask Gabriel to repeat a stable answer already in the baseline. Ask only about missing or changed
 facts. An unverified business profile caps confidence and may cap severity.
+
+Liveness and usage questions (is this route still called, is this feature retired?) are audit work,
+not questions for Gabriel. Answer them from Loki, Grafana databases, CloudWatch through Grafana,
+Athena ALB logs, git history, and n8n. When a claim depends on data a read-only query can reach,
+run the query before reporting the claim. Ask Gabriel only for product rulings.
 
 ## Official KPI severity
 
@@ -98,6 +113,10 @@ amplification; secondary detection is Média; one constrained missing audit even
 Every finding records `riskClass` (`desvio-corrigível` or `risco-residual`) and
 `marginalReduction` (`alta`, `média`, `baixa`, `nenhuma`). A fix that does not materially reduce
 probability cannot carry a high recommendation solely because its hypothetical impact is large.
+
+`recommendedFix` is the smallest change that reduces probability, at the industry default. Extra
+policy (expiry, quotas, additional validation, stricter permissions, UX fallbacks, confirmation
+steps) is a new requirement: name it as an option for the owner, never as part of the fix.
 
 ## False-positive shields learned from confirmed failures
 
@@ -134,6 +153,11 @@ probability cannot carry a high recommendation solely because its hypothetical i
 - Before closing a deployed finding, account for every active revision selected by host, header,
   cookie or path, including canaries. A pipeline's infrastructure commit is not its application
   commit: link the application SHA to the built image, running digest and routed target.
+- Prove a deployment from the running ECS task definition's image (`aws ecs describe-services` →
+  task definition → image tag or digest → commit), never from a green CI run or a merged PR. Deploy
+  paths change: check which one is live for each repository before judging deploy status.
+- A slice's claim is a lead until checked. Give every claim a light first-hand check before
+  relaying it.
 
 ## Edge and public-dashboard evidence
 

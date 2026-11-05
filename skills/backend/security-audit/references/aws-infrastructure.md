@@ -11,6 +11,7 @@ verification: 2026-08-28 through 2026-08-31.
 | development | `654654607244` | `zoppy-dev` | dev, staging, mirror |
 | payer/main | `089543940399` | `zoppy-main` | organization, CI/CD, SES |
 | zoppy login | `654654603166` | none | coverage gap |
+| ops | `124310608785` | none | coverage gap; joined the organization 2026-10-30 |
 | data sandbox | `407370958965` | none | coverage gap |
 | Zoppy WP | `363819825378` | none | coverage gap |
 
@@ -25,6 +26,14 @@ remains true.
   Metabase, Grafana, Airbyte, Glue/DMS/Athena workloads, and CSM agent.
 - `nlb-production-services-public` forwards to an internal-named ALB; verify listeners, targets,
   SGs, prefix lists, host rules, and application authentication together.
+
+## Deploy paths
+
+- `zoppy-api` production deploys through the GitHub Actions workflow `deploy-ecs.yml` (OIDC to
+  AWS) on pushes to `master`. The CodePipeline `zoppy-api-pipeline` last ran around 2026-10-26 and
+  is retired. Other services were seen moving to the same pattern; verify each repository.
+- A green Actions run is not deployment proof. Read the running ECS task definition's image and
+  map it to the commit.
 
 ## Data-lake ownership discovered after July
 
