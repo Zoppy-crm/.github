@@ -32,7 +32,7 @@ Read [audit-scope.md](references/audit-scope.md). Verify the three AWS account I
 and every mandatory repository. Clone fresh default branches into a new scratch root; record full
 commit hashes, observation time, and access gaps.
 
-Ingest prior business profiles and ask Luis only about missing or changed customer count,
+Ingest prior business profiles and ask Gabriel only about missing or changed customer count,
 essentiality, reachability, or containment.
 
 **Completion criterion:** every mandatory repo/account/surface is scanned, explicitly dismissed, or
@@ -53,11 +53,11 @@ Load every prior finding and re-query current code, issues, PRs, deployments, li
 traffic evidence. Capture current GitHub issue/Project/PR state and Cloudflare controls in the
 snapshots defined by the report contract. Markdown is not an input registry.
 
-Load `baselines/rulings.json`, Luis's product rulings, and apply every entry to its finding:
-`close` (intended behaviour: unscored, `closureKind=refuted`), `keep` (stays scored; do not ask
-again), `accept` (scored as `accepted-risk`), and `severity` (fixed rating). Give slices the rulings
-for their findings. Ask Luis only about findings with no ruling; `validate_bundle.py` fails a
-current bundle that contradicts the ledger.
+Load `baselines/rulings.json`, Gabriel's product rulings. Every entry binds its finding: `close`
+(intended behaviour: unscored, `closureKind=refuted`), `keep` (stays scored; do not ask again),
+`accept` (scored as `accepted-risk`), and `severity` (fixed rating). Give slices the rulings for
+their findings. Ask Gabriel only about findings with no ruling; Step 4 applies the ledger and
+`validate_bundle.py` fails a current bundle that contradicts it.
 
 **Completion criterion:** the prior bundle reproduces its manifest finding count and score with
 zero validator errors; otherwise stop because the trend is not reproducible.
@@ -83,6 +83,15 @@ The coordinator independently re-reads every Catastrófica and Crítica. Data-de
 read-only live confirmation. Every material claim is `confirmed | inferred | refuted | unknown`;
 unknown upside is not scored at its worst case. Verify every previously fixed finding for regression.
 
+Apply the rulings ledger to the canonical bundle:
+
+```bash
+python3 scripts/apply_rulings.py <canonical.bundle.json>
+```
+
+It sets each ruled finding's score state, status and severity, records the decision in the
+unrendered `ruling` field, and writes only a neutral PT-BR closure note.
+
 **Completion criterion:** one canonical current bundle contains every prior and new finding exactly
 once, every mandatory field is populated, and no high-severity claim depends on inferred
 reachability or a missing business profile.
@@ -94,9 +103,16 @@ Preserve prior IDs. Classify new records as `already-reported`, `pre-existing-mi
 for mutable cloud state without evidence.
 
 Compute like-for-like and coverage-change deltas separately. Print counts, weights, Security,
-Privacy, Combined, and the reconciliation equation. Run `scripts/calculate_delta.py` so the bundle
-contains every score-changing finding grouped as remediated, refuted, reclassified, coverage
-expanded, introduced, or undetermined.
+Privacy, Combined, and the reconciliation equation. Run:
+
+```bash
+python3 scripts/calculate_delta.py <previous.bundle.json> <canonical.bundle.json> <current.bundle.json>
+```
+
+The bundle then contains every score-changing finding grouped as remediated, refuted, reclassified,
+coverage expanded, introduced, or undetermined. The script fails when a prior ID is missing from
+the current registry, and puts every reopened prior closure in the delta as a regression, report
+correction or undetermined reopening.
 
 **Completion criterion:** every changed point is itemized by stable ID with before/after severity
 and points; remediation is never conflated with a refuted prior finding; no finding lacks an origin
@@ -111,8 +127,11 @@ python3 scripts/validate_bundle.py <current.bundle.json>
 python3 -m unittest discover -s tests -v
 ```
 
-Also assert precondition ceilings, section totals, regression coverage, dedicated issues for open
-Catastróficas, and Security + Privacy = Combined.
+On a current bundle the validator also enforces the policy gates: precondition ceilings from
+[audit-policy.md](references/audit-policy.md), a valid origin, board priority matching severity, a
+dedicated issue for every open Catastrófica, `meta.delta.toScore` equal to the section totals,
+comparability subtotals, and the rulings ledger. The independent re-read of every Catastrófica and
+Crítica in Step 4 is the one gate no script covers.
 
 **Completion criterion:** every assertion exits zero. Do not render or publish around a failed gate.
 
@@ -126,18 +145,29 @@ lead with conclusion and the itemized **Delta** section before arithmetic, cover
 or remediation ordering. Current GitHub remediation and Cloudflare coverage sections follow Delta;
 missing access is shown as an explicit snapshot gap.
 
+Check the rendered package, named `<stem>.bundle.json`, `<stem>.md`, `<stem>.html` and
+`<stem>-by-actionability.md` side by side:
+
+```bash
+python3 scripts/check_report.py docs/security/<stem>.bundle.json
+```
+
+It fails on process words, tool names, secret-shaped strings, personal email domains, people's
+names, English prose, sections out of the Delta-first order, and external assets.
+
 Publication and issue writes require current explicit authorization. New cards use `gh`, Project #7
 Status `To Do`, and the security-specific work/severity taxonomy defined in the report contract;
 Project Priority remains a separate scheduling field.
 
-**Completion criterion:** all five artifacts exist, hashes match the manifest, HTML has no external
-assets or legacy scoring language, and every local deliverable is handed to Luis as a clickable link.
+With the same authorization, post the monthly score to Bússola as the report contract describes.
 
-After validating a generated or updated HTML deliverable, read and follow [phone-html](../phone-html/SKILL.md) to make it available on Luis's phone by default. Include the literal phone URL alongside the original local path.
+**Completion criterion:** all five artifacts exist, hashes match the manifest, `check_report.py`
+exits zero, HTML has no legacy scoring language, and every local deliverable is handed to Gabriel
+as a clickable link.
 
 ## Step 8 — Learn and synchronize
 
-Append every product ruling Luis gave during the run to `baselines/rulings.json` with its date
+Append every product ruling Gabriel gave during the run to `baselines/rulings.json` with its date
 and source; a ruling recorded only on a finding or in the conversation is lost by the next run.
 Ask what this run taught that the next run must not rediscover. Update the single relevant source of
 truth, prune superseded sediment, add deterministic regression tests, and rerun the clean fixture
