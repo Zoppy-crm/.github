@@ -55,6 +55,7 @@ Sempre **português (pt-BR)**, tom direto. Evite marketing/desculpas — o retor
 -   Project ID: `PVT_kwDOCAubUc4BQdrV`
 -   Field "Retorno de Solução" ID: `PVTF_lADOCAubUc4BQdrVzg-wo9s` (tipo TEXT)
 -   Field "Restauração do sistema" ID: `PVTF_lADOCAubUc4BQdrVzhlg2sY` (tipo DATE)
+-   Field "Restauração do sistema (hora)" ID: `PVTF_lADOCAubUc4BQdrVzho3Rgo` (tipo TEXT)
 
 Outros fields TEXT do mesmo project (caso o usuário peça para preencher junto):
 
@@ -429,18 +430,51 @@ restauração (MTTR). Campo vazio no fechamento é ticket fora da métrica.
 | A correção só vale depois de uma ação pós-deploy (backfill, correção de dados) | o dia em que a ação foi executada |
 | `work: fakeBug` (não era bug, nada foi restaurado) | não preencher |
 
-Data em `AAAA-MM-DD`, no fuso de Brasília. Restauração é o cliente sem impacto, não a causa raiz
-fechada: um contorno que destrava o cliente já conta, mesmo que a correção definitiva venha
-depois.
+Restauração é o cliente sem impacto, não a causa raiz fechada: um contorno que destrava o cliente
+já conta, mesmo que a correção definitiva venha depois.
+
+**Dois fields, sempre juntos.** O field DATE só guarda o dia, e um P0 restaurado no mesmo dia
+vira MTTR zero. Por isso o horário vai num segundo field, TEXT:
+
+| Field | ID | Formato |
+| --- | --- | --- |
+| Restauração do sistema | `PVTF_lADOCAubUc4BQdrVzhlg2sY` (DATE) | `AAAA-MM-DD` |
+| Restauração do sistema (hora) | `PVTF_lADOCAubUc4BQdrVzho3Rgo` (TEXT) | `AAAA-MM-DDTHH:MM-03:00` |
+
+Os dois no fuso de Brasília e o dia dos dois igual. Nunca grave hora aproximada ("fim da tarde"):
+sem horário de fonte, deixe a hora pendente e diga ao dev.
+
+**De onde tirar o horário:**
+
+-   **Contorno ou ação pós-deploy:** o horário em que foi executado, confirmado com o dev (log da
+    execução, mensagem no chat, `updatedAt` do registro corrigido).
+-   **Correção em produção:** o fim do deploy de `master`, não o merge. A pipeline pode levar mais
+    de uma hora depois do merge, e um deploy com falha não restaura nada: vale a primeira execução
+    **com sucesso** que contém o commit do merge.
+
+```bash
+# Repos com deploy por GitHub Actions (zoppy-api desde 26/10/2026, zoppy-workflow)
+REPO=zoppy-api; MERGED_AT=$(gh pr view <PR> -R Zoppy-crm/$REPO --json mergedAt -q .mergedAt)
+RUN=$(gh api "repos/Zoppy-crm/$REPO/actions/runs?branch=master&event=push&per_page=100&created=>=$MERGED_AT" \
+  -q '[.workflow_runs[]|select(.name|startswith("Build e deploy no ECS"))|select(.conclusion=="success")]|sort_by(.created_at)|.[0].id')
+END=$(gh api repos/Zoppy-crm/$REPO/actions/runs/$RUN/jobs \
+  -q '[.jobs[].steps[]|select(.name=="Deploy no ECS")|.completed_at][0]')
+TZ=America/Sao_Paulo date -d "$END" +%Y-%m-%dT%H:%M%:z   # valor do field (hora)
+```
+
+`created=>=` devolve as runs da mais nova para a mais antiga, até 100. Num merge antigo, feche a
+janela (`created=<merge>..<merge+2d>`) para a primeira run não ficar de fora. Se o repo não faz
+deploy por Actions (ex.: zoppy-api antes de 26/10/2026, no CodePipeline `zoppy-api-pipeline`), use
+o fim da execução da pipeline na AWS ou pergunte ao dev.
 
 **Quando preencher:** esta skill costuma rodar no commit da branch `bugfix/*`, antes do deploy.
 
--   Se a restauração **já aconteceu** (houve contorno, ou o fix já está em produção): proponha a
-    data com o motivo em uma linha ("contorno em 14/10: flag desligada para a empresa X") e,
-    confirmada, grave.
+-   Se a restauração **já aconteceu** (houve contorno, ou o fix já está em produção): proponha
+    data e hora com o motivo em uma linha ("contorno em 14/10 às 10:42: flag desligada para a
+    empresa X"; "deploy de master terminou em 06/11 às 12:22") e, confirmada, grave os dois fields.
 -   Se **ainda não aconteceu**: não grave data futura nem a de hoje por aproximação. Avise o dev
-    que o field fica pendente até o deploy em produção (ou a ação pós-deploy) e que a
-    `flow-github-issues` cobra a data antes de mover para Done.
+    que os dois fields ficam pendentes até o deploy em produção (ou a ação pós-deploy) e que a
+    `flow-github-issues` cobra os dois antes de mover para Done.
 
 ```bash
 gh api graphql -f query='
@@ -453,6 +487,18 @@ mutation($project:ID!, $item:ID!, $field:ID!, $value:Date!) {
 -f item="<ITEM_ID_DO_PASSO_1>" \
 -f field="PVTF_lADOCAubUc4BQdrVzhlg2sY" \
 -f value="<AAAA-MM-DD>"
+
+# hora (TEXT), mesmo item
+gh api graphql -f query='
+mutation($project:ID!, $item:ID!, $field:ID!, $value:String!) {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: $project, itemId: $item, fieldId: $field, value: {text: $value}
+  }) { projectV2Item { id } }
+}' \
+-f project="PVT_kwDOCAubUc4BQdrV" \
+-f item="<ITEM_ID_DO_PASSO_1>" \
+-f field="PVTF_lADOCAubUc4BQdrVzho3Rgo" \
+-f value="<AAAA-MM-DDTHH:MM-03:00>"
 ```
 
 ## Não era bug, mas teve código: `work: demanda`
@@ -498,7 +544,7 @@ Como são ações visíveis (impactam shared state), **sempre confirme o texto c
 -   [ ] Se a alavanca é `api` ou `front`: linha `Escape: ...` proposta, confirmada e escrita no comentário técnico
 -   [ ] Se a Tratativa tem backfill, correção de dados ou reprocessamento: `post-action` proposta e aplicada, e a seção **Ação pós-deploy** escrita com escopo medido (query junto), como executar e como conferir
 -   [ ] Se o PR vai para `master`, não houve correção de código ou não era bug: `HotFix` ou `work: fakeBug` aplicada
--   [ ] Se a restauração já aconteceu: field **Restauração do sistema** gravado com a data certa (tabela em **Restauração do sistema**); se não, o dev avisado de que fica pendente até produção
+-   [ ] Se a restauração já aconteceu: fields **Restauração do sistema** (data) e **Restauração do sistema (hora)** gravados, com o horário vindo de fonte (fim do deploy de `master` ou execução do contorno/ação); se não, o dev avisado de que ficam pendentes até produção
 -   [ ] Se não era bug mas teve código (improvement): `work: bug` removida e `work: demanda` aplicada, sem `alavanca:*`
 
 ## Exemplo preenchido
